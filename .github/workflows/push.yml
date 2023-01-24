@@ -191,25 +191,3 @@ jobs:
           npm version --no-git-tag-version "v${{ needs.release.outputs.version }}"
           npm publish
 
-  template-sync:
-    timeout-minutes: 5
-
-    needs:
-      - metadata
-      - test-run
-      - commit-lint
-      - mega-linter
-
-    # only runs on main branch for template repos
-    if: |
-      needs.metadata.outputs.repository_is_template == 'true' &&
-      needs.metadata.outputs.repository_default_branch == github.ref_name
-
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v3.2.0
-
-      - uses: ahmadnassri/action-template-repository-sync@v2.3.4
-        with:
-          github-token: ${{ secrets.GH_TOKEN }}

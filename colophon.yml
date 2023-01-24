@@ -1,8 +1,8 @@
 version: 2.0
 
-id: template-js-lib
+id: interactive-semantic-graph
 
 about:
-  title: JavaScript Library Template
-  description: Universal JavaScript library project template
-  repository: ahmadnassri/template-js-lib
+  title: Interactive Semantic Graph
+  description: Interactive semantic graph tool based on vis.js
+  repository: opensemanticlab/interactive-semantic-graph

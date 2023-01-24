@@ -1,28 +1,23 @@
 {
   "version": "0.0.0-semantically-released",
-  "name": "@ahmadnassri/template-js-lib",
-  "description": "node library project template",
-  "author": "Ahmad Nassri <email@ahmadnassri.com> (https://www.ahmadnassri.com)",
-  "homepage": "https://github.com/ahmadnassri/template-js-lib",
+  "name": "@opensemanticlab/interactive-semantic-graph",
+  "description": "interactive semantic graph tool based on vis.js",
+  "author": "Simon Stier, Alexander Triol, Matthias Popp",
+  "homepage": "https://github.com/OpenSemanticLab/interactive-semantic-graph",
   "repository": {
     "type": "git",
-    "url": "https://github.com/ahmadnassri/template-js-lib.git"
+    "url": "https://github.com/OpenSemanticLab/interactive-semantic-graph.git"
   },
   "bugs": {
-    "url": "https://github.com/ahmadnassri/template-js-lib/issues"
+    "url": "https://github.com/OpenSemanticLab/interactive-semantic-graph/issues"
   },
-  "funding": {
-    "type": "individual",
-    "url": "https://github.com/sponsors/ahmadnassri"
-  },
-  "license": "MIT",
+  "license": "AGPLv3",
   "keywords": [
-    "template",
-    "universal",
     "javascript",
-    "library"
+    "library",
+    "graph",
+    "semantic"
   ],
-  "type": "module",
   "engines": {
     "node": ">=14"
   },
@@ -30,14 +25,13 @@
     "src",
     "dist"
   ],
-  "amdName": "TemplateLib",
+  "amdName": "isg",
   "source": "src/index.js",
   "main": "dist/index.cjs",
-  "module": "dist/index.mjs",
-  "unpkg": "./dist/foo.umd.js",
+  "unpkg": "./dist/isg.umd.js",
   "exports": "./src/index.modern.mjs",
   "scripts": {
-    "build": "microbundle src/*.js",
+    "build": "npx webpack",
     "build:test": "npm run build -- --no-sourcemap",
     "pretest:ci": "npm run build:test",
     "test": "tap test --no-coverage",
@@ -46,10 +40,16 @@
     "test:ci": "tap test --100",
     "test:report": "opener coverage/lcov-report/index.html"
   },
+  "dependencies": {
+    "vis-data": "^7.1.2",
+    "vis-network": "^9.1.2"
+  },
   "devDependencies": {
     "microbundle": "^0.15.1",
     "playwright": "^1.29.2",
     "sinon": "^15.0.1",
-    "tap": "^16.3.3"
+    "tap": "^16.3.3",
+    "webpack": "^5.75.0",
+    "webpack-cli": "^5.0.1"
   }
 }

@@ -5,16 +5,8 @@ module.exports = {
     entry: './src/index.js',
     output: {
         path: path.resolve(__dirname, 'dist'),
-        filename: 'isg.bundle.js',
+        filename: 'isg.umd.js',
         library: ['isg'],
-        //libraryTarget: "umd",
-        /*globalObject: 'this',
-        library: {
-    
-          name: 'ISG',
-    
-          type: 'umd',
-    
-        },*/
+        libraryTarget: "umd"
     },
 };

@@ -25,17 +25,17 @@ jobs:
       - id: metadata
         uses: ahmadnassri/action-metadata@v2.1.2
 
-  commit-lint:
-    timeout-minutes: 5
+  # commit-lint:
+  #   timeout-minutes: 5
 
-    runs-on: ubuntu-latest
+  #   runs-on: ubuntu-latest
 
-    steps:
-      - uses: actions/checkout@v3.2.0
+  #   steps:
+  #     - uses: actions/checkout@v3.2.0
 
-      - uses: ahmadnassri/action-commit-lint@v2.0.9
-        with:
-          config: .github/linters/.commit-lint.yml
+  #     - uses: ahmadnassri/action-commit-lint@v2.0.9
+  #       with:
+  #         config: .github/linters/.commit-lint.yml
 
   mega-linter:
     timeout-minutes: 5
@@ -125,7 +125,7 @@ jobs:
 
   release:
     needs:
-      - commit-lint
+      # - commit-lint
       - mega-linter
       - metadata
       - test-run

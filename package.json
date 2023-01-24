@@ -32,7 +32,7 @@
   "exports": "./src/index.modern.mjs",
   "scripts": {
     "build": "npx webpack",
-    "build:test": "npm run build -- --no-sourcemap",
+    "build:test": "npm run build",
     "pretest:ci": "npm run build:test",
     "test": "tap test --no-coverage",
     "test:browser": "tap test --no-coverage",

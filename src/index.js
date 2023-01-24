@@ -31,7 +31,7 @@ class GraphEditor {
 	}
 
   static test() {
-    return "Test"
+    return "test"
   }
 }
 

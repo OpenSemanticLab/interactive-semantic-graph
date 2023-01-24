@@ -22,18 +22,18 @@ for (const engine of engines) {
 
     await page.goto(`file://${join(__dirname, 'fixtures/index.html')}`)
     await page.addScriptTag({
-      path: join(__dirname, '../dist/index.umd.js')
+      path: join(__dirname, '../dist/isg.umd.js')
     })
 
     assert.plan(1)
 
     // run in the browser
     const result = await page.evaluate(() => {
-      const { Lib } = window.TemplateLib
-      return Lib()
+      const ge = new isg.GraphEditor()
+      return ge.test()
     })
 
-    assert.equal(result, 'hello world')
+    assert.equal(result, 'test')
 
     await browser.close()
   })

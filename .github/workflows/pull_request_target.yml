@@ -56,22 +56,3 @@ jobs:
         run: |
           gh pr review --approve "$PR_URL"
           gh pr merge --auto --rebase "$PR_URL"
-
-  template-sync:
-    needs: metadata
-
-    timeout-minutes: 20
-
-    runs-on: ubuntu-latest
-
-    # only run for templates
-    if: ${{ needs.metadata.outputs.repository_is_template == 'true' }}
-
-    steps:
-      - uses: actions/checkout@v3.3.0
-        with:
-          ref: ${{ github.event.pull_request.head.ref }}
-
-      - uses: ahmadnassri/action-template-repository-sync@v2.3.4
-        with:
-          github-token: ${{ secrets.GH_TOKEN }}

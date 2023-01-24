@@ -20,23 +20,39 @@ npm install interactive-semantic-graph
 ### Browser
 
 ``` html
-<script src="https://unpkg.com/@open-semantic-lab/interactive-semantic-graph@latest/dist/index.umd.js">// UMD bundle</script>
+<script src="https://unpkg.com/@open-semantic-lab/interactive-semantic-graph@latest/dist/isg.umd.js">// UMD bundle</script>
 ```
 
 
 [license-url]: LICENSE
-[license-img]: https://badgen.net/github/license/ahmadnassri/template-js-lib
+[license-img]: https://badgen.net/github/license/OpenSemanticLab/interactive-semantic-graph
 
-[release-url]: https://github.com/ahmadnassri/template-js-lib/releases
-[release-img]: https://badgen.net/github/release/ahmadnassri/template-js-lib
+[release-url]: https://github.com/OpenSemanticLab/interactive-semantic-graph/releases
+[release-img]: https://badgen.net/github/release/OpenSemanticLab/interactive-semantic-graph
 
-[semantic-url]: https://github.com/ahmadnassri/template-js-lib/actions?query=workflow%3Arelease
+[semantic-url]: https://github.com/OpenSemanticLab/interactive-semantic-graph/actions?query=workflow%3Arelease
 [semantic-img]: https://badgen.net/badge/📦/semantically%20released/blue
 
 ## Dev
+
+### Requirements
+nodejs, e. g. from https://github.com/crazy-max/nodejs-portable
+
+### Clone & Install
 ```bash
+git clone https://github.com/OpenSemanticLab/interactive-semantic-graph
+cd interactive-semantic-graph
 npm i
+```
+
+### Build
+```bash
 npm run build
+```
+
+### Build
+```bash
+npm run test
 ```
 
 ## Local Automation

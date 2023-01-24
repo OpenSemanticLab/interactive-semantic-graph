@@ -1,8 +1,19 @@
 const vis = require("vis-network/standalone/esm/index.js")
 //import { Network, DataSet, Options } from "vis-network/standalone/esm/index.js";
+const utils = require("./utils.js")
 
 class GraphEditor {
-	constructor() {
+
+  config = {
+    graph_container: document.getElementById("mynetwork"),
+    get_entity: (id) => {return {id: id}},
+    get_nodes_and_edges: (entity) => {return {nodes: [], edges: []}}
+  }
+
+  constructor(config) {
+    config = config
+    this.config = utils.mergeDeep(this.config, config);
+
     var nodes = new vis.DataSet([
       { id: 1, label: "Node 1" },
       { id: 2, label: "Node 2" },
@@ -21,14 +32,13 @@ class GraphEditor {
     ]);
 
     // create a network
-    var container = document.getElementById("mynetwork");
     var data = {
       nodes: nodes,
       edges: edges,
     };
     var options = {};
-    var network = new vis.Network(container, data, options);
-	}
+    var network = new vis.Network(this.config.graph_container, data, options);
+  }
 
   static test() {
     return "test"

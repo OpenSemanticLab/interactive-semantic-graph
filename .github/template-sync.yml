@@ -1,0 +1,10 @@
+files:
+  - "!**.js"
+  - "!README.md"
+  - "!docs/README.md"
+  - "!colophon.yml"
+  - "!package*.json"
+  - "!.github/test-matrix.json"
+  - "!**/template-sync.yml"
+  - "!.github/dependabot.yml"
+  - .github/dependabot-template.yml: .github/dependabot.yml

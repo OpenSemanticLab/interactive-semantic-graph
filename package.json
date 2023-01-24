@@ -1,0 +1,55 @@
+{
+  "version": "0.0.0-semantically-released",
+  "name": "@ahmadnassri/template-js-lib",
+  "description": "node library project template",
+  "author": "Ahmad Nassri <email@ahmadnassri.com> (https://www.ahmadnassri.com)",
+  "homepage": "https://github.com/ahmadnassri/template-js-lib",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ahmadnassri/template-js-lib.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ahmadnassri/template-js-lib/issues"
+  },
+  "funding": {
+    "type": "individual",
+    "url": "https://github.com/sponsors/ahmadnassri"
+  },
+  "license": "MIT",
+  "keywords": [
+    "template",
+    "universal",
+    "javascript",
+    "library"
+  ],
+  "type": "module",
+  "engines": {
+    "node": ">=14"
+  },
+  "files": [
+    "src",
+    "dist"
+  ],
+  "amdName": "TemplateLib",
+  "source": "src/index.js",
+  "main": "dist/index.cjs",
+  "module": "dist/index.mjs",
+  "unpkg": "./dist/foo.umd.js",
+  "exports": "./src/index.modern.mjs",
+  "scripts": {
+    "build": "microbundle src/*.js",
+    "build:test": "npm run build -- --no-sourcemap",
+    "pretest:ci": "npm run build:test",
+    "test": "tap test --no-coverage",
+    "test:browser": "tap test --no-coverage",
+    "test:watch": "tap test --watch",
+    "test:ci": "tap test --100",
+    "test:report": "opener coverage/lcov-report/index.html"
+  },
+  "devDependencies": {
+    "microbundle": "^0.15.1",
+    "playwright": "^1.29.2",
+    "sinon": "^15.0.1",
+    "tap": "^16.3.3"
+  }
+}

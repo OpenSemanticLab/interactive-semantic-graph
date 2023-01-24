@@ -1,0 +1,7 @@
+{
+  "os": ["ubuntu-latest"],
+  "node-version": [14, 16, 18],
+  "include": [
+    { "name": "with browsers", "os": "ubuntu-latest", "node-version": 18, "with-browsers": "true" }
+  ]
+}

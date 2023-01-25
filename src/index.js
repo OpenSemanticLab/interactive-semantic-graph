@@ -31,7 +31,7 @@ const CSVToJSONTable = (data, delimiter = ',') => {
   return columns
 }
 
-
+//test
 class GraphTool {
   constructor(div_id = "mynetwork", config = {
     nodes: [{id: 1,label: "1"},

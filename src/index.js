@@ -198,7 +198,7 @@ class GraphTool {
         this.pressed_keys.splice(index, 1); // 2nd parameter means remove one item only
       }
     }, false);
-  }
+  } 
   showOptions_default(node,optionsDivId = 'optionsDiv'){
       let optionsDiv = document.getElementById(optionsDivId)
       optionsDiv.innerHTML = `

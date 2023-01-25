@@ -198,7 +198,225 @@ class GraphTool {
         this.pressed_keys.splice(index, 1); // 2nd parameter means remove one item only
       }
     }, false);
+
+    // Rectangular selection:
+    this.initRectangleSelection()
+    this.initDragAndDrop()
+
   } 
+
+  initRectangleSelection(){
+      // Multiselect functionality 
+      this.network.setOptions({interaction:{
+        dragView: false,
+        multiselect: true
+    }})
+
+      var canvas;
+      var ctx;
+      var container = this.vis_container
+
+      
+      canvas = this.network.canvas.frame.canvas;
+      ctx = canvas.getContext('2d');
+
+      var rect = {},
+        drag = false;
+      var drawingSurfaceImageData;
+
+      const saveDrawingSurface = ()=>{
+        drawingSurfaceImageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      }
+
+      const restoreDrawingSurface = () => {
+        ctx.putImageData(drawingSurfaceImageData, 0, 0);
+      }
+
+      const selectNodesFromHighlight = () => {
+        var fromX, toX, fromY, toY;
+        var nodesIdInDrawing = [];
+        var xRange = getStartToEnd(rect.startX, rect.w);
+        var yRange = getStartToEnd(rect.startY, rect.h);
+        
+       
+        var allNodes = this.nodes.get();
+        for (var i = 0; i < allNodes.length; i++) {
+          var curNode = allNodes[i];
+          var nodePosition = this.network.getPositions([curNode.id]);
+          var nodeXY = this.network.canvasToDOM({
+            x: nodePosition[curNode.id].x,
+            y: nodePosition[curNode.id].y
+          });
+          if (xRange.start <= nodeXY.x && nodeXY.x <= xRange.end && yRange.start <= nodeXY.y && nodeXY.y <= yRange
+            .end) {
+            nodesIdInDrawing.push(curNode.id);
+          }
+        }
+        console.log(nodesIdInDrawing)
+
+        console.log("network.selectNodes")
+        this.network.selectNodes(nodesIdInDrawing);
+
+        
+      }
+
+      const getStartToEnd = (start, theLen)=> {
+        return theLen > 0 ? {
+          start: start,
+          end: start + theLen
+        } : {
+          start: start + theLen,
+          end: start
+        };
+      }
+
+      container.addEventListener("mousemove", function (e) {
+        if (drag) {
+          
+          drag = "mousemove"
+          restoreDrawingSurface();
+          rect.w = (e.pageX - this.offsetLeft) - rect.startX;
+          rect.h = (e.pageY - this.offsetTop) - rect.startY;
+
+          ctx.setLineDash([5]);
+          ctx.strokeStyle = "rgb(0, 102, 0)";
+          ctx.strokeRect(rect.startX, rect.startY, rect.w, rect.h);
+          ctx.setLineDash([]);
+          ctx.fillStyle = "rgba(0, 255, 0, 0.2)";
+          ctx.fillRect(rect.startX, rect.startY, rect.w, rect.h);
+        }
+      });
+
+      container.addEventListener("mousedown", function (e) {
+        console.log(e)
+        if (e.button == 0) {
+          //var selectedNodes = e.ctrlKey ? this.network.getSelectedNodes() : null;
+          
+          saveDrawingSurface();
+          var that = this;
+          rect.startX = e.pageX - this.offsetLeft;
+          rect.startY = e.pageY - this.offsetTop;
+          drag = "mousedown";
+          container.style.cursor = "crosshair";
+        }
+      });
+
+      container.addEventListener("mouseup", (e) => {
+        if (e.button == 0) {
+         
+
+          
+          let prev_selectedNodes = this.network.getSelectedNodes()
+          console.log('drag',drag,prev_selectedNodes)
+          if (prev_selectedNodes.length==0){
+            
+            selectNodesFromHighlight();
+          }
+          restoreDrawingSurface();
+          drag = false;
+
+          container.style.cursor = "default";
+
+        }
+        console.log("end of mouse up",)
+      });
+
+      document.body.oncontextmenu = function () {
+        console.log('oncontextmenu');
+        return false;
+      };
+  }
+
+  initDragAndDrop(){
+        // drag & drop functionality
+
+    var container = this.vis_container
+    const handleDrop = (e)=>{
+      console.log(e)
+      e.stopPropagation(); // Stops some browsers from redirecting
+      e.preventDefault();
+
+      var files = e.dataTransfer.files;
+      console.log(files)
+      for (let file of files) {
+
+        // images 
+        if (file.type === 'image/png' ||
+          file.type === 'image/jpeg') {
+          // add image node to network
+
+          let xy = this.network.DOMtoCanvas({
+            x: e.clientX,
+            y: e.clientY
+          })
+          console.log("xy", xy)
+
+          // read file 
+          console.log(file);
+
+          let reader = new FileReader();
+          reader.onload = (event) => {
+            //console.log(event.target.result);
+            let newNode = new NodeClasses.ImageNode(utils.uuidv4(), xy.x, xy.y, event.target.result)
+            console.log("create Image node", newNode)
+            this.nodes.update(newNode)
+          };
+          console.log(file);
+          console.log(reader.readAsDataURL(file));
+        }
+
+        // csv files
+        else if (file.type === 'application/vnd.ms-excel' && file.name.endsWith('.csv')) {
+          // add csv node
+          let xy = this.network.DOMtoCanvas({
+            x: e.clientX,
+            y: e.clientY
+          })
+          console.log("xy", xy)
+
+          // read file 
+          console.log(file);
+
+          let reader = new FileReader();
+          reader.onload = (event) => {
+            //console.log(event.target.result);
+            let newNode = new NodeClasses.CsvNode(utils.uuidv4(), xy.x, xy.y, event.target.result)
+            console.log("create CSV Node", newNode)
+            this.nodes.update(newNode)
+          };
+          console.log(file);
+          console.log(reader.readAsText(file));
+        } else {
+          window.alert('File type ' + file.type + ' not supported');
+        }
+
+
+
+      }
+    }
+
+    container.addEventListener('dragenter', function (e) {
+      console.log("dragenter", e)
+      e.preventDefault()
+      console.log("container.style", container, container.style.border)
+      container.style.border = "1px solid black"
+      // container.style.cssText = "border: 5px solid lightgray"
+
+    }, false)
+    container.addEventListener('dragleave', function (e) {
+      console.log("dragleave", e)
+      container.style.border = "1px solid lightgray"
+    }, false)
+    container.addEventListener('drop', function (e) {
+      console.log("dragdrop", e);
+      e.preventDefault
+      handleDrop(e)
+    }, false)
+    container.addEventListener('dragover', function (e) {
+      e.preventDefault()
+    }, false)
+  }
+
   showOptions_default(node,optionsDivId = 'optionsDiv'){
       let optionsDiv = document.getElementById(optionsDivId)
       optionsDiv.innerHTML = `
@@ -228,7 +446,7 @@ class GraphTool {
     if ("fire" in node) {
       node.fire()
     } else {
-      let conn_edges = network.getConnectedEdges(node.id)
+      let conn_edges = this.network.getConnectedEdges(node.id)
       console.log(conn_edges)
       conn_edges.forEach(function (edge_id) {
         let edge = this.edges.get(edge_id)
@@ -245,7 +463,7 @@ class GraphTool {
           }
         }
       })
-      console.log(network.getConnectedNodes(node.id))
+      console.log(this.network.getConnectedNodes(node.id))
     }
   }
 

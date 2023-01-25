@@ -535,7 +535,7 @@ class CameraNode {
 /// utility function to convert CSV files to JSONTable (incomplete, TODO!)
     CSVToJSONTable (data, delimiter = ','){
     const titles = data.slice(0, data.indexOf('\n')).split(delimiter);
-    rows = data.slice(data.indexOf('\n') + 1)
+    let rows = data.slice(data.indexOf('\n') + 1)
       .split('\n')
     // initialize columns
     let columns = {}
@@ -547,7 +547,7 @@ class CameraNode {
       rows[i] = rows[i].replace(/(\r\n|\n|\r)/gm, "")
       if (rows[i].length > 0) { // only for non-empty rows
         console.log(rows[i])
-        values = rows[i].split(delimiter)
+        let values = rows[i].split(delimiter)
         for (let j = 0; j < titles.length; j++) {
           columns[titles[j]].push(Number(values[j]))
         }

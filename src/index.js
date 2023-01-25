@@ -1,35 +1,9 @@
+// imports
+
 const vis = require("vis-network/standalone/esm/index.js")
-//import { Network, DataSet, Options } from "vis-network/standalone/esm/index.js";
 const utils = require("./utils.js")
 const NodeClasses = require("./NodeClasses.js")
-function uuidv4() {
-  return ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, c =>    (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
-  );
-}
-/// utility function to convert CSV files to JSONTable (incomplete, TODO!)
-const CSVToJSONTable = (data, delimiter = ',') => {
-  const titles = data.slice(0, data.indexOf('\n')).split(delimiter);
-  rows = data.slice(data.indexOf('\n') + 1)
-    .split('\n')
-  // initialize columns
-  let columns = {}
-  titles.forEach((title) => {
-    columns[title] = []
-  })
-  for (let i = 1; i < rows.length; i++) {
-    // strip unnecessary signs
-    rows[i] = rows[i].replace(/(\r\n|\n|\r)/gm, "")
-    if (rows[i].length > 0) { // only for non-empty rows
-      console.log(rows[i])
-      values = rows[i].split(delimiter)
-      for (let j = 0; j < titles.length; j++) {
-        columns[titles[j]].push(Number(values[j]))
-      }
-    }
-  }
-  console.log(columns)
-  return columns
-}
+
 
 
 class GraphTool {
@@ -90,9 +64,10 @@ class GraphTool {
       if (params.nodes.length > 0) {
         console.log("show options")
         let node = this.nodes.get(params.nodes[0])
-        console.log("clicked node:", node.constructor, node, "with prototype:", Object.getPrototypeOf(node))
         if (typeof node.showOptions === 'function') {
-          node.showOptions(optionsDivId = this.options_container.id)
+          console.log(node,node.showOptions,this.options_container.id)
+          let optionsId=this.options_container.id
+          node.showOptions(optionsId)
         } else {
           this.showOptions_default(node, this.options_container.id)
         }
@@ -236,9 +211,9 @@ class GraphTool {
     let newNode = {}
     if (Object.getOwnPropertyNames(node).includes("typeString")) {
       let cls = this.classRegistry.get(node.typeString)
-      newNode = new cls(uuidv4())
+      newNode = new cls(utils.uuidv4())
     } else {
-      newNode.id = uuidv4()
+      newNode.id = utils.uuidv4()
     }
     let keys = Object.getOwnPropertyNames(node)
     keys.forEach((key) => {
@@ -277,34 +252,32 @@ class GraphTool {
   createTestSetup(){
     console.log('createTestSetup')
   }
+
 }
-///////// Test-Cases//////////
-function test() {
-  new GraphTool(div_id = "mynetwork", config = {
+
+function testGraph(){
+  
+  let config = {
     nodes: [
-      new RocketBase(1, "red", 0, 0),
-      new RocketBase(2, "orange", 100, 0),
-      new RocketBase(3, "yellow", 200, 0),
-      new RocketBase(4, "green", 300, 0),
-      new RocketBase(5, "blue", 400, 0),
-      new RocketBase(6, "purple", 500, 0),
-      new Fountain(7, "red", 50, 50),
-      new Fountain(8, "orange", 150, 50),
-      new Fountain(9, "yellow", 250, 50),
-      new Fountain(10, "green", 350, 50),
-      new Fountain(11, "blue", 450, 50),
-      new Fountain(12, "purple", 550, 50),
-      new delayNode(13, 0, 200, 1000),
-      new delayNode(14, 500, 200, 1000),
-      new delayNode(15, 250, 400, 1000),
-      new textSpeechNode(16, 100, 600, "Hello"),
+      new NodeClasses.RocketBase(1, "red", 0, 0),
+      new NodeClasses.RocketBase(2, "orange", 100, 0),
+      new NodeClasses.RocketBase(3, "yellow", 200, 0),
+      new NodeClasses.RocketBase(4, "green", 300, 0),
+      new NodeClasses.RocketBase(5, "blue", 400, 0),
+      new NodeClasses.RocketBase(6, "purple", 500, 0),
+      new NodeClasses.Fountain(7, "red", 50, 50),
+      new NodeClasses.Fountain(8, "orange", 150, 50),
+      new NodeClasses.Fountain(9, "yellow", 250, 50),
+      new NodeClasses.Fountain(10, "green", 350, 50),
+      new NodeClasses.Fountain(11, "blue", 450, 50),
+      new NodeClasses.Fountain(12, "purple", 550, 50),
+      new NodeClasses.DelayNode(13, 0, 200, 1000),
+      new NodeClasses.DelayNode(14, 500, 200, 1000),
+      new NodeClasses.DelayNode(15, 250, 400, 1000),
+      new NodeClasses.TextSpeechNode(16, 100, 600, "Hello"),
       new NodeClasses.CameraNode(17, 200, 600),
     ],
-    edges: [{
-        from: 13,
-        to: 1,
-        a: 5
-      },
+    edges: [{from: 13,to: 1,a: 5},
       {
         from: 13,
         to: 2
@@ -370,9 +343,13 @@ function test() {
         arrows: "to"
       }
     }
-  })
+  }
+  new GraphTool(this.div_id,config)
 }
+
+
 export {
   GraphTool,
-  vis
+  vis,
+  testGraph
 }

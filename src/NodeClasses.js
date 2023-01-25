@@ -74,7 +74,7 @@ class CameraNode {
     fire = () => {}
     showOptions = (optionsDivId = "optionsDiv") => {
       console.log("this in cameraNode Show Options ", this.constructor, this)
-      optionsDiv = document.getElementById(optionsDivId)
+      let optionsDiv = document.getElementById(optionsDivId)
       optionsDiv.innerHTML = `
   <button id="start-camera">Start Camera</button><button id="click-photo">Click Photo</button><button id="use-photo">Use Photo</button><div id="Camera_options_div"><canvas id="canvas" width="320" height="240"></canvas><video id="video" width="320" height="240" autoplay></video><div id = "json_div"><pre id="objectJson"></pre></div></div>`
       let camera_button = document.querySelector("#start-camera");
@@ -192,8 +192,9 @@ class CameraNode {
         }, 700 + 300 * Math.random())
       }
     }
-    showOptions = (optionsDivId = "optionsDiv") => {
-      optionsDiv = document.getElementById(optionsDivId)
+    showOptions = (optionsDivId="optionsDiv") => {
+        console.log("Rocket Base ",optionsDivId)
+      let optionsDiv = document.getElementById(optionsDivId)
       optionsDiv.innerHTML = `<div id="explosion_rec_div"></div>    <div id="shot_rec_div"></div><br>    <label>explosion time (ms)</label><input id="explosion_time_input"></input>    <div id = "json_div"><pre id="objectJson"></pre></div>`
       this.constructor.shot_recorder.drawToDiv("explosion_rec_div")
       this.constructor.explosion_recorder.drawToDiv("shot_rec_div")
@@ -252,7 +253,7 @@ class CameraNode {
       }
     }
     showOptions = (optionsDivId = "optionsDiv") => {
-      optionsDiv = document.getElementById(optionsDivId)
+      let optionsDiv = document.getElementById(optionsDivId)
       optionsDiv.innerHTML = `<div id="spray_rec_div"></div><br>    <div id = "json_div"><pre id="objectJson"></pre></div>`
       this.recorder.drawToDiv("spray_rec_div")
       document.getElementById("objectJson").innerHTML = JSON.stringify(this, null, 4)
@@ -296,7 +297,7 @@ class CameraNode {
       }
     }
     showOptions = (optionsDivId = "optionsDiv") => {
-      optionsDiv = document.getElementById(optionsDivId)
+      let optionsDiv = document.getElementById(optionsDivId)
       optionsDiv.innerHTML = `<div id="delay_options_div">delay<input id="delay_input"></input></div> <input id="break_input" type="checkbox"></input><label for=break_input">break</label><br></div><br>    <div id = "json_div"><pre id="objectJson"></pre></div>`
       document.getElementById("delay_input").value = this.delay_ms
       document.getElementById("break_input").checked = this.break
@@ -358,7 +359,7 @@ class CameraNode {
       )
     }
     showOptions = (optionsDivId = "optionsDiv") => {
-      optionsDiv = document.getElementById(optionsDivId)
+      let optionsDiv = document.getElementById(optionsDivId)
       optionsDiv.innerHTML = `<div id="textSpeechNode_options_div">textSpeechNode<input id="textSpeechNode_input"></input></div> <br></div><br>    <div id = "json_div"><pre id="objectJson"></pre></div>`
       document.getElementById("textSpeechNode_input").value = this.text
       console.log('Add event Listener')
@@ -387,7 +388,7 @@ class CameraNode {
     }
     fire = () => {}
     showOptions = (optionsDivId = "optionsDiv") => {
-      optionsDiv = document.getElementById(optionsDivId)
+      let optionsDiv = document.getElementById(optionsDivId)
       optionsDiv.innerHTML = `
   <button id="use-photo">Use Photo</button><div id="Camera_options_div"><canvas id="canvas" width="320" height="240"></canvas><div id = "json_div"><pre id="objectJson"></pre></div></div>`
       let canvas = document.querySelector("#canvas");
@@ -444,12 +445,12 @@ class CameraNode {
             background: "lightblue"
           }
         }
-        this.columns = CSVToJSONTable(this.csvText, "\t")
+        this.columns = this.CSVToJSONTable(this.csvText, "\t")
       }
     }
     fire = () => {}
     showOptions = (optionsDivId = "optionsDiv") => {
-      optionsDiv = document.getElementById(optionsDivId)
+      let optionsDiv = document.getElementById(optionsDivId)
       optionsDiv.innerHTML = `
   <table style="width:100%"><tr><th>x axis</th><th>y axis</th></tr><tr><th><select id="xSelect"name = "x"></select></th><th><select id="ySelect"name = "y"></select></th></tr></table>  <div id="plotDiv" width="320" height="240"></canvas>    <button id="usePlotAsThumbnail">Use Plot as Icon</button>  <div id = "json_div"><pre id="objectJson"></pre></div></div>`
       let plot_div = document.querySelector("#plotDiv")
@@ -529,6 +530,32 @@ class CameraNode {
         })
       })
     }
+
+    
+/// utility function to convert CSV files to JSONTable (incomplete, TODO!)
+    CSVToJSONTable (data, delimiter = ','){
+    const titles = data.slice(0, data.indexOf('\n')).split(delimiter);
+    rows = data.slice(data.indexOf('\n') + 1)
+      .split('\n')
+    // initialize columns
+    let columns = {}
+    titles.forEach((title) => {
+      columns[title] = []
+    })
+    for (let i = 1; i < rows.length; i++) {
+      // strip unnecessary signs
+      rows[i] = rows[i].replace(/(\r\n|\n|\r)/gm, "")
+      if (rows[i].length > 0) { // only for non-empty rows
+        console.log(rows[i])
+        values = rows[i].split(delimiter)
+        for (let j = 0; j < titles.length; j++) {
+          columns[titles[j]].push(Number(values[j]))
+        }
+      }
+    }
+    console.log(columns)
+    return columns
+  }
   }
 
 export {

@@ -23,18 +23,18 @@ class recorder {
       this.arr = []
       this.recording = true
       script_processor_node.onaudioprocess = this.process_microphone_buffer
-      console.log('startRecording')
-      console.log(this, this.arr)
+      //console.log('startRecording')
+      //console.log(this, this.arr)
     }
     stopRecording = () => {
       this.recording = false
       script_processor_node.onaudioprocess = () => {}
-      console.log("stopRecording")
-      console.log(this, this.arr)
+      //console.log("stopRecording")
+      //console.log(this, this.arr)
     }
     process_microphone_buffer = (event) => { // invoked by event loop
-      console.log(event.inputBuffer.getChannelData(0))
-      console.log(this.arr, this.arr.concat(event.inputBuffer.getChannelData(0)))
+      //console.log(event.inputBuffer.getChannelData(0))
+      //console.log(this.arr, this.arr.concat(event.inputBuffer.getChannelData(0)))
       this.arr = this.arr.concat(event.inputBuffer.getChannelData(0))
     }
     play = () => {
@@ -49,7 +49,7 @@ class recorder {
         flat_arr.set(elem, passed)
         passed += elem.length
       }
-      console.log(flat_arr)
+      //console.log(flat_arr)
       if (flat_arr.length > 0) {
         playSound(flat_arr)
       }
@@ -60,7 +60,7 @@ class recorder {
 class CameraNode {
     constructor(id, x = 0, y = 0) {
       this.typeString = "CameraNode"
-      console.log('constructor of CameraNode', id, x, y)
+      //console.log('constructor of CameraNode', id, x, y)
       this.id = id
       this.label = "Camera"
       this.title = "Camera"
@@ -73,7 +73,7 @@ class CameraNode {
     }
     fire = () => {}
     showOptions = (optionsDivId = "optionsDiv") => {
-      console.log("this in cameraNode Show Options ", this.constructor, this)
+      //console.log("this in cameraNode Show Options ", this.constructor, this)
       optionsDiv = document.getElementById(optionsDivId)
       optionsDiv.innerHTML = `
   <button id="start-camera">Start Camera</button><button id="click-photo">Click Photo</button><button id="use-photo">Use Photo</button><div id="Camera_options_div"><canvas id="canvas" width="320" height="240"></canvas><video id="video" width="320" height="240" autoplay></video><div id = "json_div"><pre id="objectJson"></pre></div></div>`
@@ -102,8 +102,8 @@ class CameraNode {
         //    console.log(image_data_url);
       });
       use_button.addEventListener('click', () => {
-        console.log("use button clicked")
-        console.log(canvas.toDataURL('image/jpeg'))
+        //console.log("use button clicked")
+        //console.log(canvas.toDataURL('image/jpeg'))
         this.image = canvas.toDataURL('image/jpeg')
         this.shape = "image"
         //console.log("update nodes in EventListener",this.constructor,this)
@@ -142,15 +142,15 @@ class CameraNode {
       this.explosion_time_ms = 1000
     }
     fire = () => {
-      console.log("fire", this)
+      //console.log("fire", this)
       let position = network.getPosition(this.id)
       this.shot(position.x, position.y - 10, nodes.get(this.id).color.background)
-      console.log(this)
+      //console.log(this)
     }
     shot = (x, y, color) => {
       this.constructor.shot_recorder.play()
       let new_id = uuidv4()
-      console.log('bin in release_shot')
+      //console.log('bin in release_shot')
       nodes.update({
         id: new_id,
         label: "bomb",
@@ -165,7 +165,7 @@ class CameraNode {
       window.setTimeout(() => {
         let position = network.getPosition(new_id)
         this.explosion(position.x, position.y - 100, color)
-        console.log(nodes.get(new_id))
+        //console.log(nodes.get(new_id))
         nodes.remove(new_id)
       }, this.explosion_time_ms)
     }
@@ -186,8 +186,8 @@ class CameraNode {
         })
         added_nodes_ids.push(new_id)
         window.setTimeout(function () {
-          console.log("Timeout")
-          console.log(added_nodes_ids)
+          //console.log("Timeout")
+          //console.log(added_nodes_ids)
           nodes.remove(new_id)
         }, 700 + 300 * Math.random())
       }
@@ -240,8 +240,8 @@ class CameraNode {
           })
           added_nodes_ids.push(new_id)
           window.setTimeout(function () {
-            console.log("Timeout")
-            console.log(added_nodes_ids)
+            //console.log("Timeout")
+            //console.log(added_nodes_ids)
             network.setSelection({
               nodes: [new_id],
               edges: []
@@ -275,19 +275,19 @@ class CameraNode {
     fire = () => {
       if (!this.break) {
         let conn_edges = network.getConnectedEdges(this.id)
-        console.log(conn_edges)
+        //console.log(conn_edges)
         conn_edges.forEach((edge_id) => {
           let edge = this.edges.get(edge_id)
           if (edge.from == this.id) {
             let neighbor_node = nodes.get(edge.to)
-            console.log(neighbor_node)
+            //console.log(neighbor_node)
             if (neighbor_node.fire) {
               window.setTimeout(() => {
                 neighbor_node.fire()
               }, this.delay_ms)
             } else {
               window.setTimeout(() => {
-                console.log("no fire, recurse in " + neighbor_node)
+                //console.log("no fire, recurse in " + neighbor_node)
                 fire_recursive(edge.to)
               }, this.delay_ms)
             }
@@ -301,12 +301,12 @@ class CameraNode {
       document.getElementById("delay_input").value = this.delay_ms
       document.getElementById("break_input").checked = this.break
       document.getElementById("delay_input").addEventListener('change', () => {
-        console.log("input changed")
+        //console.log("input changed")
         this.delay_ms = document.getElementById("delay_input").value
       })
-      console.log("show Options of ", this)
+      //console.log("show Options of ", this)
       document.getElementById("break_input").addEventListener('click', () => {
-        console.log("break_input changed", document.getElementById("break_input").checked)
+        //console.log("break_input changed", document.getElementById("break_input").checked)
         this.break = document.getElementById("break_input").checked
       })
       document.getElementById("objectJson").innerHTML = JSON.stringify(this, null,
@@ -334,21 +334,21 @@ class CameraNode {
       msg.pitch = 1
       window.speechSynthesis.speak(msg);
       msg.addEventListener("end", () => {
-          console.log(this)
+          //console.log(this)
           let conn_edges = network.getConnectedEdges(this.id)
-          console.log(conn_edges)
+          //console.log(conn_edges)
           conn_edges.forEach((edge_id) => {
             let edge = this.edges.get(edge_id)
             if (edge.from == this.id) {
               let neighbor_node = nodes.get(edge.to)
-              console.log(neighbor_node)
+              //console.log(neighbor_node)
               if (neighbor_node.fire) {
                 window.setTimeout(() => {
                   neighbor_node.fire()
                 }, this.delay_ms)
               } else {
                 window.setTimeout(() => {
-                  console.log("no fire, recurse in " + neighbor_node)
+                  //console.log("no fire, recurse in " + neighbor_node)
                   fire_recursive(edge.to)
                 }, this.delay_ms)
               }
@@ -361,9 +361,9 @@ class CameraNode {
       optionsDiv = document.getElementById(optionsDivId)
       optionsDiv.innerHTML = `<div id="textSpeechNode_options_div">textSpeechNode<input id="textSpeechNode_input"></input></div> <br></div><br>    <div id = "json_div"><pre id="objectJson"></pre></div>`
       document.getElementById("textSpeechNode_input").value = this.text
-      console.log('Add event Listener')
+      //console.log('Add event Listener')
       document.getElementById("textSpeechNode_input").addEventListener('change', () => {
-        console.log("input changed")
+        //console.log("input changed")
         this.text = document.getElementById("textSpeechNode_input").value
       })
       document.getElementById("objectJson").innerHTML = JSON.stringify(this, null, 4)
@@ -393,15 +393,15 @@ class CameraNode {
       let canvas = document.querySelector("#canvas");
       let use_button = document.querySelector("#use-photo")
       document.getElementById("objectJson").innerHTML = JSON.stringify(this, null, 4)
-      console.log(this)
+      //console.log(this)
       if (this.hasOwnProperty("image")) {
-        console.log('Hasown')
+        //console.log('Hasown')
         let img = new Image;
         img.src = this.image
         canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height)
       }
       use_button.addEventListener('click', () => {
-        console.log("use button clicked")
+        //console.log("use button clicked")
         this.image = canvas.toDataURL('image/jpeg')
         this.shape = "image"
         nodes.update(this)
@@ -459,7 +459,7 @@ class CameraNode {
       xSelect = document.getElementById("xSelect")
       ySelect = document.getElementById("ySelect")
       Object.keys(this.columns).forEach((key) => {
-        console.log(key)
+        //console.log(key)
         var el = document.createElement("option");
         el.textContent = key;
         el.value = key;
@@ -506,12 +506,12 @@ class CameraNode {
       }
       plotData()
       xSelect.addEventListener('change', () => {
-        console.log('x change')
+        //console.log('x change')
         this.visualization_definition.x = xSelect.value
         plotData()
       })
       ySelect.addEventListener('change', () => {
-        console.log('y change')
+        //console.log('y change')
         this.visualization_definition.y = ySelect.value
         plotData()
       })

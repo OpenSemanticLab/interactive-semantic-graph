@@ -375,7 +375,8 @@ let new_json = {"jsonschema": {
           {
               "member": {"@id": "Property:HasMember", "@type": "@id"},
               "budget": {"@id": "Property:HasBudget", "@type": "@id"},
-              "some_property": {"@id": "Property:HasSomeItem", "@type": "@id"}
+              "some_property": {"@id": "Property:HasSomeItem", "@type": "@id"},
+              "some_literal": "Property:HasSomeLiteral"
           }
           ],
       "properties": {
@@ -415,9 +416,10 @@ let new_json = {"jsonschema": {
   "Item:MyProject": {
       "type": ["Category:Item"],
       "label": [{"text": "My Project", "lang": "en"}],
-      "member": ["Item:SomePerson","Item:SomePerson","Item:SomePerson"],
+      "member": ["Item:SomePerson", "Item:SomePerson", "Item:MyOtherItem"],
       "start": true,
       "some_literal": "Some string",
+      "not_in_context": "Not in Context",
       "budget": [{
           "year": "2000",
           "value": "10000"
@@ -434,9 +436,23 @@ let new_json = {"jsonschema": {
   },
   "Item:MyOtherItem": {
     "type": ["Category:Item"],
-    "label": [{"text": "My Other", "lang": "en"}]
+    "label": [{"text": "My Other", "lang": "en"}],
+    "member": ["Item:MyNewItem", "Item:MySecondItem"],
+    "some_literal": "Some string",
+    "not_in_context": "Not in Context",
     
-},
+  },
+  "Item:MyNewItem": {
+    "type": ["Category:Item"],
+    "label": [{"text": "My New Other", "lang": "en"}]
+    
+  },
+  "Item:MySecondItem": {
+    "type": ["Category:Item"],
+    "label": [{"text": "My Second Other", "lang": "en"}]
+    
+  },
+
 }};
 
 
@@ -444,7 +460,7 @@ let new_json = {"jsonschema": {
 
 
 
-import data from './test.json'
+//import data from './test.json'
 
 
 // let nodes = [];
@@ -501,23 +517,28 @@ return fullContext;
 
 
 
+
+
+
+
 let id = 0;
 let nodes = [];
 let edges = [];
-let rootId;
 let lang = "en";
-let label;
 let first = true;
-let startItem;
 let oldStartItem;
 let baseRootId;
 
-function createGraphNE(file, item, lastId, oldStrtItm){
+function createGraphNE(file, lastId, item, oldContext){
+  let startItem;
+  let label;
+  let rootId;
+  let startContext;
+  let objKeys;
   
   if(!item && !lastId){
 
     startItem = getStartItem(file);
-    oldStrtItm = startItem;
 
     let labelArray = file.jsondata[startItem].label;
 
@@ -532,6 +553,15 @@ function createGraphNE(file, item, lastId, oldStrtItm){
     rootId = id;
     baseRootId = rootId;
     id++;
+
+    startContext = createContext(file, startItem);
+    objKeys = Object.keys(file.jsondata[startItem]);
+
+  }else if(oldContext){
+    startItem = item;
+    startContext = oldContext;
+    objKeys = Object.keys(file.jsondata[startItem]);
+    rootId = id;
 
   }else{
     
@@ -549,12 +579,14 @@ function createGraphNE(file, item, lastId, oldStrtItm){
     }
     rootId = lastId;
     id++;
+
+    startContext = createContext(file, startItem);
+    objKeys = Object.keys(file.jsondata[startItem]);
   }
 
 
 
-  let startContext = createContext(file, startItem);
-  let objKeys = Object.keys(file.jsondata[startItem]);
+
 
 
   for(let i = 0; i < objKeys.length; i++){
@@ -562,15 +594,41 @@ function createGraphNE(file, item, lastId, oldStrtItm){
 
     if(objKeys[i] != "type" && objKeys[i] != "label" && objKeys[i] != "start"){
 
-      console.log(startItem,id)
+
 
       if(objKeys[i] in startContext && startContext[objKeys[i]]["@type"] == "@id" && Array.isArray(file.jsondata[startItem][objKeys[i]]) && typeof file.jsondata[startItem][objKeys[i]][0] === 'object' && file.jsondata[startItem][objKeys[i]][0] !== null){
 
-        //recursion
+        // nodes.push({id:id, label: objKeys[i]});
+        // edges.push({from: rootId, to: id, label: startContext[objKeys[i]]["@id"]});
+        // id++;
+
+        //file.jsondata[objKeys[i]] = file.jsondata[startItem][objKeys[i]][0];
+
+        for(let j =  0; j < file.jsondata[startItem][objKeys[i]].length; j++){
+
+          file.jsondata[objKeys[i]+""+j] = file.jsondata[startItem][objKeys[i]][j];
+
+          nodes.push({id:id, label: objKeys[i]+""+j});
+
+          edges.push({from: rootId, to: id, label: startContext[objKeys[i]]["@id"]});
+          let oldId = id;
+          id++;
+          
+          
+          
+          createGraphNE(file, oldId, objKeys[i]+""+j, startContext);
+
+
+        }
+
+        console.log(file.jsondata)
+
+        
+        //recursions
         //objekt im objekt
-        //console.log(file.jsondata[startItem][objKeys[i]])
+        //console.log(file.jsondata[startItem][objKeys[i]], objKeys[i])
       }else if(objKeys[i] in startContext && startContext[objKeys[i]]["@type"] == "@id" && Array.isArray(file.jsondata[startItem][objKeys[i]]) && !(typeof file.jsondata[startItem][objKeys[i]][0] === 'object' && file.jsondata[startItem][objKeys[i]][0] !== null)){
-        console.log(file.jsondata[startItem][objKeys[i]]);
+        //console.log(file.jsondata[startItem][objKeys[i]]);
         
         let rememberArray = file.jsondata[startItem][objKeys[i]];
 
@@ -592,7 +650,8 @@ function createGraphNE(file, item, lastId, oldStrtItm){
           nodes.push({id:id, label:label});
           edges.push({from: rootId, to: id, label: startContext[objKeys[i]]["@id"]});
 
-          createGraphNE(file, rememberArray[j], baseRootId, oldStrtItm);
+
+          createGraphNE(file, id, rememberArray[j]);
 
         }
         file.jsondata[startItem][objKeys[i]] = rememberArray;
@@ -614,18 +673,25 @@ function createGraphNE(file, item, lastId, oldStrtItm){
 
         nodes.push({id:id, label:label});
         edges.push({from: rootId, to: id, label: startContext[objKeys[i]]["@id"]});
-        
-        createGraphNE(file, file.jsondata[startItem][objKeys[i]], id, oldStrtItm);
+
+        createGraphNE(file, id, file.jsondata[startItem][objKeys[i]]);
         
         //console.log(file.jsondata[startItem][objKeys[i]])
         //item literal
 
       }else if(objKeys[i] in startContext){
+
+        nodes.push({id:id, label: file.jsondata[startItem][objKeys[i]]});
+        edges.push({from: rootId, to: id, label: startContext[objKeys[i]]});
+        id++;
         //console.log(file.jsondata[startItem][objKeys[i]])
         //literal
 
       }else{
-        //console.log(file.jsondata[startItem][objKeys[i]])
+        nodes.push({id:id, label: file.jsondata[startItem][objKeys[i]]});
+        edges.push({from: rootId, to: id, label: objKeys[i]});
+        id++;
+        console.log(file.jsondata[startItem][objKeys[i]])
         //not in context
 
       }
@@ -636,7 +702,7 @@ function createGraphNE(file, item, lastId, oldStrtItm){
 
   
   
-  startItem = oldStrtItm;
+  //startItem = oldStrtItm;
 
   console.log(nodes);
   console.log(edges);

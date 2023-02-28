@@ -3,7 +3,9 @@ const vis = require("vis-network/standalone/esm/index.js")
 const utils = require("./utils.js")
 const NodeClasses = require("./NodeClasses.js")
 const $ = require("jquery")
-
+const createGraph = require("./createGraph.js")
+//const Keymap = require("./Keymap.js")
+const chroma = require("chroma-js")
 
 
 function uuidv4() {
@@ -374,6 +376,7 @@ let new_json = {"jsonschema": {
           "Category:Entity",
           {
               "member": {"@id": "Property:HasMember", "@type": "@id"},
+              "other": {"@id": "Property:HasOther", "@type": "@id"},
               "budget": {"@id": "Property:HasBudget", "@type": "@id"},
               "some_property": {"@id": "Property:HasSomeItem", "@type": "@id"},
               "some_literal": "Property:HasSomeLiteral"
@@ -423,7 +426,10 @@ let new_json = {"jsonschema": {
       "budget": [{
           "year": "2000",
           "value": "10000"
-      }]
+      },{
+        "year": "2001",
+        "value": "20000"
+    }]
   },
   "Item:SomePerson": {
       "type": ["Category:Item"],
@@ -437,7 +443,8 @@ let new_json = {"jsonschema": {
   "Item:MyOtherItem": {
     "type": ["Category:Item"],
     "label": [{"text": "My Other", "lang": "en"}],
-    "member": ["Item:MyNewItem", "Item:MySecondItem"],
+    "member": ["Item:MyNewItem"],
+    "other":["Item:MySecondItem"],
     "some_literal": "Some string",
     "not_in_context": "Not in Context",
     
@@ -456,10 +463,6 @@ let new_json = {"jsonschema": {
 }};
 
 
-
-
-
-
 //import data from './test.json'
 
 
@@ -470,347 +473,12 @@ let new_json = {"jsonschema": {
 // let rootId;
 // let context = data['@context']
 
-
-function getStartItem(file){
-  let items = Object.keys(file.jsondata);
-  let startCounter = 0
-  let output = []
-
-  for (let i =  0 ;i < items.length;i++) {
-
-    if("start" in file.jsondata[items[i]]){
-
-      output.push(items[i]);
-      startCounter++;
-    }
-    
-  }
-  if(output.length == 1){
-    return output[0];
-  }else{
-    return false;
-  }
-}
-
-
-function contextRecursion(file, schema, fullContext = []){
-  fullContext = fullContext;
-
-  let startContext = file.jsonschema[schema]["@context"];
-
-  if(Array.isArray(startContext)){
-    for(let i = 0; i < startContext.length; i++){
-
-      
-      if(!(typeof startContext[i] === 'object' && startContext[i] !== null)){
-        contextRecursion(file, startContext[i], fullContext);
-      }
-      else{
-        fullContext.push(startContext[i]);
-      }
-    }
-  }else{
-    fullContext.push(startContext);
-  }
-return fullContext;
-}
-
-
-
-
-
-
-
-let id = 0;
 let nodes = [];
 let edges = [];
-let lang = "en";
-let first = true;
-let oldStartItem;
-let baseRootId;
 
-function createGraphNE(file, lastId, item, oldContext){
-  let startItem;
-  let label;
-  let rootId;
-  let startContext;
-  let objKeys;
-  
-  if(!item && !lastId){
+let draw = new createGraph.drawGraph(new_json, 3, true, nodes, edges);
 
-    startItem = getStartItem(file);
 
-    let labelArray = file.jsondata[startItem].label;
-
-    for(let i = 0; i < labelArray.length; i++){
-
-      if(labelArray[i].lang == lang){
-        label = labelArray[i].text;
-      }
-
-    }
-    nodes.push({id: id, label: label});
-    rootId = id;
-    baseRootId = rootId;
-    id++;
-
-    startContext = createContext(file, startItem);
-    objKeys = Object.keys(file.jsondata[startItem]);
-
-  }else if(oldContext){
-    startItem = item;
-    startContext = oldContext;
-    objKeys = Object.keys(file.jsondata[startItem]);
-    rootId = id;
-
-  }else{
-    
-    startItem = item;
-    
-
-    let labelArray = file.jsondata[startItem].label;
-
-    for(let i = 0; i < labelArray.length; i++){
-
-      if(labelArray[i].lang == lang){
-        label = labelArray[i].text;
-      }
-
-    }
-    rootId = lastId;
-    id++;
-
-    startContext = createContext(file, startItem);
-    objKeys = Object.keys(file.jsondata[startItem]);
-  }
-
-
-
-
-
-
-  for(let i = 0; i < objKeys.length; i++){
-    
-
-    if(objKeys[i] != "type" && objKeys[i] != "label" && objKeys[i] != "start"){
-
-
-
-      if(objKeys[i] in startContext && startContext[objKeys[i]]["@type"] == "@id" && Array.isArray(file.jsondata[startItem][objKeys[i]]) && typeof file.jsondata[startItem][objKeys[i]][0] === 'object' && file.jsondata[startItem][objKeys[i]][0] !== null){
-
-        // nodes.push({id:id, label: objKeys[i]});
-        // edges.push({from: rootId, to: id, label: startContext[objKeys[i]]["@id"]});
-        // id++;
-
-        //file.jsondata[objKeys[i]] = file.jsondata[startItem][objKeys[i]][0];
-
-        for(let j =  0; j < file.jsondata[startItem][objKeys[i]].length; j++){
-
-          file.jsondata[objKeys[i]+""+j] = file.jsondata[startItem][objKeys[i]][j];
-
-          nodes.push({id:id, label: objKeys[i]+""+j});
-
-          edges.push({from: rootId, to: id, label: startContext[objKeys[i]]["@id"]});
-          let oldId = id;
-          id++;
-          
-          
-          
-          createGraphNE(file, oldId, objKeys[i]+""+j, startContext);
-
-
-        }
-
-        console.log(file.jsondata)
-
-        
-        //recursions
-        //objekt im objekt
-        //console.log(file.jsondata[startItem][objKeys[i]], objKeys[i])
-      }else if(objKeys[i] in startContext && startContext[objKeys[i]]["@type"] == "@id" && Array.isArray(file.jsondata[startItem][objKeys[i]]) && !(typeof file.jsondata[startItem][objKeys[i]][0] === 'object' && file.jsondata[startItem][objKeys[i]][0] !== null)){
-        //console.log(file.jsondata[startItem][objKeys[i]]);
-        
-        let rememberArray = file.jsondata[startItem][objKeys[i]];
-
-        file.jsondata[startItem][objKeys[i]] = "";
-
-
-        for(let j = 0; j < rememberArray.length; j++){
-
-          let labelArray = file.jsondata[rememberArray[j]].label;
-
-          for(let i = 0; i < labelArray.length; i++){
-
-            if(labelArray[i].lang == lang){
-              label = labelArray[i].text;
-            }
-
-          }
-
-          nodes.push({id:id, label:label});
-          edges.push({from: rootId, to: id, label: startContext[objKeys[i]]["@id"]});
-
-
-          createGraphNE(file, id, rememberArray[j]);
-
-        }
-        file.jsondata[startItem][objKeys[i]] = rememberArray;
-        //console.log(file.jsondata[startItem][objKeys[i]])
-        //item array
-
-      }else if(objKeys[i] in startContext && startContext[objKeys[i]]["@type"] == "@id" && !(Array.isArray(file.jsondata[startItem][objKeys[i]])) && !(typeof file.jsondata[startItem][objKeys[i]][0] === 'object' && file.jsondata[startItem][objKeys[i]][0] !== null)){
-
-
-        let labelArray = file.jsondata[file.jsondata[startItem][objKeys[i]]].label;
-
-        for(let i = 0; i < labelArray.length; i++){
-
-          if(labelArray[i].lang == lang){
-            label = labelArray[i].text;
-          }
-
-        }
-
-        nodes.push({id:id, label:label});
-        edges.push({from: rootId, to: id, label: startContext[objKeys[i]]["@id"]});
-
-        createGraphNE(file, id, file.jsondata[startItem][objKeys[i]]);
-        
-        //console.log(file.jsondata[startItem][objKeys[i]])
-        //item literal
-
-      }else if(objKeys[i] in startContext){
-
-        nodes.push({id:id, label: file.jsondata[startItem][objKeys[i]]});
-        edges.push({from: rootId, to: id, label: startContext[objKeys[i]]});
-        id++;
-        //console.log(file.jsondata[startItem][objKeys[i]])
-        //literal
-
-      }else{
-        nodes.push({id:id, label: file.jsondata[startItem][objKeys[i]]});
-        edges.push({from: rootId, to: id, label: objKeys[i]});
-        id++;
-        console.log(file.jsondata[startItem][objKeys[i]])
-        //not in context
-
-      }
-
-      //console.log(file.jsondata[startItem][objKeys[i]])
-    }
-  }
-
-  
-  
-  //startItem = oldStrtItm;
-
-  console.log(nodes);
-  console.log(edges);
-  return startContext;
-}
-
-createGraphNE(new_json);
-
-function createContext(file, item){
-
-  let itemSchema = file.jsondata[item].type[0];
-
-  let contextArrayOfObjects = contextRecursion(file, itemSchema);
-  
-  
-  let context = {};
-
-  for(let i = 0; i<contextArrayOfObjects.length;i++){
-
-    let partContextKeys = Object.keys(contextArrayOfObjects[i]);
-
-    for(let j = 0;j<partContextKeys.length;j++){
-      
-      context[partContextKeys[j]] = contextArrayOfObjects[i][partContextKeys[j]];
-    }
-  }
-
-  return context;
-}
-
-
-function getAllProperties(file, givenId = -1){
-
-
-
-  if("properties" in file){
-    if(first){
-      if(!(nodes.find(o => o.label === ''+file.title))){
-        nodes.push({id: id, label: "" + file.title});
-      }
-    if(givenId == -1){
-      rootId = id;
-    }else{
-      rootId = givenId;
-    }
-    id++;
-    first = false;
-    
-
-    for(let i=0;i<Object.keys(file["properties"]).length;i++){
-      nodes.push({id: id, label:"" + file["properties"][Object.keys(file["properties"])[i]].title});
-      let edge_label;
-      if(context[0][Object.keys(file["properties"])[i]]){
-        edge_label = "" + context[0][Object.keys(file["properties"])[i]];
-        //edge_label.replace("Property:", "");
-        edge_label = edge_label.replace("Property:", "")
-      }else{
-        edge_label = "" + file["properties"][Object.keys(file["properties"])[i]].title;
-      }
-      
-
-
-      edges.push({from: rootId, to: id, label: edge_label});
-      id++;
-
-    }
-    }else{
-      let search_node = nodes.find((o, i) => {
-        if (o.label === ''+file.title) {
-
-            nodes[i].leftJSON = file;
-            nodes[i].clicked = false;
-            return true; // stop searching
-        }
-    });
-      //let obj = nodes.find(o => o.label === ''+file.title);
-      //rootId = obj.id;
-
-      first = true;
-      return;
-    }
-
-    for(let i=0;i<Object.keys(file["properties"]).length;i++){
-
-            getAllProperties(file["properties"][Object.keys(file["properties"])[i]]);
-
-    }
-  }else{
-    let string = JSON.stringify(file);
-    if(string.indexOf("properties") != -1){
-      for(let i=0;i<Object.keys(file).length;i++){
-              if(typeof file[Object.keys(file)[i]] === 'object' && file[Object.keys(file)[i]] !== null){
-                getAllProperties(file[Object.keys(file)[i]])
-              }
-              
-      }
-      // console.log(string.indexOf("properties"));
-      // console.log(file);
-    }
-    
-    return;
-  }
-  //console.log(nodes);
-}
-
-/////getAllProperties(data);
-//console.log(nodes);
-//console.log(edges);
 var options = {interaction: {hover: true,multiselect: true,},
       manipulation: {enabled: true,},
       edges: {arrows: "to"}
@@ -819,170 +487,329 @@ let config = {nodes:nodes,edges:edges,options:options};
 
 
 
+
+
 let clicked = {};
 
 $( document ).ready(function() {
-  var graphtool = new GraphTool("mynetwork",config);
 
-  var legendDiv = document.createElement("div");
-                let vis_cont = document.getElementById("vis_container")
-                vis_cont.append(legendDiv);
-                legendDiv.style.width = '100%';
-                legendDiv.style.position = 'relative';
-                legendDiv.style.display = 'inline-block';
-                legendDiv.id = "legendContainer";
-                var legendColors = {};
-                for (var i = 0; i < edges.length; i++) {
-                    //legendColors[input.properties[i]] = colors[i];
-                    var propertyContainer = document.createElement("div");
-                    var propertyColor = document.createElement("div");
-                    var propertyName = document.createElement("div");
-                    propertyContainer.className = "legend-element-container";
-                    propertyContainer.id = edges[i].label;
-                    propertyColor.className = "color-container";
-                    propertyName.className = "name-container";
-                    propertyColor.style.float = "left";
-                    propertyName.style.float = "left";
-                    propertyColor.style.border = "1px solid black";
-                    propertyName.style.border = "1px solid black";
-                    //propertyColor.style.background = colors[i];
-                    propertyColor.innerHTML = "";
-                    propertyName.innerHTML = edges[i].label;
-                    propertyColor.style.width = "30px";
-                    propertyColor.style.height = "30px";
-                    propertyName.style.height = "30px";
-                    propertyName.style.background = '#DEF';
-                    //propertyName.text-align = 'center';
-                    propertyContainer.paddinng = '5px 5px 5px 5px';
-                    //propertyName.addEventListener("click", legendFunctionality);
-                    //propertyColor.addEventListener("click", legendFunctionality);
-                    legendDiv.append(propertyContainer);
-                    propertyContainer.append(propertyColor);
-                    propertyContainer.append(propertyName);
-                }
+  $(document).keydown(function(e){
+    console.log(e.keyCode);
+  });
 
 
-  graphtool.network.on("doubleClick", (params) => {
 
-    if (params.nodes.length > 0) {
+  // var keymap = new Keymap.Keymap({                      // Create a new instance of Keymap
+  //                 "shift_b": function(event, keyid) {         // Bind key combi: ctrl+a
+  //                     alert("Key pressed down! KeyId: " + keyid)
+  //                 }
+  //             });
+  //             keymap.install(document.body); 
 
-      let node = graphtool.nodes.get(params.nodes[0])
+
+
+let keyObject = {
+  doubleclick: function(params){
+    expandNodes(params)
+  },
+}
+
+function getAllEdgesWithLabel(edges, label){
+
+  let tempArray = []
+
+  for (let index = 0; index < edges.length; index++) {
+    
+    if(edges[index].label == label){
+      tempArray.push(edges[index]);
+    }
+    
+  }
+
+  return tempArray;
+
+}
+
+
+
+
+function colorByValue(path, nodes, edges){
+
+  let tempArray = [];
+
+  for(let i = 0; i < path.length; i++){
+
+    tempArray.push(getAllEdgesWithLabel(edges, path[i]));
+
+  }
+
+
+
+  let thingsToColor = [];
+  let colorPath = 0;
+
+  if(path.length == 1){
+
+    for (let index = 0; index < tempArray[0].length; index++) {
       
-      if("leftJSON" in node && (clicked[params.nodes[0]] == false || !(""+params.nodes[0] in clicked))){
-        
-        getAllProperties(node.leftJSON, node.id);
-        
-        
-        clicked[params.nodes[0]] = true;
+      for(let j = 0; j < nodes.length; j++){
 
-        graphtool.nodes.update(nodes);
-        graphtool.edges.update(edges);
+        if(tempArray[0][index].from == nodes[j].id || tempArray[0][index].to == nodes[j].id){
 
-        }else{
-          clicked[params.nodes[0]] = false;
-          //let nodesToDelete = graphtool.network.getConnectedNodes(params.nodes[0], "to");
-          let nodesToDelete = [];
+          nodes[j].color = "#ff0000";
+          thingsToColor.push(nodes[j]);
           
-          recNodes(params.nodes[0], nodesToDelete);
+        }
+
+      }
+      tempArray[0][index].color = "#ff0000";
+      thingsToColor.push(tempArray[0][index]);
+
+    }
+
+  }
 
 
+  for(let i = 0; i < tempArray.length; i++){
 
-          for(let i = 0; i<nodesToDelete.length;i++){
-            if(!(nodesToDelete[i] == params.nodes[0])){
-              graphtool.nodes.remove(nodesToDelete[i])
-            }
-          }
+    for(let j = 0; j < tempArray[i].length; j++){
 
-          for(let i = 0; i<nodes.length;i++){
-            if(nodesToDelete.includes(nodes[i].id) && nodes[i].id != params.nodes[0]){
-              //console.log(nodes[i])
-              nodes.splice(i, 1);
-              i =  i-1;
-              //console.log(nodes); 
-            }
+      if(tempArray.length == i+1){
+        console.log(thingsToColor)
+        console.log(thingsToColor.filter(x => x.label=="value").length);
+        return;
+      }
+
+      for(let k = 0; k < tempArray[i+1].length; k++){
+
+        if(tempArray[i][j].to == tempArray[i+1][k].from && tempArray[i+1][k].label == path[i+1] && tempArray[i][j].label == path[i]){
+
+          
+
+          for (let index = 0; index < nodes.length; index++) {
+
+              if(nodes[index].id == tempArray[i][j].to){
+                nodes[index].color = "#ff0000"
+                thingsToColor.push(nodes[index])
+
+              }
+
+
+              if(nodes[index].id == tempArray[i+1][k].to){
+                nodes[index].color = "#ff0000"
+                thingsToColor.push(nodes[index])
+
+              }
             
           }
-          
 
-          //graphtool.nodes.update(nodes);
-          //graphtool.edges.update(edges);
-          //deleteNodesChildren(params.nodes[0], "", params.nodes[0]);
+          tempArray[i][j]["color"] = "#ff0000"
+
+          thingsToColor.push(tempArray[i][j]);
+
+          tempArray[i+1][k]["color"] = "#ff0000"
+
+          thingsToColor.push(tempArray[i+1][k]);
+
+
+
+        }
+
+
+        //console.log("not +1",tempArray[i][j])
+        //console.log("+1", tempArray[i+1][k])
+
+  
+      }
+  
+    }
+
+  }
+
+  
+
+  //console.log(tempArray);
+
+}
+
+function expandNodes(params){
+
+  let newcolor = chroma.scale(["green", "red"]).mode('hsl').colors(6);
+  console.log(newcolor);
+
+
+
+  if (params.nodes.length > 0) {
+
+    let node = graphtool.nodes.get(params.nodes[0])
+    
+    if("object" in node && (clicked[params.nodes[0]] == false || !(""+params.nodes[0] in clicked))){
+      
+      if(node.context){
+        draw.createGraphNE(new_json, node.id, node.object, node.context, node.depth, "", true);
+      }else{
+        draw.createGraphNE(new_json, node.id, node.object, "", node.depth, "", true);
+      }
+
+      //getAllProperties(node.leftJSON, node.id);
+
+      colorByValue(["value"], nodes, edges)
+      clicked[params.nodes[0]] = true;
+
+      graphtool.nodes.update(nodes);
+      graphtool.edges.update(edges);
+
+      }else{
+        clicked[params.nodes[0]] = false;
+        //let nodesToDelete = graphtool.network.getConnectedNodes(params.nodes[0], "to");
+        let nodesToDelete = [];
+        
+        recNodes(params.nodes[0], nodesToDelete);
+
+
+
+        for(let i = 0; i<nodesToDelete.length;i++){
+          if(!(nodesToDelete[i] == params.nodes[0])){
+            graphtool.nodes.remove(nodesToDelete[i])
+          }
+        }
+
+        for(let i = 0; i<nodes.length;i++){
+          if(nodesToDelete.includes(nodes[i].id) && nodes[i].id != params.nodes[0]){
+            //console.log(nodes[i])
+            nodes.splice(i, 1);
+            i =  i-1;
+            //console.log(nodes); 
+          }
           
         }
-        //console.log(clicked)
-        }
-  
+        
+
+        //graphtool.nodes.update(nodes);
+        //graphtool.edges.update(edges);
+        //deleteNodesChildren(params.nodes[0], "", params.nodes[0]);
+        
+      }
+      //console.log(clicked)
+      }
+
 
 
 function getAllReachableNodesTo(nodeId, excludeIds, reachableNodes) {
-                    if (reachableNodes.includes(nodeId) || excludeIds.includes(nodeId)) {
-                        return;
-                    }
-                    var children = graphtool.network.getConnectedNodes(nodeId);
-                    reachableNodes.push(nodeId);
-                    for (var i = 0; i < children.length; i++) {
-                        getAllReachableNodesTo(children[i], excludeIds, reachableNodes);
-                        //if(excludeIds.includes(children[i]))continue;
-                        //reachableNodes.push(children[i]);
-                    }
-                }
-function deleteNodesChildren(nodeId, deleteEdge, clickedNode) {
-                    var excludedIds = [];
-                    if (deleteEdge === true) {
-                        console.log("deleteEdge true")
-                    } else {
-                        excludedIds.push(nodeId);
-                    }
-                    var reachableNodesTo = [];
-                    getAllReachableNodesTo(graphtool.nodes.get("0"), excludedIds, reachableNodesTo);
-                    var nodesToDelete = [];
-                    var allIds = graphtool.nodes.getIds();
-                    for (var i = 0; i < allIds.length; i++) {
-                        if (reachableNodesTo.includes(allIds[i])) continue;
-                        if (allIds[i] == nodeId) {
-                            deleteEdges(nodeId);
-                            continue;
-                        }
-                        nodesToDelete.push(allIds[i]);
-                        deleteEdges(allIds[i]);
-                        graphtool.nodes.remove(allIds[i]);
-
-                    }
-                    return nodesToDelete;
-                }
-
-function deleteEdges(nodeID) {
-                    var fromEdges = graphtool.edges.get({
-                        filter: function(item) {
-                            return item.from == nodeID;
-                        }
-                    });
-                    for (var j = 0; j < fromEdges.length; j++) {
-                        graphtool.edges.remove(fromEdges[j]);
-                    }
-                }
-
-                function recNodes(nodeId, reachableNodes){
-                  if (graphtool.network.getConnectedNodes(nodeId, "to") == []) {
-                    return reachableNodes;
+                  if (reachableNodes.includes(nodeId) || excludeIds.includes(nodeId)) {
+                      return;
                   }
-                  var children = graphtool.network.getConnectedNodes(nodeId, "to");
+                  var children = graphtool.network.getConnectedNodes(nodeId);
                   reachableNodes.push(nodeId);
                   for (var i = 0; i < children.length; i++) {
-                      delete clicked[children[i]];
-                      recNodes(children[i], reachableNodes);
+                      getAllReachableNodesTo(children[i], excludeIds, reachableNodes);
                       //if(excludeIds.includes(children[i]))continue;
                       //reachableNodes.push(children[i]);
+                  }
+              }
+function deleteNodesChildren(nodeId, deleteEdge, clickedNode) {
+                  var excludedIds = [];
+                  if (deleteEdge === true) {
+                      console.log("deleteEdge true")
+                  } else {
+                      excludedIds.push(nodeId);
+                  }
+                  var reachableNodesTo = [];
+                  getAllReachableNodesTo(graphtool.nodes.get("0"), excludedIds, reachableNodesTo);
+                  var nodesToDelete = [];
+                  var allIds = graphtool.nodes.getIds();
+                  for (var i = 0; i < allIds.length; i++) {
+                      if (reachableNodesTo.includes(allIds[i])) continue;
+                      if (allIds[i] == nodeId) {
+                          deleteEdges(nodeId);
+                          continue;
+                      }
+                      nodesToDelete.push(allIds[i]);
+                      deleteEdges(allIds[i]);
+                      graphtool.nodes.remove(allIds[i]);
+
+                  }
+                  return nodesToDelete;
+              }
+
+function deleteEdges(nodeID) {
+                  var fromEdges = graphtool.edges.get({
+                      filter: function(item) {
+                          return item.from == nodeID;
+                      }
+                  });
+                  for (var j = 0; j < fromEdges.length; j++) {
+                      graphtool.edges.remove(fromEdges[j]);
+                  }
+              }
+
+              function recNodes(nodeId, reachableNodes){
+                if (graphtool.network.getConnectedNodes(nodeId, "to") == []) {
+                  return reachableNodes;
                 }
-                
-                
-                }
+                var children = graphtool.network.getConnectedNodes(nodeId, "to");
+                reachableNodes.push(nodeId);
+                for (var i = 0; i < children.length; i++) {
+                    delete clicked[children[i]];
+                    recNodes(children[i], reachableNodes);
+                    //if(excludeIds.includes(children[i]))continue;
+                    //reachableNodes.push(children[i]);
+              }
+              
+              
+              }
 
-                
-                //deleteNodesChildren(params.nodes[0]);
+              
+              //deleteNodesChildren(params.nodes[0]);
 
 
-});
+}
+
+  var graphtool = new GraphTool("mynetwork",config);
+
+  // var legendDiv = document.createElement("div");
+  //               let vis_cont = document.getElementById("vis_container")
+  //               vis_cont.append(legendDiv);
+  //               legendDiv.style.width = '100%';
+  //               legendDiv.style.position = 'relative';
+  //               legendDiv.style.display = 'inline-block';
+  //               legendDiv.id = "legendContainer";
+  //               var legendColors = {};
+  //               for (var i = 0; i < edges.length; i++) {
+  //                   //legendColors[input.properties[i]] = colors[i];
+  //                   var propertyContainer = document.createElement("div");
+  //                   var propertyColor = document.createElement("div");
+  //                   var propertyName = document.createElement("div");
+  //                   propertyContainer.className = "legend-element-container";
+  //                   propertyContainer.id = edges[i].label;
+  //                   propertyColor.className = "color-container";
+  //                   propertyName.className = "name-container";
+  //                   propertyColor.style.float = "left";
+  //                   propertyName.style.float = "left";
+  //                   propertyColor.style.border = "1px solid black";
+  //                   propertyName.style.border = "1px solid black";
+  //                   //propertyColor.style.background = colors[i];
+  //                   propertyColor.innerHTML = "";
+  //                   propertyName.innerHTML = edges[i].label;
+  //                   propertyColor.style.width = "30px";
+  //                   propertyColor.style.height = "30px";
+  //                   propertyName.style.height = "30px";
+  //                   propertyName.style.background = '#DEF';
+  //                   //propertyName.text-align = 'center';
+  //                   propertyContainer.paddinng = '5px 5px 5px 5px';
+  //                   //propertyName.addEventListener("click", legendFunctionality);
+  //                   //propertyColor.addEventListener("click", legendFunctionality);
+  //                   legendDiv.append(propertyContainer);
+  //                   propertyContainer.append(propertyColor);
+  //                   propertyContainer.append(propertyName);
+  //               }
+
+
+  graphtool.network.on("doubleClick", (params) => {
+    
+    keyObject.doubleclick(params);
+
+  });
 });
 
 

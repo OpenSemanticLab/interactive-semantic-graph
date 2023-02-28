@@ -1,5 +1,17 @@
+const utils = require("./utils.js")
+
 class drawGraph{
-    constructor(file, depth, mode, nodes, edges){
+
+    constructor(config, file, depth, mode, nodes, edges){
+
+      const defaultConfig = {
+        callbacks: {
+          setColor: (data) => this.setColorDefault(data) //default: use class methode
+        }
+      };
+
+      this.config = utils.mergeDeep(defaultConfig, config);
+
       this.file = file;
       this.depth = depth;
       this.mode = mode;
@@ -85,17 +97,26 @@ class drawGraph{
       return exists;
     }
     
-    setColor(property, colorObj){
-        for(let x in  colorObj){
+    // default methode if not overwritten by the user
+    setColorDefault(data){
+
+        let property = data.property;
+
+        for(let x in  this.colorObj){
             if(property == x){
                 
-                return colorObj[x];
+                return this.colorObj[x];
             }
         }
-        colorObj[property] = this.randomHSL();
+        this.colorObj[property] = this.randomHSL();
 
-        return colorObj[property];
+        return this.colorObj[property];
+    }
 
+    // set the color via callback. Defaults to setColorDefault
+    setColor(property) {
+      let data = {graph: this, property: property};
+      return this.config.callbacks.setColor(data);
     }
   
   
@@ -176,11 +197,11 @@ class drawGraph{
         if(objKeys[i] != "type" && objKeys[i] != "label" && objKeys[i] != "start" && (depth <= givenDepth || !givenDepth)){
           
           if(objKeys[i] in startContext && startContext[objKeys[i]]["@type"] == "@id"){
-            color = this.setColor(startContext[objKeys[i]]["@id"], this.colorObj)
+            color = this.setColor(startContext[objKeys[i]]["@id"])
           }else if(startContext[objKeys[i]]){
-            color = this.setColor(startContext[objKeys[i]], this.colorObj)
+            color = this.setColor(startContext[objKeys[i]])
           }else{
-            color = this.setColor(objKeys[i], this.colorObj)
+            color = this.setColor(objKeys[i])
           }
     
     
@@ -200,7 +221,7 @@ class drawGraph{
               if(this.nodeExists(this.nodes, objKeys[i]+""+j)){
     
                 if(file.jsondata[startContext[objKeys[i]]["@id"]]){
-                    //color = this.setColor(startContext[objKeys[i]]["@id"], this.colorObj)
+                    //color = this.setColor(startContext[objKeys[i]]["@id"])
                   for(let k = 0; k < file.jsondata[startContext[objKeys[i]]["@id"]]["label"].length; k++){
                     if(file.jsondata[startContext[objKeys[i]]["@id"]]["label"][k].lang == this.lang){
                       this.edges.push({from: rootId, to: this.nodes[this.nodeExists(this.nodes, objKeys[i]+""+j)].id, label: file.jsondata[startContext[objKeys[i]]["@id"]]["label"][k].text, color:color});
@@ -211,7 +232,7 @@ class drawGraph{
     
                   
                 }else{
-                    //color = this.setColor(startContext[objKeys[i]]["@id"], this.colorObj)
+                    //color = this.setColor(startContext[objKeys[i]]["@id"])
                   let edgeLabel = startContext[objKeys[i]]["@id"].replace("Property:", "");
     
     
@@ -223,7 +244,7 @@ class drawGraph{
     
               }else{
 
-                //color = this.setColor(startContext[objKeys[i]]["@id"], this.colorObj)
+                //color = this.setColor(startContext[objKeys[i]]["@id"])
     
                 this.nodes.push({id:this.id, label: objKeys[i], object: objKeys[i]+""+j, context: startContext, depth: depth, color: color});
 

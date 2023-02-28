@@ -474,9 +474,12 @@ let new_json = {"jsonschema": {
 // let context = data['@context']
 
 let nodes = [];
-let edges = [];
+let edges = []
 
-let draw = new createGraph.drawGraph(new_json, 3, true, nodes, edges);
+let _config = {
+  callbacks: {setColor: (data) => "#491230"}
+};
+let draw = new createGraph.drawGraph(_config, new_json, 3, true, nodes, edges);
 
 
 var options = {interaction: {hover: true,multiselect: true,},

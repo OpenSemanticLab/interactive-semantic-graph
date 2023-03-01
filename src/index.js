@@ -429,7 +429,13 @@ let new_json = {"jsonschema": {
       },{
         "year": "2001",
         "value": "20000"
-    }]
+    },{
+      "year": "2002",
+      "value": "30000"
+  },{
+    "year": "2003",
+    "value": "40000"
+}]
   },
   "Item:SomePerson": {
       "type": ["Category:Item"],
@@ -477,7 +483,7 @@ let nodes = [];
 let edges = []
 
 let _config = {
-  callbacks: {setColor: (data) => "#491230"}
+  //callbacks: {setColor: (data) => "#491230"}
 };
 let draw = new createGraph.drawGraph(_config, new_json, 3, true, nodes, edges);
 
@@ -534,6 +540,11 @@ function getAllEdgesWithLabel(edges, label){
 }
 
 
+Object.filter = (obj, predicate) => 
+    Object.keys(obj)
+          .filter( key => predicate(obj[key]) )
+          .reduce( (res, key) => (res[key] = obj[key], res), {} );
+
 
 
 function colorByValue(path, nodes, edges){
@@ -549,7 +560,7 @@ function colorByValue(path, nodes, edges){
 
 
   let thingsToColor = [];
-  let colorPath = 0;
+  
 
   if(path.length == 1){
 
@@ -559,13 +570,13 @@ function colorByValue(path, nodes, edges){
 
         if(tempArray[0][index].from == nodes[j].id || tempArray[0][index].to == nodes[j].id){
 
-          nodes[j].color = "#ff0000";
+          //nodes[j].color = "#ff0000";
           thingsToColor.push(nodes[j]);
           
         }
 
       }
-      tempArray[0][index].color = "#ff0000";
+      //tempArray[0][index].color = "#ff0000";
       thingsToColor.push(tempArray[0][index]);
 
     }
@@ -578,8 +589,104 @@ function colorByValue(path, nodes, edges){
     for(let j = 0; j < tempArray[i].length; j++){
 
       if(tempArray.length == i+1){
-        console.log(thingsToColor)
-        console.log(thingsToColor.filter(x => x.label=="value").length);
+
+        for(let l = 0; l< thingsToColor.length; l++){
+          delete thingsToColor[l].path;
+        }
+
+        let colorPath = 0;
+        let valueArray = [];
+
+        for (let k = 0; k < thingsToColor.length; k++) {
+          if(thingsToColor[k].from){
+            
+            let valueEdge  = Object.filter(thingsToColor, thing => thing.label == path[path.length-1]);
+            let valueEdgeKey = Object.keys(valueEdge);
+
+
+            for(let m = 0; m < valueEdgeKey.length; m++){
+
+            let valueNode = Object.filter(thingsToColor, thing => thing.id == valueEdge[valueEdgeKey[m]].to)
+            let valueNodeKey = Object.keys(valueNode)[0];
+
+            valueArray.push(valueNode[valueNodeKey].label);
+
+            }
+
+
+
+
+            let fromNode  = Object.filter(thingsToColor, thing => thing.id == thingsToColor[k].from)
+        
+            let fromNodeKey = Object.keys(fromNode)[0];
+    
+            //fromNode[fromNodeKey];
+
+            let toNode  = Object.filter(thingsToColor, thing => thing.id == thingsToColor[k].to)
+        
+            let toNodeKey = Object.keys(toNode)[0];
+    
+            //toNode[toNodeKey];
+
+            if(fromNode[fromNodeKey].path){
+
+              thingsToColor[k].path = fromNode[fromNodeKey].path
+              toNode[toNodeKey].path = fromNode[fromNodeKey].path
+
+            }else if(toNode[toNodeKey].path){
+
+              thingsToColor[k].path = toNode[toNodeKey].path
+              fromNode[fromNodeKey].path = toNode[toNodeKey].path
+
+            }else{
+
+              thingsToColor[k].path = colorPath;
+              toNode[toNodeKey].path = colorPath;
+              fromNode[fromNodeKey].path = colorPath;
+              
+              colorPath++;
+
+            }
+
+            //console.log(thingsToColor[k])
+            
+
+          }
+          
+        }
+        valueArray = [...new Set(valueArray)];
+
+        valueArray.sort(function(a,b){
+          return a - b;
+        });
+
+        let colorArray = chroma.scale(["orangered", "limegreen"]).mode('hsl').colors(colorPath)
+
+        for(let n = 0; n < valueArray.length; n++){
+
+          let nodeWithValue  = Object.filter(thingsToColor, thing => thing.label == valueArray[n])
+        
+          let nodeWithValueKey = Object.keys(nodeWithValue)[0];
+  
+          console.log(nodeWithValue[nodeWithValueKey].path);
+
+          for(let o = 0; o < thingsToColor.length; o++){
+
+            if(thingsToColor[o].path ==  nodeWithValue[nodeWithValueKey].path){
+
+              thingsToColor[o].color = colorArray[n];
+
+            }
+
+          }
+
+
+
+        }
+
+        //console.log(chroma.scale(["green", "red"]).mode('hsl').colors(colorPath))
+        //console.log(thingsToColor.filter(x => x.label=="value").length);
+
         return;
       }
 
@@ -592,25 +699,25 @@ function colorByValue(path, nodes, edges){
           for (let index = 0; index < nodes.length; index++) {
 
               if(nodes[index].id == tempArray[i][j].to){
-                nodes[index].color = "#ff0000"
+                //nodes[index].color = "#ff0000"
                 thingsToColor.push(nodes[index])
 
               }
 
 
               if(nodes[index].id == tempArray[i+1][k].to){
-                nodes[index].color = "#ff0000"
+                //nodes[index].color = "#ff0000"
                 thingsToColor.push(nodes[index])
 
               }
             
           }
 
-          tempArray[i][j]["color"] = "#ff0000"
+          //tempArray[i][j]["color"] = "#ff0000"
 
           thingsToColor.push(tempArray[i][j]);
 
-          tempArray[i+1][k]["color"] = "#ff0000"
+          //tempArray[i+1][k]["color"] = "#ff0000"
 
           thingsToColor.push(tempArray[i+1][k]);
 
@@ -637,8 +744,8 @@ function colorByValue(path, nodes, edges){
 
 function expandNodes(params){
 
-  let newcolor = chroma.scale(["green", "red"]).mode('hsl').colors(6);
-  console.log(newcolor);
+  let newcolor = chroma.scale(["green", "red"]).mode('hsl').colors(2);
+  //console.log(newcolor);
 
 
 

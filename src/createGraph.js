@@ -1,12 +1,19 @@
 const utils = require("./utils.js")
+const chroma = require("chroma-js")
 
-class drawGraph{
+class GraphDrawer{
 
     constructor(config, file, depth, mode, nodes, edges){
 
       const defaultConfig = {
         callbacks: {
-          setColor: (data) => this.setColorDefault(data) //default: use class methode
+          setColor: (data) => this.setColorDefault(data), //default: use class methode
+          getStartItem: (data) => this.getStartItemDefault(data),
+          createContext: (data) => this.createContextDefault(data),
+          onBeforeSetColor: [(graph, property) => true],
+          onBeforeGetStartItem: [(graph, item)=> true],
+          onBeforeCreateContext: [(graph, context)=> true],
+
         }
       };
 
@@ -28,8 +35,23 @@ class drawGraph{
       this.createGraphNE(file,false,false,false,false, depth, mode);
     }
 
-
     
+
+    registerCallback(params) {
+      this.config.callbacks[params.name].push(params.func)
+    }
+    
+    handleCallbacks(params) {
+      let result = true;
+      if (!this.config.callbacks[params.id]) return true;
+      for (const callback of this.config.callbacks[params.id]) {
+        if (!callback(params.params)) {
+          result = false
+          break;
+        }
+      }
+      return result;
+    }
 
     randomHSL = () => {
         
@@ -43,9 +65,10 @@ class drawGraph{
     
     
     getStartItem(file){
-        console.log(this.h)
+
+
       let items = Object.keys(file.jsondata);
-      let startCounter = 0
+
       let output = []
     
       for (let i =  0 ;i < items.length;i++) {
@@ -53,16 +76,25 @@ class drawGraph{
         if("start" in file.jsondata[items[i]]){
     
           output.push(items[i]);
-          startCounter++;
+
         }
         
       }
       if(output.length == 1){
-        return output[0];
+        if (this.handleCallbacks({id: 'onBeforeGetStartItem', params: {graph: this, item: output[0]}})) {
+          return output[0];
+        }
       }else{
         return false;
       }
     }
+
+    // getStartItem(file){
+
+    //   let data = {graph: this, file: file};
+    //   return this.config.callbacks.getStartItem(data);
+
+    // }
   
     contextRecursion(file, schema, fullContext = []){
       fullContext = fullContext;
@@ -98,9 +130,9 @@ class drawGraph{
     }
     
     // default methode if not overwritten by the user
-    setColorDefault(data){
+    setColor(property){
 
-        let property = data.property;
+      if (this.handleCallbacks({id: 'onBeforeSetColor', params: {graph: this, property: property}})) {
 
         for(let x in  this.colorObj){
             if(property == x){
@@ -111,14 +143,14 @@ class drawGraph{
         this.colorObj[property] = this.randomHSL();
 
         return this.colorObj[property];
+      }
     }
 
     // set the color via callback. Defaults to setColorDefault
-    setColor(property) {
-      let data = {graph: this, property: property};
-      return this.config.callbacks.setColor(data);
-    }
-  
+    // setColor(property) {
+    //   let data = {graph: this, property: property};
+    //   return this.config.callbacks.setColor(data);
+    // }
   
     createGraphNE(file, lastId, item, oldContext, lastDepth, givenDepth, mode){
    
@@ -146,7 +178,7 @@ class drawGraph{
         }
 
         
-        this.nodes.push({id: this.id, label: label, color: '#6dbfa9', depth: 0});
+        this.nodes.push({id: this.id, label: label, color: '#6dbfa9', depth: 0, object: startItem, group: "root"});
         rootId = this.id;
         this.baseRootId = rootId;
         this.id++;
@@ -195,11 +227,29 @@ class drawGraph{
 
     
         if(objKeys[i] != "type" && objKeys[i] != "label" && objKeys[i] != "start" && (depth <= givenDepth || !givenDepth)){
+         
           
-          if(objKeys[i] in startContext && startContext[objKeys[i]]["@type"] == "@id"){
-            color = this.setColor(startContext[objKeys[i]]["@id"])
-          }else if(startContext[objKeys[i]]){
-            color = this.setColor(startContext[objKeys[i]])
+          if(objKeys[i] in startContext && file.jsondata[startContext[objKeys[i]]["@id"]] ){
+
+            for(let k = 0; k < file.jsondata[startContext[objKeys[i]]["@id"]]["label"].length; k++){
+
+              if(file.jsondata[startContext[objKeys[i]]["@id"]]["label"][k].lang == this.lang){
+
+                color = this.setColor(file.jsondata[startContext[objKeys[i]]["@id"]]["label"][k].text)
+
+              }
+            }
+          }else if(objKeys[i] in startContext && !(startContext[objKeys[i]]["@type"] == "@id")){
+
+            let edgeLabel = startContext[objKeys[i]].replace("Property:", "");
+            color = this.setColor(edgeLabel)
+
+          }else if(objKeys[i] in startContext && !(file.jsondata[startContext[objKeys[i]]["@id"]]) && startContext[objKeys[i]]["@type"] == "@id"){
+
+            let edgeLabel = startContext[objKeys[i]]["@id"].replace("Property:", "");
+
+            color = this.setColor(edgeLabel)
+
           }else{
             color = this.setColor(objKeys[i])
           }
@@ -224,7 +274,7 @@ class drawGraph{
                     //color = this.setColor(startContext[objKeys[i]]["@id"])
                   for(let k = 0; k < file.jsondata[startContext[objKeys[i]]["@id"]]["label"].length; k++){
                     if(file.jsondata[startContext[objKeys[i]]["@id"]]["label"][k].lang == this.lang){
-                      this.edges.push({from: rootId, to: this.nodes[this.nodeExists(this.nodes, objKeys[i]+""+j)].id, label: file.jsondata[startContext[objKeys[i]]["@id"]]["label"][k].text, color:color});
+                      this.edges.push({from: rootId, to: this.nodes[this.nodeExists(this.nodes, objKeys[i]+""+j)].id, label: file.jsondata[startContext[objKeys[i]]["@id"]]["label"][k].text, color: color, group: file.jsondata[startContext[objKeys[i]]["@id"]]["label"][k].text});
                       //console.log(file.jsondata[startContext[objKeys[i]]["@id"]]["label"][j].text)
                     }
                     
@@ -236,7 +286,7 @@ class drawGraph{
                   let edgeLabel = startContext[objKeys[i]]["@id"].replace("Property:", "");
     
     
-                  this.edges.push({from: rootId, to: this.nodes[this.nodeExists(this.nodes, objKeys[i]+""+j)].id, label: edgeLabel, color:color});
+                  this.edges.push({from: rootId, to: this.nodes[this.nodeExists(this.nodes, objKeys[i]+""+j)].id, label: edgeLabel, color: color, group:edgeLabel});
     
                 }
     
@@ -245,15 +295,14 @@ class drawGraph{
               }else{
 
                 //color = this.setColor(startContext[objKeys[i]]["@id"])
-    
-                this.nodes.push({id:this.id, label: objKeys[i], object: objKeys[i]+""+j, context: startContext, depth: depth, color: color});
-
-                
+                    
     
                 if(file.jsondata[startContext[objKeys[i]]["@id"]]){
                   for(let j = 0; j < file.jsondata[startContext[objKeys[i]]["@id"]]["label"].length; j++){
                     if(file.jsondata[startContext[objKeys[i]]["@id"]]["label"][j].lang == this.lang){
-                      this.edges.push({from: rootId, to: this.id, label: file.jsondata[startContext[objKeys[i]]["@id"]]["label"][j].text, color: color});
+                      this.nodes.push({id:this.id, label: objKeys[i], object: objKeys[i]+""+j, context: startContext, depth: depth, color: color, group: file.jsondata[startContext[objKeys[i]]["@id"]]["label"][j].text});
+
+                      this.edges.push({from: rootId, to: this.id, label: file.jsondata[startContext[objKeys[i]]["@id"]]["label"][j].text, color: color, group: file.jsondata[startContext[objKeys[i]]["@id"]]["label"][j].text});
                       //console.log(file.jsondata[startContext[objKeys[i]]["@id"]]["label"][j].text)
                     }
                     
@@ -263,8 +312,9 @@ class drawGraph{
                 }else{
                   let edgeLabel = startContext[objKeys[i]]["@id"].replace("Property:", "");
     
-    
-                  this.edges.push({from: rootId, to: this.id, label: edgeLabel, color:color});
+                  this.nodes.push({id:this.id, label: objKeys[i], object: objKeys[i]+""+j, context: startContext, depth: depth, color: color, group: edgeLabel});
+
+                  this.edges.push({from: rootId, to: this.id, label: edgeLabel, color: color, group: edgeLabel});
     
                 }
                   //edges.push({from: rootId, to: id, label: startContext[objKeys[i]]["@id"]});
@@ -280,7 +330,7 @@ class drawGraph{
               
               
               
-              this.createGraphNE(file, oldId, objKeys[i]+""+j, startContext, depth+1, givenDepth);
+              this.createGraphNE(file, oldId, objKeys[i]+""+j, startContext, depth+1, givenDepth, mode);
     
     
             }
@@ -320,7 +370,7 @@ class drawGraph{
     
                     if(file.jsondata[startContext[objKeys[i]]["@id"]]["label"][k].lang == this.lang){
                       
-                     this.edges.push({from: rootId, to: this.nodes[this.nodeExists(this.nodes, rememberArray[j])].id, label: file.jsondata[startContext[objKeys[i]]["@id"]]["label"][k].text, color:color});
+                     this.edges.push({from: rootId, to: this.nodes[this.nodeExists(this.nodes, rememberArray[j])].id, label: file.jsondata[startContext[objKeys[i]]["@id"]]["label"][k].text, color: color, group: file.jsondata[startContext[objKeys[i]]["@id"]]["label"][k].text});
                       //console.log(file.jsondata[startContext[objKeys[i]]["@id"]]["label"][j].text)
                     }
                     
@@ -332,7 +382,7 @@ class drawGraph{
                   let edgeLabel = startContext[objKeys[i]]["@id"].replace("Property:", "");
      
                   
-                  this.edges.push({from: rootId, to: this.nodes[this.nodeExists(this.nodes, rememberArray[j])].id, label: edgeLabel, color:color});
+                  this.edges.push({from: rootId, to: this.nodes[this.nodeExists(this.nodes, rememberArray[j])].id, label: edgeLabel, color: color, group: edgeLabel});
     
                 }
     
@@ -340,12 +390,13 @@ class drawGraph{
 
                 //color = this.setColor(startContext[objKeys[i]]["@id"], this.colorObj)
 
-                this.nodes.push({id:this.id, label:label, object: rememberArray[j], depth: depth, color: color});
     
                 if(file.jsondata[startContext[objKeys[i]]["@id"]]){
                   for(let j = 0; j < file.jsondata[startContext[objKeys[i]]["@id"]]["label"].length; j++){
                     if(file.jsondata[startContext[objKeys[i]]["@id"]]["label"][j].lang == this.lang){
-                      this.edges.push({from: rootId, to: this.id, label: file.jsondata[startContext[objKeys[i]]["@id"]]["label"][j].text, color: color});
+                      this.nodes.push({id:this.id, label:label, object: rememberArray[j], depth: depth, color: color, group: file.jsondata[startContext[objKeys[i]]["@id"]]["label"][j].text});
+
+                      this.edges.push({from: rootId, to: this.id, label: file.jsondata[startContext[objKeys[i]]["@id"]]["label"][j].text, color: color, group: file.jsondata[startContext[objKeys[i]]["@id"]]["label"][j].text});
                       //console.log(file.jsondata[startContext[objKeys[i]]["@id"]]["label"][j].text)
                     }
                     
@@ -355,11 +406,12 @@ class drawGraph{
                 }else{
                   let edgeLabel = startContext[objKeys[i]]["@id"].replace("Property:", "");
                   
-    
-                  this.edges.push({from: rootId, to: this.id, label: edgeLabel, color: color});
+                  this.nodes.push({id:this.id, label:label, object: rememberArray[j], depth: depth, color: color, group: edgeLabel});
+
+                  this.edges.push({from: rootId, to: this.id, label: edgeLabel, color: color, group: edgeLabel});
     
                 }
-                this.createGraphNE(file, this.id, rememberArray[j], false, depth+1, givenDepth);
+                this.createGraphNE(file, this.id, rememberArray[j], false, depth+1, givenDepth, mode);
               }
               this.id++; //new maybe wrong
               
@@ -389,7 +441,7 @@ class drawGraph{
               if(file.jsondata[startContext[objKeys[i]]["@id"]]){
                 for(let k = 0; k < file.jsondata[startContext[objKeys[i]]["@id"]]["label"].length; k++){
                   if(file.jsondata[startContext[objKeys[i]]["@id"]]["label"][k].lang == this.lang){
-                    this.edges.push({from: rootId, to: this.nodes[this.nodeExists(this.nodes, file.jsondata[startItem][objKeys[i]])].id, label: file.jsondata[startContext[objKeys[i]]["@id"]]["label"][k].text, color:color});
+                    this.edges.push({from: rootId, to: this.nodes[this.nodeExists(this.nodes, file.jsondata[startItem][objKeys[i]])].id, label: file.jsondata[startContext[objKeys[i]]["@id"]]["label"][k].text, color: color, group: file.jsondata[startContext[objKeys[i]]["@id"]]["label"][k].text});
                     //console.log(file.jsondata[startContext[objKeys[i]]["@id"]]["label"][j].text)
                   }
                   
@@ -402,7 +454,7 @@ class drawGraph{
                 let edgeLabel = startContext[objKeys[i]]["@id"].replace("Property:", "");
     
     
-                this.edges.push({from: rootId, to: this.nodes[this.nodeExists(this.nodes, file.jsondata[startItem][objKeys[i]])].id, label: edgeLabel, color:color});
+                this.edges.push({from: rootId, to: this.nodes[this.nodeExists(this.nodes, file.jsondata[startItem][objKeys[i]])].id, label: edgeLabel, color: color, group: edgeLabel});
     
               }
     
@@ -411,14 +463,14 @@ class drawGraph{
             }else{
 
                 //color = this.setColor(startContext[objKeys[i]]["@id"], this.colorObj)
-              this.nodes.push({id:this.id, label:label, object: file.jsondata[startItem][objKeys[i]], depth: depth, color:color});
-
                 
 
               if(file.jsondata[startContext[objKeys[i]]["@id"]]){
                 for(let j = 0; j < file.jsondata[startContext[objKeys[i]]["@id"]]["label"].length; j++){
                   if(file.jsondata[startContext[objKeys[i]]["@id"]]["label"][j].lang == this.lang){
-                    this.edges.push({from: rootId, to: this.id, label: file.jsondata[startContext[objKeys[i]]["@id"]]["label"][j].text, color:color});
+                    this.nodes.push({id:this.id, label:label, object: file.jsondata[startItem][objKeys[i]], depth: depth, color:color, group: file.jsondata[startContext[objKeys[i]]["@id"]]["label"][j].text});
+
+                    this.edges.push({from: rootId, to: this.id, label: file.jsondata[startContext[objKeys[i]]["@id"]]["label"][j].text, color:color, group: file.jsondata[startContext[objKeys[i]]["@id"]]["label"][j].text});
                     //console.log(file.jsondata[startContext[objKeys[i]]["@id"]]["label"][j].text)
                   }
                   
@@ -427,11 +479,12 @@ class drawGraph{
                 
               }else{
                 let edgeLabel = startContext[objKeys[i]]["@id"].replace("Property:", "");
-    
-                this.edges.push({from: rootId, to: this.id, label: edgeLabel, color:color});
+                this.nodes.push({id:this.id, label:label, object: file.jsondata[startItem][objKeys[i]], depth: depth, color:color, group: edgeLabel});
+
+                this.edges.push({from: rootId, to: this.id, label: edgeLabel, color:color, group: edgeLabel});
     
               }
-              this.createGraphNE(file, this.id, file.jsondata[startItem][objKeys[i]], false, depth+1, givenDepth);
+              this.createGraphNE(file, this.id, file.jsondata[startItem][objKeys[i]], false, depth+1, givenDepth, mode);
             }
             //edges.push({from: rootId, to: id, label: startContext[objKeys[i]]["@id"]});
     
@@ -444,13 +497,14 @@ class drawGraph{
 
             //color = this.setColor(startContext[objKeys[i]]["@id"], this.colorObj)
     
-            this.nodes.push({id:this.id, label: file.jsondata[startItem][objKeys[i]], depth: depth, color: color});
-    
+            
             if(file.jsondata[startContext[objKeys[i]]]){
               
               for(let j = 0; j < file.jsondata[startContext[objKeys[i]]]["label"].length; j++){
                 if(file.jsondata[startContext[objKeys[i]]]["label"][j].lang == this.lang){
-                  this.edges.push({from: rootId, to: this.id, label: file.jsondata[startContext[objKeys[i]]["@id"]]["label"][j].text, color: color});
+                  this.nodes.push({id:this.id, label: file.jsondata[startItem][objKeys[i]], depth: depth, color: color, group: file.jsondata[startContext[objKeys[i]]["@id"]]["label"][j].text});
+    
+                  this.edges.push({from: rootId, to: this.id, label: file.jsondata[startContext[objKeys[i]]["@id"]]["label"][j].text, color: color, group: file.jsondata[startContext[objKeys[i]]["@id"]]["label"][j].text});
                   //console.log(file.jsondata[startContext[objKeys[i]]["@id"]]["label"][j].text)
                 }
                 
@@ -459,9 +513,10 @@ class drawGraph{
               
             }else{
               let edgeLabel = startContext[objKeys[i]].replace("Property:", "");
+              this.nodes.push({id:this.id, label: file.jsondata[startItem][objKeys[i]], depth: depth, color: color, group: edgeLabel});
     
     
-              this.edges.push({from: rootId, to: this.id, label: edgeLabel, color: color});
+              this.edges.push({from: rootId, to: this.id, label: edgeLabel, color: color, group: edgeLabel});
     
             }
     
@@ -474,9 +529,9 @@ class drawGraph{
             if(mode){
 
                 //color = this.setColor(startContext[objKeys[i]]["@id"], this.colorObj)
-            this.nodes.push({id:this.id, label: file.jsondata[startItem][objKeys[i]], depth: depth, color: color});       
+            this.nodes.push({id:this.id, label: file.jsondata[startItem][objKeys[i]], depth: depth, color: color, group: objKeys[i]});       
             
-            this.edges.push({from: rootId, to: this.id, label: objKeys[i], color: color});
+            this.edges.push({from: rootId, to: this.id, label: objKeys[i], color: color, group: objKeys[i]});
             this.id++;
             //console.log(file.jsondata[startItem][objKeys[i]])
             //not in context
@@ -514,12 +569,20 @@ class drawGraph{
           context[partContextKeys[j]] = contextArrayOfObjects[i][partContextKeys[j]];
         }
       }
-    
-      return context;
+      if (this.handleCallbacks({id: 'onBeforeCreateContext', params: {graph: this, context: context}})) {
+        return context;
+      }
     }
+
+    // createContext(file, item){
+
+    //   let data = {graph: this, file: file, item: item};
+    //   return this.config.callbacks.createContext(data);
+
+    // }
   
   }
 
 export {
-    drawGraph
+  GraphDrawer
 }

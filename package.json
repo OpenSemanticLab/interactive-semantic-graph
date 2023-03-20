@@ -43,8 +43,8 @@
   "dependencies": {
     "chroma-js": "^2.4.2",
     "jquery": "^3.6.3",
-    "vis-data": "^7.1.2",
-    "vis-network": "^9.1.2"
+    "vis-data": "7.1.2",
+    "vis-network": "9.1.2"
   },
   "devDependencies": {
     "microbundle": "^0.15.1",

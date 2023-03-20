@@ -39,7 +39,9 @@ const CSVToJSONTable = (data, delimiter = ',') => {
 
 
 class GraphTool {
-  constructor(div_id, config) {
+  constructor(_config, div_id, config) {
+    
+    this.clicked = {};
     // create all necessary elements/divs and set them up
     this.container = document.getElementById(div_id);
     this.vis_container = document.createElement("div");
@@ -53,6 +55,19 @@ class GraphTool {
     this.container.append(this.vis_container);
     this.container.append(this.options_container);
 
+    const defaultConfig = {
+      callbacks: {
+        //setColor: (data) => this.setColorDefault(data), //default: use class methode
+      }
+    };
+
+    this._config = utils.mergeDeep(defaultConfig, _config);
+
+    this.keyObject = {
+      doubleclick: (params) =>{
+        this.expandNodes(params)
+      },
+    }
     // create a visjs network and attatch it to div
     //console.log(config)
     this.nodes = new vis.DataSet(config.nodes)
@@ -73,14 +88,35 @@ class GraphTool {
     this.classRegistry.register = (cls) => {
       this.classRegistry.set((new cls).typeString, cls)
     }
+    
+    this.colorPicker(this);
+    this.loadSaveFunctionality();
+    this.createLegend();
+
+    
+
     for (let cls of [NodeClasses.RocketBase, NodeClasses.Fountain, NodeClasses.DelayNode, NodeClasses.TextSpeechNode,NodeClasses.CameraNode, NodeClasses.ImageNode, NodeClasses.CsvNode]) {
       //console.log(cls)
       this.classRegistry.register(cls)
     }
+
+
+    this.network.on("doubleClick", (params) => {
+    
+      this.keyObject.doubleclick(params);
+  
+    });
+
+
+
+
+
+
     //console.log(this.classRegistry)
     // set extended behavior of visjs Network 
     this.network.on("click", (params) => {
       //console.log("Click event, ",);
+      console.log(this.edges.get(params.edges[0]))
       if (params.nodes.length > 0) {
         //console.log("show options")
         let node = this.nodes.get(params.nodes[0])
@@ -109,7 +145,7 @@ class GraphTool {
     // });
     // right click
     this.network.on("oncontext", (params) => {
-      //console.log('in this.network.on(oncontext)')
+      console.log('in this.network.on(oncontext)')
     });
     this.network.on('dragStart', (params) => {
       //console.log("dragStart");
@@ -152,7 +188,7 @@ class GraphTool {
         //setting the current position is necessary to prevent snap-back to initial position
         node.x = position.x
         node.y = position.y
-        node.fixed = true
+        //node.fixed = true
         this.nodes.update(node)
       })
     });
@@ -214,6 +250,15 @@ class GraphTool {
         this.pressed_keys.splice(index, 1); // 2nd parameter means remove one item only
       }
     }, false);
+
+
+
+    Object.filter = (obj, predicate) => 
+    Object.keys(obj)
+          .filter( key => predicate(obj[key]) )
+          .reduce( (res, key) => (res[key] = obj[key], res), {} );
+
+
   }
   showOptions_default(node,optionsDivId = 'optionsDiv'){
       let optionsDiv = document.getElementById(optionsDivId)
@@ -265,9 +310,733 @@ class GraphTool {
     }
   }
 
-  createTestSetup(){
-    //console.log('createTestSetup')
+  // createTestSetup(){
+  //   console.log('createTestSetup')
+  // }
+  ///////////////////////  ///////////////////////  ///////////////////////  ///////////////////////
+  getAllEdgesWithLabel(edges, label){
+
+    let tempArray = []
+  
+    for (let index = 0; index < edges.length; index++) {
+      
+      if(edges[index].label == label){
+        tempArray.push(edges[index]);
+      }
+      
+    }
+  
+    return tempArray;
+  
   }
+  
+
+  // Object.filter = (obj, predicate) => 
+  //   Object.keys(obj)
+  //         .filter( key => predicate(obj[key]) )
+  //         .reduce( (res, key) => (res[key] = obj[key], res), {} );
+
+  recolorByProperty(){
+    nodes[0].color = "#6dbfa9";
+    for(let i = 0; i < edges.length; i++){
+      edges[i].color = config.graph.colorObj[edges[i].label];
+      for(let j = 0; j < nodes.length; j++){
+        if(edges[i].to == nodes[j].id){
+          nodes[j].color = edges[i].color;
+        }
+      }
+    }
+  }
+
+
+  colorByValue(path, nodes, edges, startColor, endColor){
+
+    let tempArray = [];
+  
+    for(let i = 0; i < path.length; i++){
+  
+      tempArray.push(this.getAllEdgesWithLabel(edges, path[i]));
+  
+    }
+    
+
+    let thingsToColor = [];
+  
+    if(path.length == 1){
+  
+      for (let index = 0; index < tempArray[0].length; index++) {
+        
+        for(let j = 0; j < nodes.length; j++){
+  
+          if(tempArray[0][index].from == nodes[j].id || tempArray[0][index].to == nodes[j].id){
+  
+            thingsToColor.push(nodes[j]);
+            
+          }
+  
+        }
+        
+        thingsToColor.push(tempArray[0][index]);
+  
+      }
+  
+    }
+    
+    for(let i = 0; i < tempArray.length; i++){
+  
+      for(let j = 0; j < tempArray[i].length; j++){
+  
+        if(tempArray.length == i+1){
+  
+          for(let p = 0; p < nodes.length; p++){
+            nodes[p].color = "#ffffff"  
+          }
+      
+          for(let p = 0; p < edges.length; p++){
+            edges[p].color = "#000000"     
+          }
+  
+          for(let l = 0; l< thingsToColor.length; l++){
+            delete thingsToColor[l].path;
+          }
+  
+          let colorPath = 0;
+          let valueArray = [];
+  
+          for (let k = 0; k < thingsToColor.length; k++) {
+            
+            if(thingsToColor[k].from){
+              
+              let valueEdge  = Object.filter(thingsToColor, thing => thing.label == path[path.length-1]);
+              let valueEdgeKey = Object.keys(valueEdge);
+  
+  
+              for(let m = 0; m < valueEdgeKey.length; m++){
+  
+              let valueNode = Object.filter(thingsToColor, thing => thing.id == valueEdge[valueEdgeKey[m]].to)
+
+              let valueNodeKey = Object.keys(valueNode)[0];
+
+              valueArray.push(valueNode[valueNodeKey].label);
+  
+              }
+  
+              let fromNode  = Object.filter(thingsToColor, thing => thing.id == thingsToColor[k].from)
+
+              let fromNodeKey = Object.keys(fromNode)[0];
+  
+              let toNode  = Object.filter(thingsToColor, thing => thing.id == thingsToColor[k].to)
+
+              let toNodeKey = Object.keys(toNode)[0];
+  
+              if(fromNode[fromNodeKey].path){
+  
+                thingsToColor[k].path = fromNode[fromNodeKey].path
+                toNode[toNodeKey].path = fromNode[fromNodeKey].path
+  
+              }else if(toNode[toNodeKey].path){
+  
+                thingsToColor[k].path = toNode[toNodeKey].path
+                fromNode[fromNodeKey].path = toNode[toNodeKey].path
+  
+              }else{
+  
+                thingsToColor[k].path = colorPath;
+                toNode[toNodeKey].path = colorPath;
+                fromNode[fromNodeKey].path = colorPath;
+                
+                colorPath++;
+  
+              }           
+  
+            }
+            
+          }
+
+          
+          valueArray = [...new Set(valueArray)];
+  
+          valueArray.sort(function(a,b){
+            return a - b;
+          });
+          let colorArray = chroma.scale([startColor, endColor]).mode('hsl').colors(valueArray.length)
+
+          for(let n = 0; n < valueArray.length; n++){
+  
+            let nodeWithValue  = Object.filter(thingsToColor, thing => thing.label == valueArray[n])
+          
+            let nodeWithValueKey = Object.keys(nodeWithValue)[0];
+    
+            for(let o = 0; o < thingsToColor.length; o++){
+
+              if(thingsToColor[o].path == nodeWithValue[nodeWithValueKey].path){
+
+                thingsToColor[o].color = colorArray[n];
+  
+              }
+  
+            }
+  
+          }
+  
+          return;
+  
+        }
+  
+        for(let k = 0; k < tempArray[i+1].length; k++){
+  
+          if(tempArray[i][j].to == tempArray[i+1][k].from && tempArray[i+1][k].label == path[i+1] && tempArray[i][j].label == path[i]){ 
+  
+            for (let index = 0; index < nodes.length; index++) {
+  
+                if(nodes[index].id == tempArray[i][j].to){
+  
+                  thingsToColor.push(nodes[index])
+  
+                }
+  
+                if(nodes[index].id == tempArray[i+1][k].to){
+  
+                  thingsToColor.push(nodes[index])
+  
+                }
+            }
+
+            thingsToColor.push(tempArray[i][j]);
+  
+            thingsToColor.push(tempArray[i+1][k]);
+  
+          }
+    
+        }
+    
+      }
+  
+    }
+  
+  }
+
+  removeObjectWithId(arr, id, edge) {
+    if(edge){
+      const objWithIdIndex = arr.findIndex((obj) => obj.from === edge.from && obj.to === edge.to);
+  
+      if (objWithIdIndex > -1) {
+        arr.splice(objWithIdIndex, 1);
+      }
+  
+    }
+    
+  
+    const objWithIdIndex = arr.findIndex((obj) => obj.id === id);
+  
+    if (objWithIdIndex > -1) {
+      arr.splice(objWithIdIndex, 1);
+    }
+    
+    return arr;
+  }
+
+  getAllReachableNodesTo(nodeId, excludeIds, reachableNodes) {
+    if (reachableNodes.includes(nodeId) || excludeIds.includes(nodeId)) {
+        return;
+    }
+    var children = this.network.getConnectedNodes(nodeId);
+    reachableNodes.push(nodeId);
+    for (var i = 0; i < children.length; i++) {
+        this.getAllReachableNodesTo(children[i], excludeIds, reachableNodes);
+        //if(excludeIds.includes(children[i]))continue;
+        //reachableNodes.push(children[i]);
+    }
+  }
+  
+  deleteNodesChildren(nodeId, deleteEdge, clickedNode) {
+    var excludedIds = [];
+    if (deleteEdge === true) {
+        console.log("deleteEdge true")
+    } else {
+        excludedIds.push(nodeId);
+    }
+    var reachableNodesTo = [];
+    this.getAllReachableNodesTo(0, excludedIds, reachableNodesTo);
+    var nodesToDelete = [];
+    var allIds = this.nodes.getIds();
+    for (var i = 0; i < allIds.length; i++) {
+        if (reachableNodesTo.includes(allIds[i])) continue;
+        if (allIds[i] == nodeId) {
+            this.deleteEdges(nodeId);
+            continue;
+        }
+        nodesToDelete.push(allIds[i]);
+        this.deleteEdges(allIds[i]);
+
+        nodes = this.removeObjectWithId(nodes, allIds[i])
+
+        this.nodes.remove(allIds[i]);
+
+    }
+    return nodesToDelete;
+  }
+
+  deleteEdges(nodeID) {
+    var fromEdges = this.edges.get({
+        filter: function(item) {
+            return item.from == nodeID;
+        }
+    });
+    for (var j = 0; j < fromEdges.length; j++) {
+        this.edges.remove(fromEdges[j]);
+
+        edges = this.removeObjectWithId(edges, false, fromEdges[j])
+    }
+  }
+
+
+
+  expandNodes(params){
+    
+    if (params.nodes.length > 0) {
+
+      let node = this.nodes.get(params.nodes[0])
+      
+      if("object" in node && (this.clicked[params.nodes[0]] == false || !(""+params.nodes[0] in this.clicked)) && (this.network.getConnectedNodes(params.nodes[0], "to").length === 0)){
+
+        if(node.context){
+
+          
+          config.graph.createGraphNE(config.file, node.id, node.object, node.context, node.depth, "", true);
+          
+        }else{
+          config.graph.createGraphNE(config.file, node.id, node.object, "", node.depth, "", true);
+          
+        }
+        
+
+        if(document.querySelector('#myDropdown select').value == "setColorByValue"){
+
+          this.colorByValue([document.querySelector('#setColorByValueInput').value], nodes, edges, document.querySelector('#startColor').value, document.querySelector('#endColor').value)
+        }
+        //this.colorByValue(["value"], nodes, edges)
+        this.clicked[params.nodes[0]] = true;
+
+        this.network.body.data.nodes.update(nodes);
+        this.network.body.data.edges.update(edges);
+  
+        // this.nodes.update(nodes);
+        // this.edges.update(edges);
+  
+        }else{
+  
+          
+          this.clicked[params.nodes[0]] = false;
+  
+          this.deleteNodesChildren(params.nodes[0]);
+  
+          this.nodes.update(nodes);
+          this.edges.update(edges);
+
+          //console.log(this.nodes.get())
+          
+        }
+  
+        }
+
+  }
+colorPicker(graph){
+    // Create the dropdown menu
+
+  var graph = graph;
+  var dropdownDiv = document.createElement("div");
+  dropdownDiv.id = "dropdown";
+  dropdownDiv.setAttribute("id", "myDropdown");
+
+  var dropdown = document.createElement("select");
+
+  var option1 = document.createElement("option");
+  option1.setAttribute("value", "setColorByProperty");
+  option1.innerHTML = "Color by Property";
+
+  var option2 = document.createElement("option");
+  option2.setAttribute("value", "setColorByValue");
+  option2.innerHTML = "Color by Value";
+
+  // var option3 = document.createElement("option");
+  // option3.setAttribute("value", "option3");
+  // option3.innerHTML = "Option 3";
+
+  dropdown.appendChild(option1);
+  dropdown.appendChild(option2);
+  //dropdown.appendChild(option3);
+
+  dropdownDiv.appendChild(dropdown);
+
+  // Add the dropdown menu to the page
+  var body = document.getElementById("title")
+  body.appendChild(dropdownDiv);
+
+  // Get the selected value
+  function getPath() {
+    let path = "" + document.querySelector('#setColorByValueInput').value;
+
+    let tempArray = path.split(",")
+    
+    let startColor = document.querySelector('#startColor').value;
+    let endColor = document.querySelector('#endColor').value;
+
+    graph.colorByValue(tempArray, graph.nodes.get(), graph.edges.get(), startColor, endColor);
+
+    graph.nodes.update(graph.nodes.get())
+    graph.edges.update(graph.edges.get())
+
+    // graph.network.body.emitter.emit('_dataChanged');
+                      
+    // graph.network.redraw();
+  }
+
+
+  // Add an event listener to get the selected value
+  document.querySelector('#myDropdown select').addEventListener('change', function() {
+    var selectedValue = this.value;
+
+    if(selectedValue == "setColorByValue"){
+
+      var input = document.createElement("input");
+      input.type = "text";
+      input.id = "setColorByValueInput";
+      
+
+
+      const usefulColors = ["orangered","red", "orange", "yellow", "green", "blue", "purple", "pink", "brown", "gray"];
+      const usefulColors2 = ["limegreen","green", "orange", "yellow", "red", "blue", "purple", "pink", "brown", "gray"];
+
+      // Create the select element
+      const select = document.createElement("select");
+
+      // Add options to the select element
+      for (let i = 0; i < usefulColors.length; i++) {
+        const option = document.createElement("option");
+        option.value = usefulColors[i];
+        option.text = usefulColors[i];
+        select.appendChild(option);
+      }
+      select.id = "startColor";
+
+
+      const select2 = document.createElement("select");
+
+      // Add options to the select element
+      for (let i = 0; i < usefulColors2.length; i++) {
+        const option = document.createElement("option");
+        option.value = usefulColors2[i];
+        option.text = usefulColors2[i];
+        select2.appendChild(option);
+      }
+      select2.id = "endColor";
+
+        // Add a button to get the selected value
+      var button = document.createElement("button");
+      button.id = "setPath";
+      button.innerHTML = "Set path";
+      button.addEventListener("click", getPath);
+      
+      if(!document.getElementById("setColorByValueInput")){
+        document.getElementById("myDropdown").appendChild(input);
+        document.getElementById("myDropdown").appendChild(select);
+        document.getElementById("myDropdown").appendChild(select2);
+        body.appendChild(button);
+      }
+    }
+
+    if(selectedValue == "setColorByProperty"){
+      if(document.getElementById("setColorByValueInput")){
+        document.getElementById("setColorByValueInput").remove();
+        document.getElementById("startColor").remove();
+        document.getElementById("endColor").remove();
+        document.getElementById("setPath").remove();
+      }
+      graph.recolorByProperty();
+      graph.nodes.update(nodes)
+      graph.edges.update(edges)
+    }
+    //alert("Selected value: " + selectedValue);
+  });
+
+  }
+
+  loadSaveFunctionality(){
+
+    function saveState(){
+
+      if(document.getElementById("setColorByValueInput")){
+        new_json.state = {nodes:nodes,edges:edges,colorFunction: document.querySelector('#myDropdown select').value, colorByValue: {startColor:document.querySelector('#startColor').value,endColor:document.querySelector('#endColor').value, path: document.querySelector('#setColorByValueInput').value}};
+
+
+      }else{
+        new_json.state = {nodes:nodes,edges:edges,colorFunction: document.querySelector('#myDropdown select').value, colorByValue: {}};
+      }
+      
+  
+      const json = new_json
+      const filename = "data.txt";
+      const text = JSON.stringify(json);
+  
+      const element = document.createElement("a");
+      element.setAttribute("href", "data:text/plain;charset=utf-8," + encodeURIComponent(text));
+      element.setAttribute("download", filename);
+      element.style.display = "none";
+      document.body.appendChild(element);
+  
+      element.click();
+  
+      document.body.removeChild(element);
+  
+    }
+  
+  
+  
+    let element = document.createElement("BUTTON");
+    element.innerHTML = "Save state";
+    element.id = "save";
+    element.addEventListener("click", saveState);
+  
+    document.getElementById("title").append(element)
+  
+    let element2 = document.createElement("BUTTON");
+    element2.id = "load"
+    element2.innerHTML = "Load state";
+    element2.addEventListener("click", loadState);
+  
+    document.getElementById("title").append(element2)
+  
+  
+    function loadState(){
+      const input = document.createElement("input");
+      input.type = "file";
+  
+      input.addEventListener("change", function () {
+        const reader = new FileReader();
+        reader.onload = function () {
+          const jsonData = JSON.parse(reader.result); 
+          if(jsonData.state){
+            config.nodes = jsonData.state.nodes;
+            config.edges = jsonData.state.edges;
+    
+            nodes = jsonData.state.nodes;
+            edges = jsonData.state.edges;
+    
+            draw.edges = jsonData.state.edges;
+            draw.nodes = jsonData.state.nodes;
+    
+            config = {nodes:jsonData.state.nodes,edges:jsonData.state.edges,options:options, graph: draw, file: new_json};
+              
+            document.getElementById("mynetwork").innerHTML =  "";
+    
+            document.getElementById('myDropdown').remove();
+            document.getElementById('save').remove();
+            document.getElementById('load').remove();
+
+            if(document.getElementById('setPath')){
+              document.getElementById('setPath').remove();
+            }
+            var graphtool = new GraphTool(_config, "mynetwork", config);
+          }else{
+            let nodes = [];
+            let edges = [];
+            let draw = new createGraph.GraphDrawer(_config, jsonData, 5, true, nodes, edges);
+
+            let options = {interaction: {hover: true,multiselect: true,},
+                  manipulation: {enabled: true,},
+                  edges: {arrows: "to"},
+                  groups: {
+                    useDefaultGroups: false
+                  }
+                }
+            let config = {nodes:nodes,edges:edges,options:options, graph: draw, file: new_json};
+            var graphtool = new GraphTool(_config, "mynetwork", config);
+          }
+          
+
+          if(jsonData.state.colorFunction == "setColorByValue"){
+            graphtool.changeColorDropdown("myDropdown", "setColorByValue")
+            document.querySelector('#myDropdown select').dispatchEvent(new Event("change"));
+            graphtool.changeStartEndColorDropdown("startColor", jsonData.state.colorByValue.startColor);
+            graphtool.changeStartEndColorDropdown("endColor", jsonData.state.colorByValue.endColor);
+            document.getElementById("setColorByValueInput").value = jsonData.state.colorByValue.path;
+            graphtool.colorByValue([jsonData.state.colorByValue.path], nodes, edges, jsonData.state.colorByValue.startColor, jsonData.state.colorByValue.endColor)
+            graphtool.nodes.update(nodes);
+            graphtool.edges.update(edges);
+          }
+
+          delete jsonData.state;
+          config.file = jsonData;
+
+          
+        };
+        reader.readAsText(this.files[0]);
+      });
+  
+      input.click();
+    }
+  }
+
+  createLegend(){
+    var legendDiv = document.createElement("div");
+    let vis_cont = document.getElementById("vis_container")
+    vis_cont.append(legendDiv);
+    legendDiv.style.width = '100%';
+    legendDiv.style.position = 'relative';
+    legendDiv.style.display = 'inline-block';
+    legendDiv.id = "legendContainer";
+    var legendColors = draw.colorObj
+    var legendSet = {}
+    for (var i = 0; i < edges.length; i++) {
+      if(!legendSet[edges[i].group]){
+        //legendColors[input.properties[i]] = colors[i];
+        var propertyContainer = document.createElement("div");
+        var propertyColor = document.createElement("div");
+        var propertyName = document.createElement("div");
+        propertyContainer.className = "legend-element-container";
+        propertyContainer.id = edges[i].label;
+        propertyColor.className = "color-container";
+        propertyName.className = "name-container";
+        propertyColor.style.float = "left";
+        propertyName.style.float = "left";
+        propertyColor.style.border = "1px solid black";
+        propertyName.style.border = "1px solid black";
+        propertyColor.style.background = legendColors[edges[i].group]
+        propertyColor.innerHTML = "";
+        propertyName.innerHTML = edges[i].label;
+        propertyColor.style.width = "30px";
+        propertyColor.style.height = "30px";
+        propertyName.style.height = "30px";
+        propertyName.style.background = '#DEF';
+        //propertyName.text-align = 'center';
+        propertyContainer.paddinng = '5px 5px 5px 5px';
+        propertyName.addEventListener("click", (e) => this.legendFunctionality(e));
+        propertyColor.addEventListener("click", (e) => this.legendFunctionality(e));
+        legendDiv.append(propertyContainer);
+        propertyContainer.append(propertyColor);
+        propertyContainer.append(propertyName);
+        legendSet[edges[i].group] = legendColors[edges[i].group];
+      }
+    }
+
+    Object.keys(legendSet).forEach((key) => {
+
+      options.groups[key] = {
+        hidden: false
+      };
+    });
+    
+  }
+
+  changeColorDropdown(id, valueToSelect) {    
+    let element = document.querySelector('#'+ id +' select');
+    element.value = valueToSelect;
+  }
+
+  changeStartEndColorDropdown(id, valueToSelect) {   
+    let element = document.querySelector('#'+ id);
+    element.value = valueToSelect;
+   }
+
+
+  setNodeVisibilityByVisiblePath = (nodeId, rootNodeId) => {
+    if (nodeId == rootNodeId) return true; //root is always visible
+    var node = this.nodes.get(nodeId);
+    if (node.visited) return !node.hidden //prevent circles. ToDo: Reuse results between runs
+    node.visited = true;
+    node.hidden = true;
+    var connectedEdgesIds = this.network.getConnectedEdges(nodeId);
+    var connectedEdges = this.edges.get(connectedEdgesIds);
+    connectedEdges.forEach((edge) => {
+        if (edge.hidden) return; //don't follow hidden edges
+        var connectedNodesIds = this.network.getConnectedNodes(edge.id);
+        var connectedNodes = this.nodes.get(connectedNodesIds);
+        connectedNodes.forEach((connectedNode) => {
+            if (connectedNode.id == nodeId) return; //prevent self evaluation
+            if (this.setNodeVisibilityByVisiblePath(connectedNode.id, rootNodeId)) {
+                node.hidden = false; //set node visible, if at least one connected node is visible
+            }
+        });
+    });
+    node.physics = !node.hidden; //disable physics for hidden nodes
+    return !node.hidden;
+  }
+
+  legendFunctionality = (e) => {
+    var legendGroup;
+    var group;
+    var nodeChildren;
+    legendGroup =  e.target.parentNode.childNodes[1].innerHTML;
+    var strategy = "strategy2"
+    if (strategy == "strategy2") {
+
+        //A node is visible if at least one path over visible edges to the root node exists.
+        this.options.groups[legendGroup].hidden = !this.options.groups[legendGroup].hidden; //toggle state
+        if (this.options.groups[legendGroup].hidden) e.target.parentNode.childNodes[1].style.background = '#FFFFFF';
+        else e.target.parentNode.childNodes[1].style.background = '#DEF';
+
+        //update all edges
+        this.edges.forEach((edge) => {
+            edge.hidden = this.options.groups[edge.group].hidden;
+            edge.physics = !edge.hidden;
+        });
+
+        //reset nodes
+        this.nodes.forEach((node) => {
+            node.hidden = false;
+            node.physics = !node.hidden;
+            node.visited = false;
+        });
+
+        //check each node
+        this.nodes.forEach((node) => {
+            this.setNodeVisibilityByVisiblePath(node.id, 0)
+            //reset visited state. Todo: Reuse visited nodes between runs
+            this.nodes.forEach( (node) => {
+                node.visited = false;
+            });
+            
+        
+        });
+        //console.log(this.options)
+        // console.log(this.nodes.get())
+        // this.nodes.update(nodes);
+        // this.edges.update(edges);
+
+        // nodes = this.nodes.get()
+        // edges = this.edges.get()
+
+
+
+        
+        this.network.setData({nodes: this.nodes.get(), edges: this.edges.get()});
+
+        // this.network.setOptions(this.options);
+        // this.network.body.emitter.emit('_dataChanged');
+        // this.network.redraw();
+    }
+
+    
+    // graphtool.network.setOptions(options);
+    // graphtool.network.body.emitter.emit('_dataChanged');
+    
+    
+    var allFalse = Object.keys(options.groups).every(function(k) {
+        if (k === 'useDefaultGroups') {
+            return true
+        }
+        return options.groups[k].hidden === false
+    });
+
+    if (allFalse === true) {
+        /*oldGroups = {};*/
+    }
+
+
+  };
+
+  ///////////////////////  ///////////////////////  ///////////////////////  ///////////////////////
 }
 ///////// Test-Cases//////////
 function test() {
@@ -422,7 +1191,7 @@ let new_json = {"jsonschema": {
       "member": ["Item:SomePerson", "Item:SomePerson", "Item:MyOtherItem"],
       "start": true,
       "some_literal": "Some string",
-      "not_in_context": "Not in Context",
+      "not_in_context": "NotinContext",
       "budget": [{
           "year": "2000",
           "value": "10000"
@@ -469,457 +1238,131 @@ let new_json = {"jsonschema": {
 }};
 
 
-//import data from './test.json'
 
-
-// let nodes = [];
-// let edges = [];
-// let id = 0;
-// let first = true;
-// let rootId;
-// let context = data['@context']
 
 let nodes = [];
 let edges = []
 
 let _config = {
-  //callbacks: {setColor: (data) => "#491230"}
+  // callbacks: {
+  //   getStartItem: (data) => "Item:MyOtherItem",
+  //   setColor: (data) => "#491230"
+  //   createContext: (data) => ""
+  // }
 };
-let draw = new createGraph.drawGraph(_config, new_json, 3, true, nodes, edges);
+let draw = new createGraph.GraphDrawer(_config, new_json, 5, true, nodes, edges);
+
+
 
 
 var options = {interaction: {hover: true,multiselect: true,},
       manipulation: {enabled: true,},
-      edges: {arrows: "to"}
+      edges: {arrows: "to"},
+      groups: {
+        useDefaultGroups: false
+      }
     }
-let config = {nodes:nodes,edges:edges,options:options};
+let config = {nodes:nodes,edges:edges,options:options, graph: draw, file: new_json};
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 
-
-
-let clicked = {};
+//let clicked = {};
 
 $( document ).ready(function() {
 
-  $(document).keydown(function(e){
-    console.log(e.keyCode);
-  });
-
-
-
-  // var keymap = new Keymap.Keymap({                      // Create a new instance of Keymap
-  //                 "shift_b": function(event, keyid) {         // Bind key combi: ctrl+a
-  //                     alert("Key pressed down! KeyId: " + keyid)
-  //                 }
-  //             });
-  //             keymap.install(document.body); 
-
-
-
-let keyObject = {
-  doubleclick: function(params){
-    expandNodes(params)
-  },
-}
-
-function getAllEdgesWithLabel(edges, label){
-
-  let tempArray = []
-
-  for (let index = 0; index < edges.length; index++) {
-    
-    if(edges[index].label == label){
-      tempArray.push(edges[index]);
-    }
-    
-  }
-
-  return tempArray;
-
-}
-
-
-Object.filter = (obj, predicate) => 
-    Object.keys(obj)
-          .filter( key => predicate(obj[key]) )
-          .reduce( (res, key) => (res[key] = obj[key], res), {} );
-
-
-
-function colorByValue(path, nodes, edges){
-
-  let tempArray = [];
-
-  for(let i = 0; i < path.length; i++){
-
-    tempArray.push(getAllEdgesWithLabel(edges, path[i]));
+  let _config = {
 
   }
 
+  var graphtool = new GraphTool(_config, "mynetwork", config);
 
 
-  let thingsToColor = [];
-  
 
-  if(path.length == 1){
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    for (let index = 0; index < tempArray[0].length; index++) {
-      
-      for(let j = 0; j < nodes.length; j++){
 
-        if(tempArray[0][index].from == nodes[j].id || tempArray[0][index].to == nodes[j].id){
 
-          //nodes[j].color = "#ff0000";
-          thingsToColor.push(nodes[j]);
-          
-        }
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-      }
-      //tempArray[0][index].color = "#ff0000";
-      thingsToColor.push(tempArray[0][index]);
+// function searchJSON(json, search, keys=[]) {
+//   for (var key in json) {
+//     if (json.hasOwnProperty(key)) {
+//       var val = json[key];
+//       if (typeof val === 'object') {
+//         searchJSON(val, search, keys);
+//       } else if (val === search) {
+//         keys.push(key);
+//       }
+//     }
+//   }
+//   return keys;
+// }
 
-    }
 
-  }
 
 
-  for(let i = 0; i < tempArray.length; i++){
+// const key = searchJSON(new_json["jsondata"], "2000");
+// console.log(key); // prints "person2"
 
-    for(let j = 0; j < tempArray[i].length; j++){
 
-      if(tempArray.length == i+1){
+// function findParentKeys(jsonObj, keyToFind, parentKey = null) {
+//   let parentKeys = [];
+//   if (typeof jsonObj !== "object") {
+//     return parentKeys;
+//   }
 
-        for(let l = 0; l< thingsToColor.length; l++){
-          delete thingsToColor[l].path;
-        }
+//   if (Array.isArray(jsonObj)) {
+//     for (let i = 0; i < jsonObj.length; i++) {
+//       if (jsonObj[i][keyToFind] !== undefined) {
+//         if (parentKey !== null) {
+//           parentKeys.push(parentKey);
+//         }
+//         //parentKeys.push(i);
+//       } else {
+//         let nestedParentKeys = findParentKeys(
+//           jsonObj[i],
+//           keyToFind,
+//           parentKey
+//         );
+//         if (nestedParentKeys.length > 0) {
+//           parentKeys = parentKeys.concat(nestedParentKeys);
+//         }
+//       }
+//     }
+//   } else {
+//     for (let key in jsonObj) {
+//       if (key === keyToFind) {
+//         if (parentKey !== null) {
+//           parentKeys.push(parentKey);
+//         }
+//       } else if (typeof jsonObj[key] === "object") {
+//         let nestedParentKeys = findParentKeys(
+//           jsonObj[key],
+//           keyToFind,
+//           key
+//         );
+//         if (nestedParentKeys.length > 0) {
+//           parentKeys = parentKeys.concat(nestedParentKeys);
+//         }
+//       }
+//     }
+//   }
+//   return parentKeys;
+// }
 
-        let colorPath = 0;
-        let valueArray = [];
 
-        for (let k = 0; k < thingsToColor.length; k++) {
-          if(thingsToColor[k].from){
-            
-            let valueEdge  = Object.filter(thingsToColor, thing => thing.label == path[path.length-1]);
-            let valueEdgeKey = Object.keys(valueEdge);
 
 
-            for(let m = 0; m < valueEdgeKey.length; m++){
+// const out = findParentKeys(new_json["jsondata"], "not_in_context")
+// console.log(out)
 
-            let valueNode = Object.filter(thingsToColor, thing => thing.id == valueEdge[valueEdgeKey[m]].to)
-            let valueNodeKey = Object.keys(valueNode)[0];
 
-            valueArray.push(valueNode[valueNodeKey].label);
 
-            }
 
 
-
-
-            let fromNode  = Object.filter(thingsToColor, thing => thing.id == thingsToColor[k].from)
-        
-            let fromNodeKey = Object.keys(fromNode)[0];
-    
-            //fromNode[fromNodeKey];
-
-            let toNode  = Object.filter(thingsToColor, thing => thing.id == thingsToColor[k].to)
-        
-            let toNodeKey = Object.keys(toNode)[0];
-    
-            //toNode[toNodeKey];
-
-            if(fromNode[fromNodeKey].path){
-
-              thingsToColor[k].path = fromNode[fromNodeKey].path
-              toNode[toNodeKey].path = fromNode[fromNodeKey].path
-
-            }else if(toNode[toNodeKey].path){
-
-              thingsToColor[k].path = toNode[toNodeKey].path
-              fromNode[fromNodeKey].path = toNode[toNodeKey].path
-
-            }else{
-
-              thingsToColor[k].path = colorPath;
-              toNode[toNodeKey].path = colorPath;
-              fromNode[fromNodeKey].path = colorPath;
-              
-              colorPath++;
-
-            }
-
-            //console.log(thingsToColor[k])
-            
-
-          }
-          
-        }
-        valueArray = [...new Set(valueArray)];
-
-        valueArray.sort(function(a,b){
-          return a - b;
-        });
-
-        let colorArray = chroma.scale(["orangered", "limegreen"]).mode('hsl').colors(colorPath)
-
-        for(let n = 0; n < valueArray.length; n++){
-
-          let nodeWithValue  = Object.filter(thingsToColor, thing => thing.label == valueArray[n])
-        
-          let nodeWithValueKey = Object.keys(nodeWithValue)[0];
-  
-          console.log(nodeWithValue[nodeWithValueKey].path);
-
-          for(let o = 0; o < thingsToColor.length; o++){
-
-            if(thingsToColor[o].path ==  nodeWithValue[nodeWithValueKey].path){
-
-              thingsToColor[o].color = colorArray[n];
-
-            }
-
-          }
-
-
-
-        }
-
-        //console.log(chroma.scale(["green", "red"]).mode('hsl').colors(colorPath))
-        //console.log(thingsToColor.filter(x => x.label=="value").length);
-
-        return;
-      }
-
-      for(let k = 0; k < tempArray[i+1].length; k++){
-
-        if(tempArray[i][j].to == tempArray[i+1][k].from && tempArray[i+1][k].label == path[i+1] && tempArray[i][j].label == path[i]){
-
-          
-
-          for (let index = 0; index < nodes.length; index++) {
-
-              if(nodes[index].id == tempArray[i][j].to){
-                //nodes[index].color = "#ff0000"
-                thingsToColor.push(nodes[index])
-
-              }
-
-
-              if(nodes[index].id == tempArray[i+1][k].to){
-                //nodes[index].color = "#ff0000"
-                thingsToColor.push(nodes[index])
-
-              }
-            
-          }
-
-          //tempArray[i][j]["color"] = "#ff0000"
-
-          thingsToColor.push(tempArray[i][j]);
-
-          //tempArray[i+1][k]["color"] = "#ff0000"
-
-          thingsToColor.push(tempArray[i+1][k]);
-
-
-
-        }
-
-
-        //console.log("not +1",tempArray[i][j])
-        //console.log("+1", tempArray[i+1][k])
-
-  
-      }
-  
-    }
-
-  }
-
-  
-
-  //console.log(tempArray);
-
-}
-
-function expandNodes(params){
-
-  let newcolor = chroma.scale(["green", "red"]).mode('hsl').colors(2);
-  //console.log(newcolor);
-
-
-
-  if (params.nodes.length > 0) {
-
-    let node = graphtool.nodes.get(params.nodes[0])
-    
-    if("object" in node && (clicked[params.nodes[0]] == false || !(""+params.nodes[0] in clicked))){
-      
-      if(node.context){
-        draw.createGraphNE(new_json, node.id, node.object, node.context, node.depth, "", true);
-      }else{
-        draw.createGraphNE(new_json, node.id, node.object, "", node.depth, "", true);
-      }
-
-      //getAllProperties(node.leftJSON, node.id);
-
-      colorByValue(["value"], nodes, edges)
-      clicked[params.nodes[0]] = true;
-
-      graphtool.nodes.update(nodes);
-      graphtool.edges.update(edges);
-
-      }else{
-        clicked[params.nodes[0]] = false;
-        //let nodesToDelete = graphtool.network.getConnectedNodes(params.nodes[0], "to");
-        let nodesToDelete = [];
-        
-        recNodes(params.nodes[0], nodesToDelete);
-
-
-
-        for(let i = 0; i<nodesToDelete.length;i++){
-          if(!(nodesToDelete[i] == params.nodes[0])){
-            graphtool.nodes.remove(nodesToDelete[i])
-          }
-        }
-
-        for(let i = 0; i<nodes.length;i++){
-          if(nodesToDelete.includes(nodes[i].id) && nodes[i].id != params.nodes[0]){
-            //console.log(nodes[i])
-            nodes.splice(i, 1);
-            i =  i-1;
-            //console.log(nodes); 
-          }
-          
-        }
-        
-
-        //graphtool.nodes.update(nodes);
-        //graphtool.edges.update(edges);
-        //deleteNodesChildren(params.nodes[0], "", params.nodes[0]);
-        
-      }
-      //console.log(clicked)
-      }
-
-
-
-function getAllReachableNodesTo(nodeId, excludeIds, reachableNodes) {
-                  if (reachableNodes.includes(nodeId) || excludeIds.includes(nodeId)) {
-                      return;
-                  }
-                  var children = graphtool.network.getConnectedNodes(nodeId);
-                  reachableNodes.push(nodeId);
-                  for (var i = 0; i < children.length; i++) {
-                      getAllReachableNodesTo(children[i], excludeIds, reachableNodes);
-                      //if(excludeIds.includes(children[i]))continue;
-                      //reachableNodes.push(children[i]);
-                  }
-              }
-function deleteNodesChildren(nodeId, deleteEdge, clickedNode) {
-                  var excludedIds = [];
-                  if (deleteEdge === true) {
-                      console.log("deleteEdge true")
-                  } else {
-                      excludedIds.push(nodeId);
-                  }
-                  var reachableNodesTo = [];
-                  getAllReachableNodesTo(graphtool.nodes.get("0"), excludedIds, reachableNodesTo);
-                  var nodesToDelete = [];
-                  var allIds = graphtool.nodes.getIds();
-                  for (var i = 0; i < allIds.length; i++) {
-                      if (reachableNodesTo.includes(allIds[i])) continue;
-                      if (allIds[i] == nodeId) {
-                          deleteEdges(nodeId);
-                          continue;
-                      }
-                      nodesToDelete.push(allIds[i]);
-                      deleteEdges(allIds[i]);
-                      graphtool.nodes.remove(allIds[i]);
-
-                  }
-                  return nodesToDelete;
-              }
-
-function deleteEdges(nodeID) {
-                  var fromEdges = graphtool.edges.get({
-                      filter: function(item) {
-                          return item.from == nodeID;
-                      }
-                  });
-                  for (var j = 0; j < fromEdges.length; j++) {
-                      graphtool.edges.remove(fromEdges[j]);
-                  }
-              }
-
-              function recNodes(nodeId, reachableNodes){
-                if (graphtool.network.getConnectedNodes(nodeId, "to") == []) {
-                  return reachableNodes;
-                }
-                var children = graphtool.network.getConnectedNodes(nodeId, "to");
-                reachableNodes.push(nodeId);
-                for (var i = 0; i < children.length; i++) {
-                    delete clicked[children[i]];
-                    recNodes(children[i], reachableNodes);
-                    //if(excludeIds.includes(children[i]))continue;
-                    //reachableNodes.push(children[i]);
-              }
-              
-              
-              }
-
-              
-              //deleteNodesChildren(params.nodes[0]);
-
-
-}
-
-  var graphtool = new GraphTool("mynetwork",config);
-
-  // var legendDiv = document.createElement("div");
-  //               let vis_cont = document.getElementById("vis_container")
-  //               vis_cont.append(legendDiv);
-  //               legendDiv.style.width = '100%';
-  //               legendDiv.style.position = 'relative';
-  //               legendDiv.style.display = 'inline-block';
-  //               legendDiv.id = "legendContainer";
-  //               var legendColors = {};
-  //               for (var i = 0; i < edges.length; i++) {
-  //                   //legendColors[input.properties[i]] = colors[i];
-  //                   var propertyContainer = document.createElement("div");
-  //                   var propertyColor = document.createElement("div");
-  //                   var propertyName = document.createElement("div");
-  //                   propertyContainer.className = "legend-element-container";
-  //                   propertyContainer.id = edges[i].label;
-  //                   propertyColor.className = "color-container";
-  //                   propertyName.className = "name-container";
-  //                   propertyColor.style.float = "left";
-  //                   propertyName.style.float = "left";
-  //                   propertyColor.style.border = "1px solid black";
-  //                   propertyName.style.border = "1px solid black";
-  //                   //propertyColor.style.background = colors[i];
-  //                   propertyColor.innerHTML = "";
-  //                   propertyName.innerHTML = edges[i].label;
-  //                   propertyColor.style.width = "30px";
-  //                   propertyColor.style.height = "30px";
-  //                   propertyName.style.height = "30px";
-  //                   propertyName.style.background = '#DEF';
-  //                   //propertyName.text-align = 'center';
-  //                   propertyContainer.paddinng = '5px 5px 5px 5px';
-  //                   //propertyName.addEventListener("click", legendFunctionality);
-  //                   //propertyColor.addEventListener("click", legendFunctionality);
-  //                   legendDiv.append(propertyContainer);
-  //                   propertyContainer.append(propertyColor);
-  //                   propertyContainer.append(propertyName);
-  //               }
-
-
-  graphtool.network.on("doubleClick", (params) => {
-    
-    keyObject.doubleclick(params);
-
-  });
 });
 
 

@@ -976,10 +976,11 @@ colorPicker(graph){
         if (this.options.groups[legendGroup].hidden) e.target.parentNode.childNodes[1].style.background = '#FFFFFF';
         else e.target.parentNode.childNodes[1].style.background = '#DEF';
 
-        //update all edges
+        //update all edges. ToDo: Consider: https://visjs.github.io/vis-network/examples/network/data/dynamicFiltering.html
         this.edges.forEach((edge) => {
             edge.hidden = this.options.groups[edge.group].hidden;
             edge.physics = !edge.hidden;
+            this.edges.update(edge); //see also: https://visjs.github.io/vis-network/examples/network/data/datasets.html
         });
 
         //reset nodes
@@ -997,7 +998,7 @@ colorPicker(graph){
                 node.visited = false;
             });
             
-        
+            this.nodes.update(node); //see also: https://visjs.github.io/vis-network/examples/network/data/datasets.html
         });
         //console.log(this.options)
         // console.log(this.nodes.get())
@@ -1010,7 +1011,7 @@ colorPicker(graph){
 
 
         
-        this.network.setData({nodes: this.nodes.get(), edges: this.edges.get()});
+        // this.network.setData({nodes: this.nodes.get(), edges: this.edges.get()});
 
         // this.network.setOptions(this.options);
         // this.network.body.emitter.emit('_dataChanged');

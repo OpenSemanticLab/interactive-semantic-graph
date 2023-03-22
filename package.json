@@ -41,7 +41,7 @@
     "test:report": "opener coverage/lcov-report/index.html"
   },
   "dependencies": {
-    "vis-data": "^7.1.2",
+    "vis-data": "^7.1.6",
     "vis-network": "^9.1.2"
   },
   "devDependencies": {

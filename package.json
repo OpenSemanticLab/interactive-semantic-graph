@@ -42,7 +42,7 @@
   },
   "dependencies": {
     "vis-data": "^7.1.2",
-    "vis-network": "^9.1.2"
+    "vis-network": "^9.1.6"
   },
   "devDependencies": {
     "microbundle": "^0.15.1",

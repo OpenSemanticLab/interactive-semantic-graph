@@ -1,11 +1,177 @@
-<!DOCTYPE html><html><head>  <meta charset="utf-8" />  <title>GraphTool Test Page</title>  <script src="../dist/isg.umd.js"></script>  <style type="text/css">    #mynetwork {
+<!DOCTYPE html>
+<html>
+  <head>  
+    <meta charset="utf-8" />  
+    <title>GraphTool Test Page</title>  
+    <script src="../dist/isg.umd.js"></script>
+    <style type="text/css">    #mynetwork {
   width: 100%;
   height: 800px;
   border: 1px solid lightgray;
 }
-</style></head><body>    <h1 id="title">GraphTool Test Page</h1>
+</style>
+</head>
+<body>
+  <h1 id="title">GraphTool Test Page</h1>
+
+<div id="mynetwork"></div>  <script>
+
+let new_json = {"jsonschema": {
+  "Category:Entity": {
+      "@context": {
+          "label": "Property:HasLabel"
+      }
+  },
+  "Category:Item": {
+      "@context": [
+          "Category:Entity",
+          {
+              "member": {"@id": "Property:HasMember", "@type": "@id"},
+              "other": {"@id": "Property:HasOther", "@type": "@id"},
+              "budget": {"@id": "Property:HasBudget", "@type": "@id"},
+              "some_property": {"@id": "Property:HasSomeItem", "@type": "@id"},
+              "some_literal": "Property:HasSomeLiteral"
+          }
+          ],
+      "properties": {
+          "label": [{
+              "type": "array",
+              "title": "Labels",
+              "items": {
+                  "type": "object",
+                  "title": "Label",
+                  "properties": {
+                      "text": {},
+                      "lang": {}
+                  }
+              }
+          }],
+          "member": {
+              "type": "string",
+              "title": "Member"
+          },
+          "budget": {
+              "type": "array",
+              "title": "Budgets",
+              "items": {
+                  "type": "object",
+                  "title": "Budget",
+                  "properties": {
+                      "year": {"title": "Year"},
+                      "value": {"title": "BudgetValue"}
+                  }
+              }
+          }
+      }
+  }
+  
+  }, 
+"jsondata": {
+  "Item:MyProject": {
+      "type": ["Category:Item"],
+      "label": [{"text": "My Project", "lang": "en"}],
+      "member": ["Item:SomePerson", "Item:SomePerson"], //"Item:MyOtherItem"
+      "start": true,
+      "some_literal": ["Some string","Some","string",],
+      "not_in_context": "Item:MyNewItem",
+      "budget": [{
+          "year": "2000",
+          "value": "10000",
+          "budget":[{
+            "year": "2022",
+            "value": "10"}, {
+              "year": "2022",
+              "value": "20"}]
+      },{
+        "year": "2001",
+        "value": "20000"
+    },{
+      "year": "2002",
+      "value": "30000"
+  },{
+    "year": "2003",
+    "value": "40000"
+}]
+  },
+  "Item:SomePerson": {
+      "type": ["Category:Item"],
+      "label": [{"text": "Max Mustermann", "lang": "en"}],
+      "some_property": "Item:MyOtherItem"
+  },
+  "Property:HasMember": {
+      "type": ["Category:Property"],
+      "label": [{"text": "Has Member", "lang": "en"}]
+  },
+  "Item:MyOtherItem": {
+    "type": ["Category:Item"],
+    "label": [{"text": "My Other", "lang": "en"}],
+    "member": ["Item:MyNewItem"],
+    "other":["Item:MySecondItem"],
+    "some_literal": "Some string",
+    "not_in_context": "Not in Context",
+    
+  },
+  "Item:MyNewItem": {
+    "type": ["Category:Item"],
+    "label": [{"text": "My New Other", "lang": "en"}]
+    
+  },
+  "Item:MySecondItem": {
+    "type": ["Category:Item"],
+    "label": [{"text": "My Second Other", "lang": "en"}]
+    
+  },
+
+}};
+
+let nodes = [];
+let edges = [];
 
 
-<div id="mynetwork"></div>  <script>    //console.log("run");
+let _config = {
+  // callbacks: {
+  //   getStartItem: (data) => "Item:MyOtherItem",
+  //   setColor: (data) => "#491230"
+  //   createContext: (data) => ""
+  // }
+};
+
+let args = {file: new_json, depth:5, mode: true, nodes: nodes, edges: edges}
+
+var draw = new isg.GraphDrawer(_config, args);
+
+
+
+
+var options = {interaction: {hover: true,multiselect: true,},
+      manipulation: {enabled: true,},
+      physics: {
+        stabilization: {
+            enabled: true,
+        },
+        barnesHut: {
+            gravitationalConstant: -40000,
+            centralGravity: 0,
+            springLength: 0,
+            springConstant: 0.5,
+            damping: 1,
+            avoidOverlap: 0
+        },
+        maxVelocity: 5
+      },
+      edges: {arrows: "to"},
+      groups: {
+        useDefaultGroups: false
+      }
+    }
+let config = {nodes:nodes,edges:edges,options:options, graph: draw, file: new_json};
+
+  // let _config = {
+
+  // }
+
+var graphtool = new isg.GraphTool(_config, "mynetwork", config);
+
+
 
 </script></body></html>

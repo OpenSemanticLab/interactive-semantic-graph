@@ -41,8 +41,11 @@
     "test:report": "opener coverage/lcov-report/index.html"
   },
   "dependencies": {
-    "vis-data": "^7.1.2",
-    "vis-network": "^9.1.2"
+    "chroma-js": "^2.4.2",
+    "jquery": "^3.6.3",
+    "jsonpath": "^1.1.1",
+    "vis-data": "7.1.2",
+    "vis-network": "9.1.2"
   },
   "devDependencies": {
     "microbundle": "^0.15.1",

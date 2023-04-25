@@ -73,12 +73,12 @@ let new_json = {"jsonschema": {
       "member": ["Item:SomePerson", "Item:SomePerson"], //"Item:MyOtherItem"
       "start": true,
       "some_literal": ["Some string","Some","string",],
-      "not_in_context": "Item:MyNewItem",
+      "not_in_context": "Not in Context",
       "budget": [{
           "year": "2000",
           "value": "10000",
           "budget":[{
-            "year": "2022",
+            "year": "2023",
             "value": "10"}, {
               "year": "2022",
               "value": "20"}]
@@ -106,14 +106,19 @@ let new_json = {"jsonschema": {
     "type": ["Category:Item"],
     "label": [{"text": "My Other", "lang": "en"}],
     "member": ["Item:MyNewItem"],
-    "other":["Item:MySecondItem"],
     "some_literal": "Some string",
     "not_in_context": "Not in Context",
+    "budget":[{
+            "year": "2022",
+            "value": "10"}, {
+              "year": "2022",
+              "value": "20"}]
     
   },
   "Item:MyNewItem": {
     "type": ["Category:Item"],
-    "label": [{"text": "My New Other", "lang": "en"}]
+    "label": [{"text": "My New Other", "lang": "en"}],
+    "other":["Item:MySecondItem"]
     
   },
   "Item:MySecondItem": {
@@ -123,6 +128,8 @@ let new_json = {"jsonschema": {
   },
 
 }};
+
+const clone = structuredClone(new_json);
 
 let nodes = [];
 let edges = [];
@@ -136,7 +143,7 @@ let _config = {
   // }
 };
 
-let args = {file: new_json, depth:5, mode: true, nodes: nodes, edges: edges}
+let args = {file: new_json, depth:1, mode: true, nodes: nodes, edges: edges}
 
 var draw = new isg.GraphDrawer(_config, args);
 

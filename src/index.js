@@ -1000,6 +1000,7 @@ class GraphTool {
   //   console.log('createTestSetup')
   // }
   ///////////////////////  ///////////////////////  ///////////////////////  ///////////////////////
+
   //Adds a callback function to config 
   registerCallback(params) {
     this._config.callbacks[params.name].push(params.func)
@@ -1017,6 +1018,7 @@ class GraphTool {
     }
     return result;
   }
+
 
 
   createSearchUI(){
@@ -1691,19 +1693,19 @@ class GraphTool {
 
     if (params.nodes.length > 0) {
 
-      let node = this.nodes.get(params.nodes[0])
+      let node = this.nodes.get(params.nodes[0]);
       
       if("object" in node && (this.clicked[params.nodes[0]] == false || !(""+params.nodes[0] in this.clicked)) && (this.network.getConnectedNodes(params.nodes[0], "to").length === 0)){
 
         if(node.context){
               //file, lastId, item, oldContext, lastDepth, givenDepth, mode
-          let args = {file: config.file, lastId: node.id, item: node.object, oldContext: node.context, lastDepth: node.depth, givenDepth: "", mode: true}
+          let args = {file: config.file, lastId: node.id, item: node.object, oldContext: node.context, lastDepth: node.depth, givenDepth: 1, mode: true}
 
           config.graph.createGraphNE(args);
           
         }else{
 
-          let args = {file: config.file, lastId: node.id, item: node.object, oldContext:"", lastDepth: node.depth, givenDepth:"", mode: true};
+          let args = {file: config.file, lastId: node.id, item: node.object, oldContext:"", lastDepth: node.depth, givenDepth:1, mode: true};
 
           config.graph.createGraphNE(args);
           
@@ -2280,6 +2282,622 @@ function test() {
 //let clicked = {};
 
 $( document ).ready(function() {
+
+//let result = jsonpath.query(draw.file, '$..[?(@=="2000")]');
+
+let data = clone.jsondata;
+
+
+console.log(data)
+
+function findKeyPath(obj, key, path = '', results = []) {
+  for (let prop in obj) {
+    if (prop === key && Array.isArray(obj[prop]) && obj[prop].every(item => typeof item === 'object' && item !== null)) {
+      results.push(path + prop);
+    }
+    if (typeof obj[prop] === 'object' && obj[prop] !== null) {
+      findKeyPath(obj[prop], key, path + prop + '.', results);
+    }
+  }
+  return results;
+}
+
+
+function searchJSON(data, searchValue) {
+
+  // const searchValue = '2022';
+  // const jsonPathExpression = `$..[?(@=="${searchValue}")]`;
+  const matches = jsonpath.query(data, `$..[?(@=="${searchValue}")]`);
+
+  const result = [...new Set(matches.flatMap(match =>
+    jsonpath.paths(data, `$..[?(@=="${match}")]`).map(key =>
+      `${key.join('.')}`//: ${match}
+    )
+  ))];
+
+  return result;
+
+}
+var idsToColor = [];
+
+var coloredNodesConnectedToRoot = [];
+
+function IsStartObjectInGraph(foundPaths, searchValue, initialSearchValue){
+
+  //console.log(foundPaths)
+
+  let nodesWithObject = [];
+
+  let objectInOnject = []//findKeyPath(data, searchValue);
+
+  if(objectInOnject.length == 0){
+
+    for(let i = 0; i < foundPaths.length; i++){
+
+      let path = foundPaths[i].split(".")[1];
+
+      let path2 = foundPaths[i].split(".");
+
+
+      if(Array.isArray(data[path2[1]][path2[2]]) && typeof data[path2[1]][path2[2]][0] === 'object' && data[path2[1]][path2[2]][0] !== null){
+
+        let startId = 0;
+        let nodes = graphtool.nodes.get();
+        //let idsToColor = [];
+
+        const nodesWithLabel = graphtool.nodes.get({
+          filter: function(node) {
+              return (node.object === path2[1]);
+          }
+        });
+
+        if(nodesWithLabel.length > 0){
+
+          startId = nodesWithLabel[0].id;
+
+        }
+
+        if(!(path2[1] == nodes[0].object) && nodesWithLabel.length == 0){
+
+            let searchExistingNodes = searchJSON(data, path2[1]);
+            //console.log(searchExistingNodes)
+            let found = IsStartObjectInGraph(searchExistingNodes, false ,initialSearchValue);
+            //console.log(found)
+            idsToColor.push(found[0].id);
+
+            let params = {nodes:[found[0].id]}
+
+            graphtool.expandNodes(params);
+
+            let objectInOnject = findKeyPath(data, initialSearchValue);
+            
+            if(objectInOnject.length == 0){
+
+              console.log("here")
+              searchExistingNodes = searchJSON(data, searchValue);
+
+              found = IsStartObjectInGraph(searchExistingNodes, false , initialSearchValue);
+            }else{
+
+              const nodesWithLabel = graphtool.nodes.get({
+                filter: function(node) {
+                    return (node.object === path2[1]);
+                }
+              });
+
+              for(let i = 0; i < nodesWithLabel.length; i++){
+
+                idsToColor.push(nodesWithLabel[i].id);
+
+                let params = {nodes:[nodesWithLabel[i].id]}
+
+                graphtool.expandNodes(params);
+              }
+
+              console.log(idsToColor)
+
+              let nodes = graphtool.nodes.get();
+
+              nodes.forEach((node) => {
+
+                  if(node.label == initialSearchValue || idsToColor.includes(node.id)){
+                    node.color = draw.colorObj[node.group];
+                    graphtool.nodes.update(node);
+                    idsToColor.push(node.id)
+                  }
+
+                  if(!(idsToColor.includes(node.id)) && node.id != 0 && node.label != initialSearchValue){
+                    node.color = "#ffffff"
+                    graphtool.nodes.update(node);
+                  }
+
+              });
+
+              let edges = graphtool.edges.get();
+
+              edges.forEach((edge) => {
+
+                if(idsToColor.includes(edge.to)){
+                  edge.color = draw.colorObj[edge.group];
+                  graphtool.edges.update(edge);
+                }
+
+                if(!(idsToColor.includes(edge.to))){
+                  edge.color = "#000000"
+                  graphtool.edges.update(edge);
+                }
+
+                
+
+
+              });
+              
+            }
+
+            //let done = expandNodesTillFoundValue(found, searchValue);
+
+            // const nodesWithLabel = graphtool.nodes.get({
+            //   filter: function(node) {
+            //       return (node.object === path2[1]);
+            //   }
+            // });
+
+            // let params = {nodes:[nodesWithLabel[0].id]}
+
+            // graphtool.expandNodes(params);
+
+            //found = IsStartObjectInGraph(searchExistingNodes);
+          //console.log(nodesWithLabel)
+        }
+        if(nodesWithLabel.length > 0 || path2[1] == nodes[0].object){
+
+
+          for(let i = 2; i < path2.length; i+=2){
+            // console.log(startId)
+            // console.log(path2)
+            
+            if(!(path2[i+1] == undefined)){
+
+              
+            let connectedNodeIds = graphtool.network.getConnectedNodes(startId, "to"); 
+            
+            if(connectedNodeIds.length == 0){
+
+              idsToColor.push(startId);
+
+              let params = {nodes:[startId]}
+
+              graphtool.expandNodes(params);
+
+            }
+
+            connectedNodeIds = graphtool.network.getConnectedNodes(startId, "to"); 
+
+            const connectedNodes = graphtool.nodes.get(connectedNodeIds);
+      
+            const filteredNodes = connectedNodes.filter(node => node.label === path2[i]);
+      
+            const filteredNodeIds = filteredNodes.map(node => node.id);
+            
+            idsToColor.push(filteredNodeIds[path2[i+1]]);
+
+            let params = {nodes:[filteredNodeIds[path2[i+1]]]}
+
+            let connectedNodesSet = graphtool.network.getConnectedNodes(filteredNodeIds[path2[i+1]], "to");
+
+            if(connectedNodesSet.length == 0){
+              
+              graphtool.expandNodes(params);
+
+            }
+
+            startId = filteredNodeIds[path2[i+1]];
+
+            }
+
+          }
+
+          
+          let nodes = graphtool.nodes.get();
+
+          nodes.forEach((node) => {
+
+
+
+              if(node.label == initialSearchValue || idsToColor.includes(node.id)){
+                node.color = draw.colorObj[node.group];
+                graphtool.nodes.update(node);
+                idsToColor.push(node.id)
+              }
+
+              if(!(idsToColor.includes(node.id)) && node.id != 0 && node.label != initialSearchValue){
+                node.color = "#ffffff"
+                graphtool.nodes.update(node);
+              }
+
+            
+
+          });
+
+          let edges = graphtool.edges.get();
+
+          edges.forEach((edge) => {
+
+            if(idsToColor.includes(edge.to)){
+              edge.color = draw.colorObj[edge.group];
+              graphtool.edges.update(edge);
+            }
+
+
+
+            if(!(idsToColor.includes(edge.to))){
+              edge.color = "#000000"
+              graphtool.edges.update(edge);
+            }
+
+          });
+        }
+        
+      }else{
+        
+        let nodes = graphtool.nodes.get();
+        let edges = graphtool.edges.get();
+
+        if(path == nodes[0].object){
+
+          if(idsToColor.length == 0){
+
+            let connectedNodesToRoot = graphtool.network.getConnectedNodes(0, "to");
+
+            for(let i = 0; i < connectedNodesToRoot.length; i++){
+
+              graphtool.nodes.get(connectedNodesToRoot[i]).color = "#ffffff";
+              graphtool.nodes.update(graphtool.nodes.get(connectedNodesToRoot[i]));
+
+            }
+
+            let connectedEdgesToRoot = graphtool.network.getConnectedEdges(0);
+
+            for(let i = 0; i < connectedEdgesToRoot.length; i++){
+
+              graphtool.edges.get(connectedEdgesToRoot[i]).color = "#000000";
+              graphtool.edges.update(graphtool.edges.get(connectedEdgesToRoot[i]));
+
+            }
+
+          }
+
+          nodes.forEach((node) => {
+            if(node.label == initialSearchValue || idsToColor.includes(node.id)){
+              
+              node.color = draw.colorObj[node.group];
+
+              graphtool.nodes.update(node);
+              if(!(idsToColor.includes(node.id))){
+                idsToColor.push(node.id);
+              }
+
+            }
+
+          });
+
+          edges.forEach((edge) => {
+            if(idsToColor.includes(edge.to) || idsToColor.includes(edge.to)){
+              edge.color = draw.colorObj[edge.group];
+              graphtool.edges.update(edge);
+            }
+          });
+
+
+          
+
+          //console.log("here")
+          continue;
+        }
+        
+        nodes = graphtool.nodes.get();
+
+        nodes.forEach((node) => {
+    
+          if(node.object === path){
+                
+            nodesWithObject.push(node);
+            
+          }
+    
+        });
+        if(nodesWithObject.length == 0){
+
+          let searchExistingNodes = searchJSON(data, path);
+          let found = IsStartObjectInGraph(searchExistingNodes);
+          nodesWithObject.push(found);
+        }
+        
+      }
+
+    }
+  }else{
+    for(let i = 0; i < objectInOnject.length; i++){
+      objectInOnjectNodes(objectInOnject[i], searchValue, initialSearchValue)
+    }
+  }
+  nodesWithObject = [...new Set(nodesWithObject.map(obj => JSON.stringify(obj)))].map(str => JSON.parse(str));
+
+  nodesWithObject = nodesWithObject.flat(Infinity);
+  
+  return nodesWithObject;
+
+}
+
+function objectInOnjectNodes(path, searchValue, initialSearchValue){
+
+
+
+}
+
+function expandNodesTillFoundValue(startingNode, searchValue){
+
+
+  if(startingNode.length == 0){
+    return;
+  }
+  
+  for(let i = 0; i < startingNode.length; i++){
+    idsToColor.push(startingNode[i].id);
+    let params = {nodes:[startingNode[i].id]}
+
+    let connectedNodesTo = graphtool.network.getConnectedNodes(startingNode[i].id, "to");
+    if(connectedNodesTo.length == 0){
+      graphtool.expandNodes(params);
+    }
+    
+  }
+
+
+
+  let nodes = graphtool.nodes.get();
+  //console.log(nodes)
+  let nodeExists = false;
+
+
+  nodes.forEach((node) => {
+
+
+
+    if(node.label == searchValue || idsToColor.includes(node.id)){
+      node.color = draw.colorObj[node.group];
+      graphtool.nodes.update(node);
+      idsToColor.push(node.id);
+    }
+    
+    if(!(idsToColor.includes(node.id)) && node.id != 0 && node.label != searchValue){
+      node.color = "#ffffff"
+      graphtool.nodes.update(node);
+    }
+
+
+
+  });
+  let edges = graphtool.edges.get();
+
+        edges.forEach((edge) => {
+
+          if(idsToColor.includes(edge.to)){
+            edge.color = draw.colorObj[edge.group];
+            graphtool.edges.update(edge);
+          }
+
+          if(!(idsToColor.includes(edge.to))){
+            edge.color = "#000000"
+            graphtool.edges.update(edge);
+          }
+
+        });
+
+  nodes.forEach((node) => {
+      
+      if(node.label === searchValue ){
+
+        var edgesToNode = graphtool.network.getConnectedEdges(node.id, {to: true}).filter(function (edgeId) {
+          return graphtool.edges.get(edgeId).to == node.id;
+        });
+    
+        if(graphtool.edges.get(edgesToNode)[0].from != 0){
+
+          nodeExists = true;
+          return;
+
+        }
+      }
+  });
+
+  if(nodeExists === false){
+    console.log("here")
+    let found = searchJSON(data, searchValue);
+    let nodesToStart = IsStartObjectInGraph(found);
+    //console.log(nodesToStart)
+    let done = expandNodesTillFoundValue(nodesToStart, searchValue);
+    return;
+  }
+
+}
+
+function pathIsObjectInObject(paths){
+
+  for(let i = 0; i < paths.length; i++){
+
+    let path = paths[i].split(".");
+
+    if(Array.isArray(data[path[1]][path[2]]) && typeof data[path[1]][path[2]][0] === 'object' && data[path[1]][path[2]][0] !== null){
+      
+      let startId = 0;
+
+      for(let i = 2; i < path.length; i+=2){
+
+        if(!(path[i+1] == undefined)){
+        const connectedNodeIds = graphtool.network.getConnectedNodes(startId, "to"); 
+
+        const connectedNodes = graphtool.nodes.get(connectedNodeIds);
+  
+        const filteredNodes = connectedNodes.filter(node => node.label === path[i]);
+  
+        const filteredNodeIds = filteredNodes.map(node => node.id);
+
+        let params = {nodes:[filteredNodeIds[path[i+1]]]}
+
+        graphtool.expandNodes(params);
+        
+        startId = filteredNodeIds[path[i+1]];
+
+        }
+
+      }
+
+
+    }else{
+
+    }
+  }
+}
+
+function searchFunctionality(data, searchValue){
+
+  let found;
+
+  if(findKeyPath(data, searchValue).length > 0){
+    found = findKeyPath(data, searchValue);
+
+    for(let i = 0; i < found.length; i++){
+      found[i] = '$.' + found[i];
+    }
+  }else{
+    found = searchJSON(data, searchValue)
+  }
+
+  let nodesToStart = IsStartObjectInGraph(found, searchValue, searchValue);
+
+
+  let done = expandNodesTillFoundValue(nodesToStart, searchValue);
+
+}
+
+const container = document.getElementById('title');
+      
+const inputField = document.createElement('input');
+inputField.type = 'text';
+inputField.id = 'input-field';
+
+const submitButton = document.createElement('button');
+submitButton.id = 'submit-button';
+submitButton.textContent = 'Submit';
+
+container.appendChild(inputField);
+container.appendChild(submitButton);
+
+submitButton.addEventListener('click', function() {
+  const inputValue = inputField.value;
+
+  let inputString = inputValue;
+
+  searchFunctionality(data, inputString)
+
+});
+
+
+
+
+
+
+
+//console.log(graphtool.nodes.get())
+//console.log(searchJSON(data, '2022'))
+//console.log(result[0].split(".")[1]);
+
+// function removeItem(arr, value) {
+//   var index = arr.indexOf(value);
+//   if (index > -1) {
+//       arr.splice(index, 1);
+//   }
+//   return arr;
+// }
+
+// function findAllPaths(startNode, endNode) {
+//   var visitedNodes = [];
+//   var currentPath = [];
+//   var allPaths = [];
+//   dfs(startNode, endNode, currentPath, allPaths, visitedNodes);
+//   return allPaths;
+// }
+// //Algorithm to search for all paths between two nodes
+// function dfs(start, end, currentPath, allPaths, visitedNodes) {
+//   if (visitedNodes.includes(start)) return;
+//   visitedNodes.push(start);
+//   currentPath.push(start);
+//   if (start == end) {
+//       var localCurrentPath = currentPath.slice();
+//       allPaths.push(localCurrentPath);
+//       removeItem(visitedNodes, start);
+//       currentPath.pop();
+//       return;
+//   }
+//   var neighbours = graphtool.network.getConnectedNodes(start);
+//   for (var i = 0; i < neighbours.length; i++) {
+//       var current = neighbours[i];
+//       dfs(current, end, currentPath, allPaths, visitedNodes);
+//   }
+//   currentPath.pop();
+//   removeItem(visitedNodes, start);
+// }
+
+// console.log(findAllPaths(2,28))
+
+// const searchValue = '2022';
+// const jsonPathExpression = `$..[?(@=="${searchValue}")]`;
+// const matches = jsonpath.query(data, jsonPathExpression);
+
+// const result = matches.reduce((acc, match) => {
+//   const keys = jsonpath.paths(data, `$..[?(@=="${match}")]`);
+//   return acc.concat(keys.map(key => `${key.join('.')}: ${match}`));
+// }, []);
+
+// console.log(result)
+
+// const searchObject = (obj, searchValue) => {
+//   let result = [];
+//   for (let key in obj) {
+//     if (obj[key] === searchValue) {
+//       result.push(key);
+//     } else if (typeof obj[key] === 'object') {
+//       const nestedResult = searchObject(obj[key], searchValue);
+//       if (nestedResult.length > 0) {
+//         result = result.concat(nestedResult.map(nestedKey => `${key}.${nestedKey}`));
+//       }
+//     }
+//   }
+//   return result;
+// };
+
+// const searchValue = '2022';
+// const jsonPathExpression = `$..[?(@=="${searchValue}")]`;
+// const matches = jsonpath.query(data, jsonPathExpression, 1);
+
+
+// const result = matches.reduce((acc, match) => {
+//   console.log(match)
+//   const keys = searchObject(data, match);
+//   return acc.concat(keys.map(key => `${key}: ${match}`));
+// }, []);
+
+// console.log(result); 
+
+//console.log(data["Item:MyProject"]["budget"][0]["budget"][0]["value"])
+//console.log(data["Item:MyProject"]["budget"][0]["budget"][1]["value"])
+
+
+// "Item:MyProject.budget.0.budget.0.year: 2022"
+// "Item:MyProject.budget.0.budget.1.year: 2022"
+
+//const result = jsonpath.query(data, '$..[?(@=="Fiesta")]');
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

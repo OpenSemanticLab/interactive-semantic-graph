@@ -15,10 +15,15 @@
 <link href="https://unpkg.com/tabulator-tables@4.3.0/dist/css/tabulator.min.css" rel="stylesheet">
 <script type="text/javascript" src="https://unpkg.com/tabulator-tables@4.3.0/dist/js/tabulator.min.js"></script>
 
+
+
 <!--for jsoneditor-->
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jsoneditor/9.10.0/jsoneditor.min.js"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jsoneditor/9.10.0/jsoneditor.css" integrity="sha512-/JghmMAi5bleEgj1BT7h7Jm2+o4I4AbJYRVaY3eGGfdyTzV+yW3n0IedWH4ysbws5zpNK1beCqVJh0MSZxvNaA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.4/lodash.min.js"></script>
+
+
 
 <!--for json-editor-->
 <!--
@@ -85,9 +90,8 @@ let new_json = {"jsonschema": {
       "type": ["Category:Item"],
       "label": [{"text": "My Project", "lang": "en"}],
       "member": ["Item:SomePerson", "Item:SomePerson"], //"Item:MyOtherItem"
-      "start": true,
       "some_literal": ["Some string","Some","string",],
-      "not_in_context": "Not in Context",
+      "key_not_in_context": "Value of Not in Context",
       "budget": [{
           "year": "2000",
           "value": "10000",
@@ -149,7 +153,7 @@ let nodes = [];
 let edges = [];
 
 
-let _config = {
+let callback_config = {
   // callbacks: {
   //   getStartItem: (data) => "Item:MyOtherItem",
   //   setColor: (data) => "#491230"
@@ -157,9 +161,9 @@ let _config = {
   // }
 };
 
-let args = {file: new_json, depth:1, mode: true, nodes: nodes, edges: edges}
+let args = {file: new_json, depth:1, mode: true, nodes: nodes, edges: edges, rootItem: "Item:MyProject"}
 
-var draw = new isg.GraphDrawer(_config, args);
+var draw = new isg.GraphDrawer(callback_config, args);
 
 
 
@@ -187,11 +191,8 @@ var options = {interaction: {hover: true,multiselect: true,},
     }
 let config = {nodes:nodes,edges:edges,options:options, graph: draw, file: new_json};
 
-  // let _config = {
 
-  // }
-
-var graphtool = new isg.GraphTool("mynetwork", config, _config);
+var graphtool = new isg.GraphTool("mynetwork", config, callback_config);
 
 
 

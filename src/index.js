@@ -1,6 +1,6 @@
 const vis = require("vis-network/standalone/esm/index.js")
 const utils = require("./utils.js")
-const NodeClasses = require("./NodeClasses.js")
+//const NodeClasses = require("./NodeClasses.js")    // this causes firefox hanging. 
 const $ = require("jquery")
 const chroma = require("chroma-js")
 //const RegExp = require('RegExp');
@@ -9,22 +9,26 @@ const jsonpath = require('jsonpath');
 
 class GraphDrawer {
 
-  constructor(config, args) {
+  constructor(callback_config, args) {
 
-    const defaultConfig = {
+    const defaultCallbackConfig = {
       callbacks: {
         setColor: (data) => this.setColorDefault(data), //default: use class methode
         getStartItem: (data) => this.getStartItemDefault(data),
-        createContext: (data) => this.createContextDefault(data),
+        createContext: (file,item) => this.getItemContextDefault(file,item),
+        getEdgeLabel: (item, key) => this.getEdgeLabelDefault(item, key),
         onBeforeSetColor: [(graph, property) => true],
         onBeforeGetStartItem: [(graph, item) => true],
         onBeforeCreateContext: [(graph, context) => true],
       }
     };
 
-    this.config = utils.mergeDeep(defaultConfig, config);
+    this.config = utils.mergeDeep(defaultCallbackConfig, callback_config);
+    console.log("this.config  = ",this.config)
+    console.log("args", args)
 
     this.file = args.file;
+    this.rootItem = args.rootItem
     this.depth = args.depth;
     this.mode = args.mode;
     this.id = 0;
@@ -32,7 +36,6 @@ class GraphDrawer {
     this.edges = args.edges;
     this.lang = "en";
     this.first = true;
-    this.oldStartItem;
     this.baseRootId;
     this.colorObj = {};
     this.h = Math.random();
@@ -46,8 +49,10 @@ class GraphDrawer {
       givenDepth: this.depth,
       mode: this.mode
     }
-    this.createGraphNE(this.createArgs);
 
+ //   this.context = this.config.callbacks.createContext(this.file);
+
+    this.createGraphNodesEdges(this.createArgs);
 
     Object.filter = (obj, predicate) =>
       Object.keys(obj)
@@ -82,8 +87,11 @@ class GraphDrawer {
       "80%,1)";
   }
 
+  getLabelFromContext(context, key) {
+    context[key]["@id"].replace("Property:", "")
+  }
 
-  //Gets the starting Item inside the JSON file
+ /* //Gets the starting Item inside the JSON file
   getStartItem(file) {
 
     console.log(file);
@@ -113,10 +121,16 @@ class GraphDrawer {
     } else {
       return false;
     }
+  } */
+
+  getStartItem(file){
+    return(this.rootItem)
   }
 
   //Creates Array of arrays Array of all contexts
-  contextRecursion(file, schema, fullContext = []) {
+  getSchemaContextRecursive(file, schema, fullContext = []) {
+
+    
     fullContext = fullContext;
 
     let startContext = file.jsonschema[schema]["@context"];
@@ -124,9 +138,8 @@ class GraphDrawer {
     if (Array.isArray(startContext)) {
       for (let i = 0; i < startContext.length; i++) {
 
-
         if (!(typeof startContext[i] === 'object' && startContext[i] !== null)) {
-          this.contextRecursion(file, startContext[i], fullContext);
+          this.getSchemaContextRecursive(file, startContext[i], fullContext);
         } else {
           fullContext.push(startContext[i]);
         }
@@ -134,16 +147,14 @@ class GraphDrawer {
     } else {
       fullContext.push(startContext);
     }
-
     return fullContext;
   }
-
   
   //Creates a context object out of the multidimensional array created by the recursive context function
-  createContext(file, item) {
-
+  getItemContextDefault(file, item) {
+    console.log("createCentextDefault file,item:", file, item)
     let itemSchema = file.jsondata[item].type[0];
-    let contextArrayOfObjects = this.contextRecursion(file, itemSchema);
+    let contextArrayOfObjects = this.getSchemaContextRecursive(file, itemSchema);
     let context = {};
 
     for (let i = 0; i < contextArrayOfObjects.length; i++) {
@@ -155,6 +166,7 @@ class GraphDrawer {
         context[partContextKeys[j]] = contextArrayOfObjects[i][partContextKeys[j]];
       }
     }
+
     if (this.handleCallbacks({
         id: 'onBeforeCreateContext',
         params: {
@@ -162,9 +174,53 @@ class GraphDrawer {
           context: context
         }
       })) {
-
       return context;
     }
+  }
+
+  
+  // default method if not overwritten by the user
+  getEdgeLabelDefault(item, key){
+    
+    // look up schema
+    let hits = []
+    schemas = this.file.jsondata[item].type
+
+    for (let schema of schemas){
+      console.log(schema)
+
+      // look up key in Property map in @context of schema
+        if ("@context" in Object.keys(schema)){
+          let context_arr = schema["@context"]
+          console.log("@context:",context_arr)
+          for (let i in context_arr){
+            context = context_arr[i]
+            if (typeof context === "object") {
+              if (key in context){
+                hits.push(context[key])
+              }
+            }
+          }
+        }
+    }
+
+    // create label from Property
+    if (hits.length==0){
+      edgeLabel = key
+    }  
+    else if (hits.length==1){
+      edgeLabel = hits[0]
+    }
+    else {
+      edgeLabel = hits[0]
+      for (let i in hits){
+        if (i >0){
+          edgeLabel += ", " + hits[i]
+        }
+      }
+    }
+    
+    return edgeLabel
   }
 
   // createContext(file, item){
@@ -177,15 +233,13 @@ class GraphDrawer {
   nodeExists(nodes, item) {
     let exists = false;
     for (let index = 0; index < nodes.length; index++) {
-      if (nodes[index].object && nodes[index].object == item) {
+      if (nodes[index].item && nodes[index].item == item) {
         exists = index;
       }
 
     }
     return exists;
   }
-
-  // default method if not overwritten by the user
 
   // generates colors per property (per property, not per node! Todo: consider renaming: getColorByProperty)
   setColor(property) {
@@ -215,82 +269,98 @@ class GraphDrawer {
   //   return this.config.callbacks.setColor(data);
   // }
 
-  //creates nodes and edges out of a JSON file
-  createGraphNE(args) {
+  createNodeFromJSONPath(){
 
-    //keys of args: file, lastId, item, oldContext, lastDepth, givenDepth, mode
+  }
 
-    let startItem;
-    let label;
-    let rootId;
-    let startContext;
-    let objKeys;
-    let depth;
-    let color;
+  createEdgeFromJSONPath(){
 
-    //first run of the function
-    if (!args.item && !args.lastId) {
-      //gets the item in the jsondata that is labelled with "start":true
-      startItem = this.getStartItem(args.file);
+  }
 
-      let labelArray = args.file.jsondata[startItem].label;
-
-      // check language for root node and set label according to this.lang
+  getLabelFromItem(item){
+    // check language for root node and set label according to this.lang
+    let labelArray = this.file.jsondata[item].label
+    let label = ""
       for (let i = 0; i < labelArray.length; i++) {
         if (labelArray[i].lang == this.lang) {
           label = labelArray[i].text;
         }
       }
+      return(label)
+    }
+
+
+  //creates nodes and edges out of a JSON file
+  createGraphNodesEdges(args) {
+    //keys of args: file, lastId, item, oldContext, lastDepth, givenDepth, mode
+
+    let currentItem;
+    // set start Item
+    if (args.item){
+      currentItem = args.item
+    }
+    else{
+      currentItem = this.getStartItem(args.file);
+    }
+
+    // set current Context
+    let startContext;
+    if (args.oldContext){
+      startContext = args.oldContext
+    }
+    else{
+      startContext = this.config.callbacks.createContext(args.file, currentItem)
+    }
+
+    let label;
+    let rootId;
+    if (args.lastId){
+      rootId = args.lastId
+    }
+    else{
+      rootId = this.id;
+    }
+
+    let objKeys = Object.keys(args.file.jsondata[currentItem]);
+    let depth;
+    if (args.lastDepth){
+      depth = args.lastDepth
+    }
+    else{
+      depth = 1
+    }
+
+    let color;
+    let rootNodeColor = '#6dbfa9';
+
+    //first run of the (recursive) function
+    if (!args.item && !args.lastId) {
+      //gets the item in the jsondata that is labelled with "start":true
+      //currentItem = this.getStartItem(args.file);
+      label = this.getLabelFromItem(currentItem)
 
       //creates the root node
       this.nodes.push({
         id: this.id,
         label: label,
-        color: '#6dbfa9',
+        color: rootNodeColor,
         depth: 0,
-        object: startItem,
+        item: currentItem,    
         group: "root"
       });
-      rootId = this.id;
+
       this.baseRootId = rootId;
       this.id++;
-      depth = 1;
-
-      //creates  the context of the root node
-      startContext = this.createContext(args.file, startItem); // a map from JSON-keys on SemanticProperty (labels)
-      objKeys = Object.keys(args.file.jsondata[startItem]);
-
+      
     }
-    // not the first run; context already exists i.e. for objects inside objects
-    else if (args.oldContext) { //if context is given inside a node
-      startItem = args.item;
-      startContext = args.oldContext;
-      objKeys = Object.keys(args.file.jsondata[startItem]);
-      rootId = args.lastId;
-      depth = args.lastDepth;
-
-
-    }
-    // no oldContext present and not first run.
+    // no oldContext present and not first run. => context has to be created
     else {
-
-      startItem = args.item;
-
-      let labelArray = args.file.jsondata[startItem].label;
-
-      for (let i = 0; i < labelArray.length; i++) {
-
-        if (labelArray[i].lang == this.lang) {
-          label = labelArray[i].text;
-        }
-      }
-      rootId = args.lastId;
+      label = this.getLabelFromItem(currentItem)
       this.id++;
-      depth = args.lastDepth;
-
-      startContext = this.createContext(args.file, startItem);
-      objKeys = Object.keys(args.file.jsondata[startItem]);
     }
+
+
+
 
     // loops through an item
     for (let i = 0; i < objKeys.length; i++) {
@@ -317,7 +387,7 @@ class GraphDrawer {
           // if the key is in start context and Property is present in jsondata and literal property
         } else if (objKeys[i] in startContext && !(args.file.jsondata[startContext[objKeys[i]]["@id"]]) && startContext[objKeys[i]]["@type"] == "@id") {
 
-          let edgeLabel = startContext[objKeys[i]]["@id"].replace("Property:", "");
+          let edgeLabel = this.getLabelFromContext(startContext, objKeys[i]);
 
           color = this.setColor(edgeLabel)
           // if no mapping/context is present for the key.
@@ -329,20 +399,20 @@ class GraphDrawer {
 
 
         // check if given key's value is an array and if the first element is an object
-        if (Array.isArray(args.file.jsondata[startItem][objKeys[i]]) && typeof args.file.jsondata[startItem][objKeys[i]][0] === 'object' && args.file.jsondata[startItem][objKeys[i]][0] !== null) {
+        if (Array.isArray(args.file.jsondata[currentItem][objKeys[i]]) && typeof args.file.jsondata[currentItem][objKeys[i]][0] === 'object' && args.file.jsondata[currentItem][objKeys[i]][0] !== null) {
           //Object inside an Object (recursively)
           // recursively create objects for subobjects that shall be visible in the graph
 
 
           // loop through array
-          for (let j = 0; j < args.file.jsondata[startItem][objKeys[i]].length; j++) {
+          for (let j = 0; j < args.file.jsondata[currentItem][objKeys[i]].length; j++) {
 
             const randomNumber = Math.floor(Math.random() * 100000000);
             const eightDigitRandomNumber = randomNumber.toString().padStart(8, '0');
 
-            args.file.jsondata[objKeys[i] + "" + eightDigitRandomNumber] = args.file.jsondata[startItem][objKeys[i]][j];
+            args.file.jsondata[objKeys[i] + "" + eightDigitRandomNumber] = args.file.jsondata[currentItem][objKeys[i]][j];
 
-            // args.file.jsondata[objKeys[i]+""+j] = args.file.jsondata[startItem][objKeys[i]][j];
+            // args.file.jsondata[objKeys[i]+""+j] = args.file.jsondata[currentItem][objKeys[i]][j];
             // console.log(args.file.jsondata[objKeys[i]+""+j])
 
             if (this.nodeExists(this.nodes, objKeys[i] + "" + eightDigitRandomNumber)) {
@@ -368,7 +438,7 @@ class GraphDrawer {
               } else {
                 // if property is not mapped (no property in jsondata)
                
-                let edgeLabel = startContext[objKeys[i]]["@id"].replace("Property:", "");
+                let edgeLabel = this.getLabelFromContext(startContext, objKeys[i]);
 
                 this.edges.push({
                   from: rootId,
@@ -393,7 +463,7 @@ class GraphDrawer {
                       this.nodes.push({
                         id: this.id,
                         label: objKeys[i],
-                        object: objKeys[i] + "" + eightDigitRandomNumber,
+                        item: objKeys[i] + "" + eightDigitRandomNumber,
                         context: startContext,
                         depth: depth,
                         color: color,
@@ -417,12 +487,12 @@ class GraphDrawer {
 
                 } else {
 
-                  let edgeLabel = startContext[objKeys[i]]["@id"].replace("Property:", "");
+                  let edgeLabel = this.getLabelFromContext(startContext, objKeys[i]);
 
                   this.nodes.push({
                     id: this.id,
                     label: objKeys[i],
-                    object: objKeys[i] + "" + eightDigitRandomNumber,
+                    item: objKeys[i] + "" + eightDigitRandomNumber,
                     context: startContext,
                     depth: depth,
                     color: color,
@@ -446,7 +516,7 @@ class GraphDrawer {
                 this.nodes.push({
                   id: this.id,
                   label: objKeys[i],
-                  object: objKeys[i] + "" + eightDigitRandomNumber,
+                  item: objKeys[i] + "" + eightDigitRandomNumber,
                   context: startContext,
                   depth: depth,
                   color: color,
@@ -480,42 +550,35 @@ class GraphDrawer {
               mode: args.mode
             };
 
-            this.createGraphNE(argObj);
+            this.createGraphNodesEdges(argObj);
           }
 
         // if value of current key is an array of items 
 
-        } else if (objKeys[i] in startContext && startContext[objKeys[i]]["@type"] == "@id" && Array.isArray(args.file.jsondata[startItem][objKeys[i]]) && !(typeof args.file.jsondata[startItem][objKeys[i]][0] === 'object' && args.file.jsondata[startItem][objKeys[i]][0] !== null)) {
+        } else if (objKeys[i] in startContext && startContext[objKeys[i]]["@type"] == "@id" && Array.isArray(args.file.jsondata[currentItem][objKeys[i]]) && !(typeof args.file.jsondata[currentItem][objKeys[i]][0] === 'object' && args.file.jsondata[currentItem][objKeys[i]][0] !== null)) {
 
           //Array of Items (recursively)
 
-          //console.log(args.file.jsondata[startItem][objKeys[i]]);
+          //console.log(args.file.jsondata[currentItem][objKeys[i]]);
 
-          let rememberArray = args.file.jsondata[startItem][objKeys[i]];
+          let rememberArray = args.file.jsondata[currentItem][objKeys[i]];
 
-          args.file.jsondata[startItem][objKeys[i]] = "";
+          args.file.jsondata[currentItem][objKeys[i]] = "";
 
 
           for (let j = 0; j < rememberArray.length; j++) {
 
-            let labelArray = args.file.jsondata[rememberArray[j]].label;
+            label = this.getLabelFromItem(rememberArray[j])
 
-            for (let i = 0; i < labelArray.length; i++) {
-
-              if (labelArray[i].lang == this.lang) {
-                label = labelArray[i].text;
-              }
-
-            }
             if (this.nodeExists(this.nodes, rememberArray[j])) {
 
 
-
+              // if property exists in jsondata
               if (args.file.jsondata[startContext[objKeys[i]]["@id"]]) {
                 for (let k = 0; k < args.file.jsondata[startContext[objKeys[i]]["@id"]]["label"].length; k++) {
 
                   if (args.file.jsondata[startContext[objKeys[i]]["@id"]]["label"][k].lang == this.lang) {
-
+                    
                     this.edges.push({
                       from: rootId,
                       to: this.nodes[this.nodeExists(this.nodes, rememberArray[j])].id,
@@ -531,7 +594,7 @@ class GraphDrawer {
 
 
               } else {
-                let edgeLabel = startContext[objKeys[i]]["@id"].replace("Property:", "");
+                let edgeLabel = this.getLabelFromContext(startContext, objKeys[i]);
 
 
                 this.edges.push({
@@ -554,7 +617,7 @@ class GraphDrawer {
                     this.nodes.push({
                       id: this.id,
                       label: label,
-                      object: rememberArray[j],
+                      item: rememberArray[j],
                       depth: depth,
                       color: color,
                       group: args.file.jsondata[startContext[objKeys[i]]["@id"]]["label"][j].text
@@ -575,12 +638,12 @@ class GraphDrawer {
 
 
               } else {
-                let edgeLabel = startContext[objKeys[i]]["@id"].replace("Property:", "");
+                let edgeLabel = this.getLabelFromContext(startContext, objKeys[i]);
 
                 this.nodes.push({
                   id: this.id,
                   label: label,
-                  object: rememberArray[j],
+                  item: rememberArray[j],
                   depth: depth,
                   color: color,
                   group: edgeLabel
@@ -607,41 +670,33 @@ class GraphDrawer {
                 mode: args.mode
               }
 
-              this.createGraphNE(argObj2);
+              this.createGraphNodesEdges(argObj2);
             }
             this.id++; //new maybe wrong
 
 
-            /////////////////////////////////createGraphNE(args.file, id, rememberArray[j]);
+            /////////////////////////////////createGraphNodesEdges(args.file, id, rememberArray[j]);
 
           }
 
-          args.file.jsondata[startItem][objKeys[i]] = rememberArray;
-          //console.log(args.file.jsondata[startItem][objKeys[i]])
+          args.file.jsondata[currentItem][objKeys[i]] = rememberArray;
+          //console.log(args.file.jsondata[currentItem][objKeys[i]])
 
 
         // if value of current key is an item string
-        } else if (objKeys[i] in startContext && startContext[objKeys[i]]["@type"] == "@id" && !(Array.isArray(args.file.jsondata[startItem][objKeys[i]])) && !(typeof args.file.jsondata[startItem][objKeys[i]][0] === 'object' && args.file.jsondata[startItem][objKeys[i]][0] !== null)) {
+        } else if (objKeys[i] in startContext && startContext[objKeys[i]]["@type"] == "@id" && !(Array.isArray(args.file.jsondata[currentItem][objKeys[i]])) && !(typeof args.file.jsondata[currentItem][objKeys[i]][0] === 'object' && args.file.jsondata[currentItem][objKeys[i]][0] !== null)) {
 
           //Item is a literal 
 
-          let labelArray = args.file.jsondata[args.file.jsondata[startItem][objKeys[i]]].label;
+          label = this.getLabelFromItem(args.file.jsondata[currentItem][objKeys[i]])
 
-          for (let i = 0; i < labelArray.length; i++) {
-
-            if (labelArray[i].lang == this.lang) {
-              label = labelArray[i].text;
-            }
-
-          }
-
-          if (this.nodeExists(this.nodes, args.file.jsondata[startItem][objKeys[i]])) {
+          if (this.nodeExists(this.nodes, args.file.jsondata[currentItem][objKeys[i]])) {
             if (args.file.jsondata[startContext[objKeys[i]]["@id"]]) {
               for (let k = 0; k < args.file.jsondata[startContext[objKeys[i]]["@id"]]["label"].length; k++) {
                 if (args.file.jsondata[startContext[objKeys[i]]["@id"]]["label"][k].lang == this.lang) {
                   this.edges.push({
                     from: rootId,
-                    to: this.nodes[this.nodeExists(this.nodes, args.file.jsondata[startItem][objKeys[i]])].id,
+                    to: this.nodes[this.nodeExists(this.nodes, args.file.jsondata[currentItem][objKeys[i]])].id,
                     label: args.file.jsondata[startContext[objKeys[i]]["@id"]]["label"][k].text,
                     color: color,
                     group: args.file.jsondata[startContext[objKeys[i]]["@id"]]["label"][k].text,
@@ -655,12 +710,12 @@ class GraphDrawer {
 
             } else {
 
-              let edgeLabel = startContext[objKeys[i]]["@id"].replace("Property:", "");
+              let edgeLabel = this.getLabelFromContext(startContext, objKeys[i]);
 
 
               this.edges.push({
                 from: rootId,
-                to: this.nodes[this.nodeExists(this.nodes, args.file.jsondata[startItem][objKeys[i]])].id,
+                to: this.nodes[this.nodeExists(this.nodes, args.file.jsondata[currentItem][objKeys[i]])].id,
                 label: edgeLabel,
                 color: color,
                 group: edgeLabel,
@@ -681,7 +736,7 @@ class GraphDrawer {
                   this.nodes.push({
                     id: this.id,
                     label: label,
-                    object: args.file.jsondata[startItem][objKeys[i]],
+                    item: args.file.jsondata[currentItem][objKeys[i]],
                     depth: depth,
                     color: color,
                     group: args.file.jsondata[startContext[objKeys[i]]["@id"]]["label"][j].text
@@ -702,11 +757,11 @@ class GraphDrawer {
 
 
             } else {
-              let edgeLabel = startContext[objKeys[i]]["@id"].replace("Property:", "");
+              let edgeLabel = this.getLabelFromContext(startContext, objKeys[i]);
               this.nodes.push({
                 id: this.id,
                 label: label,
-                object: args.file.jsondata[startItem][objKeys[i]],
+                item: args.file.jsondata[currentItem][objKeys[i]],
                 depth: depth,
                 color: color,
                 group: edgeLabel
@@ -726,18 +781,18 @@ class GraphDrawer {
             let argObj3 = {
               file: args.file,
               lastId: this.id,
-              item: args.file.jsondata[startItem][objKeys[i]],
+              item: args.file.jsondata[currentItem][objKeys[i]],
               oldContext: false,
               lastDepth: depth + 1,
               givenDepth: args.givenDepth,
               mode: args.mode
             }
 
-            this.createGraphNE(argObj3);
+            this.createGraphNodesEdges(argObj3);
           }
           //edges.push({from: rootId, to: id, label: startContext[objKeys[i]]["@id"]});
 
-          ///////////////////////////////createGraphNE(args.file, id, args.file.jsondata[startItem][objKeys[i]]);
+          ///////////////////////////////createGraphNodesEdges(args.file, id, args.file.jsondata[currentItem][objKeys[i]]);
 
          
         // if value of current key is in start context but property is not in jsondata; args.mode => literals shall be displayed
@@ -747,18 +802,18 @@ class GraphDrawer {
 
           let nodeLabel;
           let loopLength;
-          if (Array.isArray(args.file.jsondata[startItem][objKeys[i]])) {
-            loopLength = args.file.jsondata[startItem][objKeys[i]].length;
+          if (Array.isArray(args.file.jsondata[currentItem][objKeys[i]])) {
+            loopLength = args.file.jsondata[currentItem][objKeys[i]].length;
           } else {
             loopLength = 1;
           }
 
           for (let k = 0; k < loopLength; k++) {
 
-            if (Array.isArray(args.file.jsondata[startItem][objKeys[i]])) {
-              nodeLabel = args.file.jsondata[startItem][objKeys[i]][k]
+            if (Array.isArray(args.file.jsondata[currentItem][objKeys[i]])) {
+              nodeLabel = args.file.jsondata[currentItem][objKeys[i]][k]
             } else {
-              nodeLabel = args.file.jsondata[startItem][objKeys[i]];
+              nodeLabel = args.file.jsondata[currentItem][objKeys[i]];
             }
 
             if (args.file.jsondata[startContext[objKeys[i]]]) {
@@ -811,7 +866,7 @@ class GraphDrawer {
 
             //edges.push({from: rootId, to: id, label: startContext[objKeys[i]]});
             this.id++;
-            //console.log(args.file.jsondata[startItem][objKeys[i]])
+            //console.log(args.file.jsondata[currentItem][objKeys[i]])
 
           }
 
@@ -821,10 +876,10 @@ class GraphDrawer {
           //Is a literal (not in context)
           if (args.mode) {
 
-            //console.log(args.file.jsondata[startItem][objKeys[i]])
+            //console.log(args.file.jsondata[currentItem][objKeys[i]])
             this.nodes.push({
               id: this.id,
-              label: args.file.jsondata[startItem][objKeys[i]],
+              label: args.file.jsondata[currentItem][objKeys[i]],
               depth: depth,
               color: color,
               group: objKeys[i]
@@ -853,7 +908,7 @@ class GraphDrawer {
 
 
 class GraphTool {
-  constructor(div_id, config, _config) {
+  constructor(div_id, config, callback_config) {
 
     
     // create all necessary elements/divs and set them up
@@ -878,7 +933,7 @@ class GraphTool {
       }
     };
 
-    this._config = utils.mergeDeep(default_config, _config); // overwrite default config with user _config
+    this.config = utils.mergeDeep(default_config, callback_config); // overwrite default config with user callback_config
 
     this.keyObject = {   // to be removed, was inteded for callback implementation
       doubleclick: (params) => {
@@ -910,14 +965,14 @@ class GraphTool {
     this.classRegistry.register = (cls) => {
       this.classRegistry.set((new cls).typeString, cls)
     }
-    for (let cls of [NodeClasses.RocketBase, NodeClasses.RocketBase, NodeClasses.Fountain, NodeClasses.DelayNode, NodeClasses.TextSpeechNode, NodeClasses.VideoNode,
+    /*for (let cls of [NodeClasses.RocketBase, NodeClasses.RocketBase, NodeClasses.Fountain, NodeClasses.DelayNode, NodeClasses.TextSpeechNode, NodeClasses.VideoNode,
         NodeClasses.DrawNode,
         NodeClasses.CameraNode, NodeClasses.ImageNode, NodeClasses.CsvNode,
         NodeClasses.JSONNode, NodeClasses.JSONNode1, NodeClasses.JSONSchemaNode
       ]) {
       console.log(cls)
       this.classRegistry.register(cls)
-    }
+    }*/
 
     // Initialize GUI for various functions acting on the graph.
     this.colorPicker(this);
@@ -1074,7 +1129,7 @@ class GraphTool {
           })
 
           this.copiedNodes.forEach((node_id, index) => {
-            if (this.nodes.get(this.network.getSelectedNodes()[index]).object) {
+            if (this.nodes.get(this.network.getSelectedNodes()[index]).item) {
               let oldNode = this.nodes.get(node_id)
 
               let newNode = this.duplicateNode(oldNode)
@@ -1090,10 +1145,10 @@ class GraphTool {
                 newNode.x = xy.x
                 newNode.y = xy.y
               })
-              newNode.id = this.config.graph.id;
+              newNode.id = config.graph.id;
               newNode.depth = this.nodes.get(this.network.getSelectedNodes()[index]).depth + 1;
 
-              this.config.graph.id += 1;
+              config.graph.id += 1;
 
               let newEdge = {
                 from: this.network.getSelectedNodes()[0],
@@ -1107,16 +1162,16 @@ class GraphTool {
               if (newNode.group != "root") {
                 this.nodes.update(newNode);
                 this.edges.update(newEdge);
-                console.log(this.config,this.config.file)
-                if (newNode.object) {
+                console.log(config,config.file)
+                if (newNode.item) {
 
                   if (newNode.context) {
 
 
-                    this.config.graph.createGraphNE(this.config.file, newNode.id, newNode.object, newNode.context, newNode.depth, "", true);   
+                    config.graph.createGraphNodesEdges(config.file, newNode.id, newNode.item, newNode.context, newNode.depth, "", true);   
 
                   } else {
-                    this.config.graph.createGraphNE(this.config.file, newNode.id, newNode.object, "", newNode.depth, "", true);
+                    config.graph.createGraphNodesEdges(config.file, newNode.id, newNode.item, "", newNode.depth, "", true);
 
                   }
 
@@ -1145,14 +1200,14 @@ class GraphTool {
       this.mouseY = event.clientY - 30
     }
 
-    this.initRectangleSelection()
+   // this.initRectangleSelection()
     this.initDragAndDrop()
   }
 
   handleCallbacks(params) {
     let result = true;
-    if (!this._config.callbacks[params.id]) return true;
-    for (const callback of this._config.callbacks[params.id]) {
+    if (!this.config.callbacks[params.id]) return true;
+    for (const callback of this.config.callbacks[params.id]) {
       if (!callback(params.params)) {
         result = false
         break;
@@ -1619,60 +1674,60 @@ class GraphTool {
   //Adds copied nodes to the given JSON
   addToJSON(node, edge) {
 
-    let receivingItem = this.nodes.get(this.network.getSelectedNodes()[0]).object;
+    let receivingItem = this.nodes.get(this.network.getSelectedNodes()[0]).item;
     let receivingNode = this.nodes.get(this.network.getSelectedNodes()[0])
 
-    if (!node.object) {
+    if (!node.item) {
 
-      if (this.config.file["jsondata"][receivingItem][edge.objectKey]) {
-        if (Array.isArray(this.config.file["jsondata"][receivingItem][edge.objectKey])) {
-          this.config.file["jsondata"][receivingItem][edge.objectKey].push(node.label);
+      if (config.file["jsondata"][receivingItem][edge.objectKey]) {
+        if (Array.isArray(config.file["jsondata"][receivingItem][edge.objectKey])) {
+          config.file["jsondata"][receivingItem][edge.objectKey].push(node.label);
         } else {
           let tempArray = [];
-          tempArray.push(this.config.file["jsondata"][receivingItem][edge.objectKey]);
+          tempArray.push(config.file["jsondata"][receivingItem][edge.objectKey]);
           tempArray.push(node.label);
 
-          this.config.file["jsondata"][receivingItem][edge.objectKey] = tempArray;
+          config.file["jsondata"][receivingItem][edge.objectKey] = tempArray;
         }
       } else {
 
-        this.config.file["jsondata"][receivingItem][edge.objectKey] = node.label;
+        config.file["jsondata"][receivingItem][edge.objectKey] = node.label;
 
       }
       //add literal to object
     } else {
 
       if (!receivingNode.hasOwnProperty('mainObjectId') && !node.hasOwnProperty('mainObjectId')) {
-        if (this.config.file["jsondata"][receivingItem][edge.objectKey]) {
-          if (Array.isArray(this.config.file["jsondata"][receivingItem][edge.objectKey])) {
-            this.config.file["jsondata"][receivingItem][edge.objectKey].push(node.object);
+        if (config.file["jsondata"][receivingItem][edge.objectKey]) {
+          if (Array.isArray(config.file["jsondata"][receivingItem][edge.objectKey])) {
+            config.file["jsondata"][receivingItem][edge.objectKey].push(node.item);
           } else {
             let tempArray = [];
-            tempArray.push(this.config.file["jsondata"][receivingItem][edge.objectKey]);
-            tempArray.push(node.object);
+            tempArray.push(config.file["jsondata"][receivingItem][edge.objectKey]);
+            tempArray.push(node.item);
 
-            this.config.file["jsondata"][receivingItem][edge.objectKey] = tempArray;
+            config.file["jsondata"][receivingItem][edge.objectKey] = tempArray;
           }
         } else {
 
-          this.config.file["jsondata"][receivingItem][edge.objectKey] = node.object;
+          config.file["jsondata"][receivingItem][edge.objectKey] = node.object;
 
         }
       } else if (!receivingNode.hasOwnProperty('mainObjectId') && node.hasOwnProperty('mainObjectId')) {
 
-        if (this.config.file["jsondata"][receivingItem][edge.objectKey]) {
-          if (Array.isArray(this.config.file["jsondata"][receivingItem][edge.objectKey])) {
-            this.config.file["jsondata"][receivingItem][edge.objectKey].push(this.config.file["jsondata"][node.object]);
+        if (config.file["jsondata"][receivingItem][edge.objectKey]) {
+          if (Array.isArray(config.file["jsondata"][receivingItem][edge.objectKey])) {
+            config.file["jsondata"][receivingItem][edge.objectKey].push(config.file["jsondata"][node.item]);
           } else {
             let tempArray = [];
-            tempArray.push(this.config.file["jsondata"][receivingItem][edge.objectKey]);
-            tempArray.push(this.config.file["jsondata"][node.object]);
+            tempArray.push(config.file["jsondata"][receivingItem][edge.objectKey]);
+            tempArray.push(config.file["jsondata"][node.item]);
 
-            this.config.file["jsondata"][receivingItem][edge.objectKey] = tempArray;
+            config.file["jsondata"][receivingItem][edge.objectKey] = tempArray;
           }
         } else {
 
-          this.config.file["jsondata"][receivingItem][edge.objectKey] = this.config.file["jsondata"][node.object];
+          config.file["jsondata"][receivingItem][edge.objectKey] = config.file["jsondata"][node.item];
 
         }
 
@@ -1687,13 +1742,13 @@ class GraphTool {
         })[0].objectKey
 
 
-        this.config.file["jsondata"][mainObject.object][objKey].forEach((object, index) => {
+        config.file["jsondata"][mainObject.object][objKey].forEach((object, index) => {
 
-          if (Object.is(this.config.file["jsondata"][receivingNode.object], object)) {
+          if (Object.is(config.file["jsondata"][receivingNode.object], object)) {
 
             if (Array.isArray(object[edge.objectKey])) {
 
-              object[edge.objectKey].push(node.object);
+              object[edge.objectKey].push(node.item);
 
             } else {
               let tempArray = [];
@@ -1702,7 +1757,7 @@ class GraphTool {
                 tempArray.push(object[edge.objectKey]);
               }
 
-              tempArray.push(node.object);
+              tempArray.push(node.item);
               object[edge.objectKey] = tempArray;
 
             }
@@ -1715,13 +1770,13 @@ class GraphTool {
 
         let mainObject = this.nodes.get(receivingNode.mainObjectId)
 
-        this.config.file["jsondata"][mainObject.object][edge.objectKey].forEach((object, index) => {
+        config.file["jsondata"][mainObject.item][edge.objectKey].forEach((object, index) => {
 
-          if (Object.is(this.config.file["jsondata"][receivingNode.object], object)) {
+          if (Object.is(config.file["jsondata"][receivingNode.item], object)) {
 
             if (Array.isArray(object[edge.objectKey])) {
 
-              object[edge.objectKey].push(this.config.file["jsondata"][node.object]);
+              object[edge.objectKey].push(config.file["jsondata"][node.item]);
 
             } else {
               let tempArray = [];
@@ -1730,23 +1785,23 @@ class GraphTool {
                 tempArray.push(object[edge.objectKey]);
               }
 
-              tempArray.push(this.config.file["jsondata"][node.object]);
+              tempArray.push(config.file["jsondata"][node.item]);
               object[edge.objectKey] = tempArray;
 
             }
 
-            //object[edge.objectKey] = new_json["jsondata"][node.object];
+            //object[edge.objectKey] = new_json["jsondata"][node.item];
 
           }
         })
 
-        //console.log(new_json["jsondata"][mainObject.object])
+        //console.log(new_json["jsondata"][mainObject.item])
       }
       //console.log(new_json["jsondata"])
     }
 
 
-    console.log(this.config.file["jsondata"])
+    console.log(config.file["jsondata"])
 
   }
 
@@ -1821,7 +1876,7 @@ class GraphTool {
   recolorByProperty() {
     nodes[0].color = "#6dbfa9";
     for (let i = 0; i < edges.length; i++) {
-      edges[i].color = this.config.graph.colorObj[edges[i].label];
+      edges[i].color = config.graph.colorObj[edges[i].label];
       for (let j = 0; j < nodes.length; j++) {
         if (edges[i].to == nodes[j].id) {
           nodes[j].color = edges[i].color;
@@ -2197,43 +2252,45 @@ class GraphTool {
   // on doubleclick expands the object that is saved inside a node and on second doubleclick deletes nodes and edges that go out of the clicked node
   expandNodes(params) {
 
+    console.log("expandNodes, params:", params)
+
     this.searchNodes("");
     document.getElementById("search_input").value = "";
 
     if (params.nodes.length > 0) {
-
+      
       let node = this.nodes.get(params.nodes[0]);
 
-      if ("object" in node && (this.clicked[params.nodes[0]] == false || !("" + params.nodes[0] in this.clicked)) && (this.network.getConnectedNodes(params.nodes[0], "to").length === 0)) {
+      if ("item" in node && (this.clicked[params.nodes[0]] == false || !("" + params.nodes[0] in this.clicked)) && (this.network.getConnectedNodes(params.nodes[0], "to").length === 0)) {
 
         if (node.context) {
+
           //file, lastId, item, oldContext, lastDepth, givenDepth, mode
+          console.log(config)
+          // set up new node
           let args = {
-            file: this.config.file,
+            file: config.file,
             lastId: node.id,
-            item: node.object,
+            item: node.item,
             oldContext: node.context,
             lastDepth: node.depth,
             givenDepth: 1,
             mode: true
           }
-
-          this.config.graph.createGraphNE(args);
+          config.graph.createGraphNodesEdges(args);
 
         } else {
 
           let args = {
-            file: this.config.file,
+            file: config.file,
             lastId: node.id,
-            item: node.object,
+            item: node.item,
             oldContext: "",
             lastDepth: node.depth,
             givenDepth: 1,
             mode: true
           };
-
-          this.config.graph.createGraphNE(args);
-
+          config.graph.createGraphNodesEdges(args);
         }
 
         this.createLegend()
@@ -2408,7 +2465,7 @@ class GraphTool {
     function saveState() {
 
       if (document.getElementById("setColorByValueInput")) {
-        this.config.file.state = {
+        config.file.state = {
           nodes: nodes,
           edges: edges,
           colorFunction: document.querySelector('#myDropdown select').value,
@@ -2421,7 +2478,7 @@ class GraphTool {
 
 
       } else {
-        this.config.file.state = {
+        config.file.state = {
           nodes: nodes,
           edges: edges,
           colorFunction: document.querySelector('#myDropdown select').value,
@@ -2430,7 +2487,7 @@ class GraphTool {
       }
 
 
-      const json = this.config.file
+      const json = config.file
       const filename = "data.txt";
       const text = JSON.stringify(json);
 
@@ -2472,8 +2529,8 @@ class GraphTool {
         reader.onload = function () {
           const jsonData = JSON.parse(reader.result);
           if (jsonData.state) {
-            this.config.nodes = jsonData.state.nodes;
-            this.config.edges = jsonData.state.edges;
+            config.nodes = jsonData.state.nodes;
+            config.edges = jsonData.state.edges;
 
             nodes = jsonData.state.nodes;
             edges = jsonData.state.edges;
@@ -2486,7 +2543,7 @@ class GraphTool {
               edges: jsonData.state.edges,
               options: options,
               graph: draw,
-              file: this.config.file
+              file: config.file
             };
 
             document.getElementById("mynetwork").innerHTML = "";
@@ -2504,7 +2561,7 @@ class GraphTool {
           } else {
             let nodes = [];
             let edges = [];
-            let draw = new GraphDrawer(_config, jsonData, 5, true, nodes, edges); //createGraph.GraphDrawer(_config, jsonData, 5, true, nodes, edges);
+            let draw = new GraphDrawer(callback_config, jsonData, 5, true, nodes, edges); //createGraph.GraphDrawer(callback_config, jsonData, 5, true, nodes, edges);
 
             let options = {
               interaction: {
@@ -2526,9 +2583,9 @@ class GraphTool {
               edges: edges,
               options: options,
               graph: draw,
-              file: this.config.file
+              file: config.file
             };
-            var graphtool = new GraphTool("mynetwork", config, _config, );
+            var graphtool = new GraphTool("mynetwork", config, callback_config, );
           }
 
           if (jsonData.state.colorFunction == "setColorByValue") {
@@ -2543,7 +2600,7 @@ class GraphTool {
           }
 
           delete jsonData.state;
-          this.config.file = jsonData;
+          config.file = jsonData;
 
 
         };
@@ -2732,6 +2789,7 @@ class GraphTool {
     } else {
       // show common properties
       /**/
+      
       if (true) {
 
         // make options gui
@@ -2939,7 +2997,7 @@ class GraphTool {
               cellEdited: allColorEdit
             },
           ]
-        })
+        }) 
       } else {
         let content = "<h3>Node IDs</h3><br>"
         for (let node_id of sel_nodes) {
@@ -2949,8 +3007,10 @@ class GraphTool {
         }
         this.options_container.innerHTML = content
       }
+      
 
     }
+    
   }
 }
 
@@ -3023,7 +3083,7 @@ $(document).ready(function () {
 
           const nodesWithLabel = graphtool.nodes.get({
             filter: function (node) {
-              return (node.object === path2[1]);
+              return (node.item === path2[1]);
             }
           });
 
@@ -3033,7 +3093,7 @@ $(document).ready(function () {
 
           }
 
-          if (!(path2[1] == nodes[0].object) && nodesWithLabel.length == 0) {
+          if (!(path2[1] == nodes[0].item) && nodesWithLabel.length == 0) {
 
             let searchExistingNodes = searchJSON(data, path2[1]);
             //console.log(searchExistingNodes)
@@ -3059,7 +3119,7 @@ $(document).ready(function () {
 
               const nodesWithLabel = graphtool.nodes.get({
                 filter: function (node) {
-                  return (node.object === path2[1]);
+                  return (node.item === path2[1]);
                 }
               });
 
@@ -3114,22 +3174,8 @@ $(document).ready(function () {
 
             }
 
-            //let done = expandNodesTillFoundValue(found, searchValue);
-
-            // const nodesWithLabel = graphtool.nodes.get({
-            //   filter: function(node) {
-            //       return (node.object === path2[1]);
-            //   }
-            // });
-
-            // let params = {nodes:[nodesWithLabel[0].id]}
-
-            // graphtool.expandNodes(params);
-
-            //found = IsStartObjectInGraph(searchExistingNodes);
-            //console.log(nodesWithLabel)
           }
-          if (nodesWithLabel.length > 0 || path2[1] == nodes[0].object) {
+          if (nodesWithLabel.length > 0 || path2[1] == nodes[0].item) {
 
 
             for (let i = 2; i < path2.length; i += 2) {
@@ -3227,7 +3273,7 @@ $(document).ready(function () {
           let nodes = graphtool.nodes.get();
           let edges = graphtool.edges.get();
 
-          if (path == nodes[0].object) {
+          if (path == nodes[0].item) {
 
             if (idsToColor.length == 0) {
 
@@ -3283,7 +3329,7 @@ $(document).ready(function () {
 
           nodes.forEach((node) => {
 
-            if (node.object === path) {
+            if (node.item === path) {
 
               nodesWithObject.push(node);
 
@@ -3493,180 +3539,6 @@ $(document).ready(function () {
 
   });
 
-
-
-
-
-
-
-  //console.log(graphtool.nodes.get())
-  //console.log(searchJSON(data, '2022'))
-  //console.log(result[0].split(".")[1]);
-
-  // function removeItem(arr, value) {
-  //   var index = arr.indexOf(value);
-  //   if (index > -1) {
-  //       arr.splice(index, 1);
-  //   }
-  //   return arr;
-  // }
-
-  // function findAllPaths(startNode, endNode) {
-  //   var visitedNodes = [];
-  //   var currentPath = [];
-  //   var allPaths = [];
-  //   dfs(startNode, endNode, currentPath, allPaths, visitedNodes);
-  //   return allPaths;
-  // }
-  // //Algorithm to search for all paths between two nodes
-  // function dfs(start, end, currentPath, allPaths, visitedNodes) {
-  //   if (visitedNodes.includes(start)) return;
-  //   visitedNodes.push(start);
-  //   currentPath.push(start);
-  //   if (start == end) {
-  //       var localCurrentPath = currentPath.slice();
-  //       allPaths.push(localCurrentPath);
-  //       removeItem(visitedNodes, start);
-  //       currentPath.pop();
-  //       return;
-  //   }
-  //   var neighbours = graphtool.network.getConnectedNodes(start);
-  //   for (var i = 0; i < neighbours.length; i++) {
-  //       var current = neighbours[i];
-  //       dfs(current, end, currentPath, allPaths, visitedNodes);
-  //   }
-  //   currentPath.pop();
-  //   removeItem(visitedNodes, start);
-  // }
-
-  // console.log(findAllPaths(2,28))
-
-  // const searchValue = '2022';
-  // const jsonPathExpression = `$..[?(@=="${searchValue}")]`;
-  // const matches = jsonpath.query(data, jsonPathExpression);
-
-  // const result = matches.reduce((acc, match) => {
-  //   const keys = jsonpath.paths(data, `$..[?(@=="${match}")]`);
-  //   return acc.concat(keys.map(key => `${key.join('.')}: ${match}`));
-  // }, []);
-
-  // console.log(result)
-
-  // const searchObject = (obj, searchValue) => {
-  //   let result = [];
-  //   for (let key in obj) {
-  //     if (obj[key] === searchValue) {
-  //       result.push(key);
-  //     } else if (typeof obj[key] === 'object') {
-  //       const nestedResult = searchObject(obj[key], searchValue);
-  //       if (nestedResult.length > 0) {
-  //         result = result.concat(nestedResult.map(nestedKey => `${key}.${nestedKey}`));
-  //       }
-  //     }
-  //   }
-  //   return result;
-  // };
-
-  // const searchValue = '2022';
-  // const jsonPathExpression = `$..[?(@=="${searchValue}")]`;
-  // const matches = jsonpath.query(data, jsonPathExpression, 1);
-
-
-  // const result = matches.reduce((acc, match) => {
-  //   console.log(match)
-  //   const keys = searchObject(data, match);
-  //   return acc.concat(keys.map(key => `${key}: ${match}`));
-  // }, []);
-
-  // console.log(result); 
-
-  //console.log(data["Item:MyProject"]["budget"][0]["budget"][0]["value"])
-  //console.log(data["Item:MyProject"]["budget"][0]["budget"][1]["value"])
-
-
-  // "Item:MyProject.budget.0.budget.0.year: 2022"
-  // "Item:MyProject.budget.0.budget.1.year: 2022"
-
-  //const result = jsonpath.query(data, '$..[?(@=="Fiesta")]');
-
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-  // function searchJSON(json, search, keys=[]) {
-  //   for (var key in json) {
-  //     if (json.hasOwnProperty(key)) {
-  //       var val = json[key];
-  //       if (typeof val === 'object') {
-  //         searchJSON(val, search, keys);
-  //       } else if (val === search) {
-  //         keys.push(key);
-  //       }
-  //     }
-  //   }
-  //   return keys;
-  // }
-
-
-
-
-  // const key = searchJSON(new_json["jsondata"], "2000");
-  // console.log(key); // prints "person2"
-
-
-  // function findParentKeys(jsonObj, keyToFind, parentKey = null) {
-  //   let parentKeys = [];
-  //   if (typeof jsonObj !== "object") {
-  //     return parentKeys;
-  //   }
-
-  //   if (Array.isArray(jsonObj)) {
-  //     for (let i = 0; i < jsonObj.length; i++) {
-  //       if (jsonObj[i][keyToFind] !== undefined) {
-  //         if (parentKey !== null) {
-  //           parentKeys.push(parentKey);
-  //         }
-  //         //parentKeys.push(i);
-  //       } else {
-  //         let nestedParentKeys = findParentKeys(
-  //           jsonObj[i],
-  //           keyToFind,
-  //           parentKey
-  //         );
-  //         if (nestedParentKeys.length > 0) {
-  //           parentKeys = parentKeys.concat(nestedParentKeys);
-  //         }
-  //       }
-  //     }
-  //   } else {
-  //     for (let key in jsonObj) {
-  //       if (key === keyToFind) {
-  //         if (parentKey !== null) {
-  //           parentKeys.push(parentKey);
-  //         }
-  //       } else if (typeof jsonObj[key] === "object") {
-  //         let nestedParentKeys = findParentKeys(
-  //           jsonObj[key],
-  //           keyToFind,
-  //           key
-  //         );
-  //         if (nestedParentKeys.length > 0) {
-  //           parentKeys = parentKeys.concat(nestedParentKeys);
-  //         }
-  //       }
-  //     }
-  //   }
-  //   return parentKeys;
-  // }
-
-
-
-
-  // const out = findParentKeys(new_json["jsondata"], "not_in_context")
-  // console.log(out)
 
 });
 

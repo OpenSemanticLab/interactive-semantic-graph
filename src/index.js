@@ -2,40 +2,10 @@ const vis = require("vis-network/standalone/esm/index.js")
 const utils = require("./utils.js")
 const NodeClasses = require("./NodeClasses.js")
 const $ = require("jquery")
-//const createGraph = require("./createGraph.js")
-//const Keymap = require("./Keymap.js")
 const chroma = require("chroma-js")
 //const RegExp = require('RegExp');
 const jsonpath = require('jsonpath');
 
-
-function uuidv4() {
-  return ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, c => (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16));
-}
-/// utility function to convert CSV files to JSONTable (incomplete, TODO!)
-const CSVToJSONTable = (data, delimiter = ',') => {
-  const titles = data.slice(0, data.indexOf('\n')).split(delimiter);
-  rows = data.slice(data.indexOf('\n') + 1)
-    .split('\n')
-  // initialize columns
-  let columns = {}
-  titles.forEach((title) => {
-    columns[title] = []
-  })
-  for (let i = 1; i < rows.length; i++) {
-    // strip unnecessary signs
-    rows[i] = rows[i].replace(/(\r\n|\n|\r)/gm, "")
-    if (rows[i].length > 0) { // only for non-empty rows
-      //console.log(rows[i])
-      values = rows[i].split(delimiter)
-      for (let j = 0; j < titles.length; j++) {
-        columns[titles[j]].push(Number(values[j]))
-      }
-    }
-  }
-  //console.log(columns)
-  return columns
-}
 
 class GraphDrawer {
 
@@ -49,7 +19,6 @@ class GraphDrawer {
         onBeforeSetColor: [(graph, property) => true],
         onBeforeGetStartItem: [(graph, item) => true],
         onBeforeCreateContext: [(graph, context) => true],
-
       }
     };
 
@@ -79,11 +48,11 @@ class GraphDrawer {
     }
     this.createGraphNE(this.createArgs);
 
-    
-    Object.filter = (obj, predicate) => 
-    Object.keys(obj)
-          .filter( key => predicate(obj[key]) )
-          .reduce( (res, key) => (res[key] = obj[key], res), {} );
+
+    Object.filter = (obj, predicate) =>
+      Object.keys(obj)
+      .filter(key => predicate(obj[key]))
+      .reduce((res, key) => (res[key] = obj[key], res), {});
   }
 
 
@@ -91,7 +60,6 @@ class GraphDrawer {
   registerCallback(params) {
     this.config.callbacks[params.name].push(params.func)
   }
-
 
   handleCallbacks(params) {
     let result = true;
@@ -147,14 +115,7 @@ class GraphDrawer {
     }
   }
 
-  // getStartItem(file){
-
-  //   let data = {graph: this, file: file};
-  //   return this.config.callbacks.getStartItem(data);
-
-  // }
-
-  //Creates multidimensional Array of all contexts
+  //Creates Array of arrays Array of all contexts
   contextRecursion(file, schema, fullContext = []) {
     fullContext = fullContext;
 
@@ -177,6 +138,41 @@ class GraphDrawer {
     return fullContext;
   }
 
+  
+  //Creates a context object out of the multidimensional array created by the recursive context function
+  createContext(file, item) {
+
+    let itemSchema = file.jsondata[item].type[0];
+    let contextArrayOfObjects = this.contextRecursion(file, itemSchema);
+    let context = {};
+
+    for (let i = 0; i < contextArrayOfObjects.length; i++) {
+
+      let partContextKeys = Object.keys(contextArrayOfObjects[i]);
+
+      for (let j = 0; j < partContextKeys.length; j++) {
+
+        context[partContextKeys[j]] = contextArrayOfObjects[i][partContextKeys[j]];
+      }
+    }
+    if (this.handleCallbacks({
+        id: 'onBeforeCreateContext',
+        params: {
+          graph: this,
+          context: context
+        }
+      })) {
+
+      return context;
+    }
+  }
+
+  // createContext(file, item){
+
+  //   let data = {graph: this, file: file, item: item};
+  //   return this.config.callbacks.createContext(data);
+  // }
+
   //Checks if node already exists inside of a nodes array
   nodeExists(nodes, item) {
     let exists = false;
@@ -189,9 +185,11 @@ class GraphDrawer {
     return exists;
   }
 
-  // default methode if not overwritten by the user
-  // generates colors per property
+  // default method if not overwritten by the user
+
+  // generates colors per property (per property, not per node! Todo: consider renaming: getColorByProperty)
   setColor(property) {
+    // maps a property to a color, generates the color by randomness if not existing
 
     if (this.handleCallbacks({
         id: 'onBeforeSetColor',
@@ -203,12 +201,10 @@ class GraphDrawer {
 
       for (let x in this.colorObj) {
         if (property == x) {
-
-          return this.colorObj[x];
+          return this.colorObj[x]; // this is the color-object in GraphDrawer that contains colors per property.
         }
       }
       this.colorObj[property] = this.randomHSL();
-
       return this.colorObj[property];
     }
   }
@@ -222,7 +218,7 @@ class GraphDrawer {
   //creates nodes and edges out of a JSON file
   createGraphNE(args) {
 
-    //file, lastId, item, oldContext, lastDepth, givenDepth, mode
+    //keys of args: file, lastId, item, oldContext, lastDepth, givenDepth, mode
 
     let startItem;
     let label;
@@ -234,20 +230,19 @@ class GraphDrawer {
 
     //first run of the function
     if (!args.item && !args.lastId) {
-
+      //gets the item in the jsondata that is labelled with "start":true
       startItem = this.getStartItem(args.file);
 
       let labelArray = args.file.jsondata[startItem].label;
 
+      // check language for root node and set label according to this.lang
       for (let i = 0; i < labelArray.length; i++) {
-
         if (labelArray[i].lang == this.lang) {
           label = labelArray[i].text;
         }
-
       }
 
-
+      //creates the root node
       this.nodes.push({
         id: this.id,
         label: label,
@@ -261,10 +256,13 @@ class GraphDrawer {
       this.id++;
       depth = 1;
 
-      startContext = this.createContext(args.file, startItem);
+      //creates  the context of the root node
+      startContext = this.createContext(args.file, startItem); // a map from JSON-keys on SemanticProperty (labels)
       objKeys = Object.keys(args.file.jsondata[startItem]);
 
-    } else if (args.oldContext) { //if context is given inside a node
+    }
+    // not the first run; context already exists i.e. for objects inside objects
+    else if (args.oldContext) { //if context is given inside a node
       startItem = args.item;
       startContext = args.oldContext;
       objKeys = Object.keys(args.file.jsondata[startItem]);
@@ -272,10 +270,11 @@ class GraphDrawer {
       depth = args.lastDepth;
 
 
-    } else {
+    }
+    // no oldContext present and not first run.
+    else {
 
       startItem = args.item;
-
 
       let labelArray = args.file.jsondata[startItem].label;
 
@@ -284,66 +283,59 @@ class GraphDrawer {
         if (labelArray[i].lang == this.lang) {
           label = labelArray[i].text;
         }
-
       }
       rootId = args.lastId;
       this.id++;
       depth = args.lastDepth;
 
-
       startContext = this.createContext(args.file, startItem);
       objKeys = Object.keys(args.file.jsondata[startItem]);
     }
 
-
-
-
-
-
+    // loops through an item
     for (let i = 0; i < objKeys.length; i++) {
 
-      //sets the color variable 
+      //ignore type and lable (in order not to generate nodes for them)
       if (objKeys[i] != "type" && objKeys[i] != "label" && objKeys[i] != "start" && (depth <= args.givenDepth || !args.givenDepth)) {
 
-
+        //check if key is in startContext
         if (objKeys[i] in startContext && args.file.jsondata[startContext[objKeys[i]]["@id"]]) {
 
           for (let k = 0; k < args.file.jsondata[startContext[objKeys[i]]["@id"]]["label"].length; k++) {
 
             if (args.file.jsondata[startContext[objKeys[i]]["@id"]]["label"][k].lang == this.lang) {
-
+              // color by property.
               color = this.setColor(args.file.jsondata[startContext[objKeys[i]]["@id"]]["label"][k].text)
 
             }
           }
+          // if the key is in start context and Property is not present in jsondata
         } else if (objKeys[i] in startContext && !(startContext[objKeys[i]]["@type"] == "@id")) {
 
           let edgeLabel = startContext[objKeys[i]].replace("Property:", "");
           color = this.setColor(edgeLabel)
-
+          // if the key is in start context and Property is present in jsondata and literal property
         } else if (objKeys[i] in startContext && !(args.file.jsondata[startContext[objKeys[i]]["@id"]]) && startContext[objKeys[i]]["@type"] == "@id") {
 
           let edgeLabel = startContext[objKeys[i]]["@id"].replace("Property:", "");
 
           color = this.setColor(edgeLabel)
-
+          // if no mapping/context is present for the key.
         } else {
           color = this.setColor(objKeys[i])
         }
+        // end of setting color
 
 
-        if ( /*objKeys[i] in startContext && startContext[objKeys[i]]["@type"] == "@id" && */ Array.isArray(args.file.jsondata[startItem][objKeys[i]]) && typeof args.file.jsondata[startItem][objKeys[i]][0] === 'object' && args.file.jsondata[startItem][objKeys[i]][0] !== null) {
+
+        // check if given key's value is an array and if the first element is an object
+        if (Array.isArray(args.file.jsondata[startItem][objKeys[i]]) && typeof args.file.jsondata[startItem][objKeys[i]][0] === 'object' && args.file.jsondata[startItem][objKeys[i]][0] !== null) {
           //Object inside an Object (recursively)
+          // recursively create objects for subobjects that shall be visible in the graph
 
 
-          // nodes.push({id:id, label: objKeys[i]});
-          // edges.push({from: rootId, to: id, label: startContext[objKeys[i]]["@id"]});
-          // id++;
-
-          //args.file.jsondata[objKeys[i]] = args.file.jsondata[startItem][objKeys[i]][0];
-
+          // loop through array
           for (let j = 0; j < args.file.jsondata[startItem][objKeys[i]].length; j++) {
-
 
             const randomNumber = Math.floor(Math.random() * 100000000);
             const eightDigitRandomNumber = randomNumber.toString().padStart(8, '0');
@@ -354,9 +346,11 @@ class GraphDrawer {
             // console.log(args.file.jsondata[objKeys[i]+""+j])
 
             if (this.nodeExists(this.nodes, objKeys[i] + "" + eightDigitRandomNumber)) {
+              // only create edges
 
+              // create edge with correct language
               if (args.file.jsondata[startContext[objKeys[i]]["@id"]]) {
-                //color = this.setColor(startContext[objKeys[i]]["@id"])
+
                 for (let k = 0; k < args.file.jsondata[startContext[objKeys[i]]["@id"]]["label"].length; k++) {
                   if (args.file.jsondata[startContext[objKeys[i]]["@id"]]["label"][k].lang == this.lang) {
                     this.edges.push({
@@ -369,14 +363,12 @@ class GraphDrawer {
                     });
                     //console.log(args.file.jsondata[startContext[objKeys[i]]["@id"]]["label"][j].text)
                   }
-
                 }
 
-
               } else {
-                //color = this.setColor(startContext[objKeys[i]]["@id"])
+                // if property is not mapped (no property in jsondata)
+               
                 let edgeLabel = startContext[objKeys[i]]["@id"].replace("Property:", "");
-
 
                 this.edges.push({
                   from: rootId,
@@ -386,19 +378,18 @@ class GraphDrawer {
                   group: edgeLabel,
                   objectKey: objKeys[i]
                 });
-
               }
 
 
-
+            // if node does not exist, create node and edge
             } else {
 
-              //color = this.setColor(startContext[objKeys[i]]["@id"])
-
               if (startContext.hasOwnProperty(objKeys[i])) {
+
                 if (args.file.jsondata[startContext[objKeys[i]]["@id"]]) {
                   for (let j = 0; j < args.file.jsondata[startContext[objKeys[i]]["@id"]]["label"].length; j++) {
                     if (args.file.jsondata[startContext[objKeys[i]]["@id"]]["label"][j].lang == this.lang) {
+                      // insert node
                       this.nodes.push({
                         id: this.id,
                         label: objKeys[i],
@@ -409,7 +400,7 @@ class GraphDrawer {
                         group: args.file.jsondata[startContext[objKeys[i]]["@id"]]["label"][j].text,
                         mainObjectId: rootId
                       });
-
+                      
                       this.edges.push({
                         from: rootId,
                         to: this.id,
@@ -471,15 +462,11 @@ class GraphDrawer {
                   group: objKeys[i],
                   objectKey: objKeys[i]
                 });
-
               }
-              //edges.push({from: rootId, to: id, label: startContext[objKeys[i]]["@id"]});
             }
 
+            // prepare arguments for recursive call
 
-            //let obj = nodes.find(o => o.label === ''+objKeys[i]+""+j);
-            //rootId = obj.id;
-            //let oldId = obj.id;
             let oldId = this.id;
             this.id++;
 
@@ -494,11 +481,9 @@ class GraphDrawer {
             };
 
             this.createGraphNE(argObj);
-
-
           }
 
-          //console.log(args.file.jsondata[startItem][objKeys[i]], objKeys[i])
+        // if value of current key is an array of items 
 
         } else if (objKeys[i] in startContext && startContext[objKeys[i]]["@type"] == "@id" && Array.isArray(args.file.jsondata[startItem][objKeys[i]]) && !(typeof args.file.jsondata[startItem][objKeys[i]][0] === 'object' && args.file.jsondata[startItem][objKeys[i]][0] !== null)) {
 
@@ -527,7 +512,6 @@ class GraphDrawer {
 
 
               if (args.file.jsondata[startContext[objKeys[i]]["@id"]]) {
-                //color = this.setColor(startContext[objKeys[i]]["@id"], this.colorObj)
                 for (let k = 0; k < args.file.jsondata[startContext[objKeys[i]]["@id"]]["label"].length; k++) {
 
                   if (args.file.jsondata[startContext[objKeys[i]]["@id"]]["label"][k].lang == this.lang) {
@@ -547,7 +531,6 @@ class GraphDrawer {
 
 
               } else {
-                //color = this.setColor(startContext[objKeys[i]]["@id"], this.colorObj)
                 let edgeLabel = startContext[objKeys[i]]["@id"].replace("Property:", "");
 
 
@@ -563,8 +546,6 @@ class GraphDrawer {
               }
 
             } else {
-
-              //color = this.setColor(startContext[objKeys[i]]["@id"], this.colorObj)
 
 
               if (args.file.jsondata[startContext[objKeys[i]]["@id"]]) {
@@ -639,7 +620,7 @@ class GraphDrawer {
           //console.log(args.file.jsondata[startItem][objKeys[i]])
 
 
-
+        // if value of current key is an item string
         } else if (objKeys[i] in startContext && startContext[objKeys[i]]["@type"] == "@id" && !(Array.isArray(args.file.jsondata[startItem][objKeys[i]])) && !(typeof args.file.jsondata[startItem][objKeys[i]][0] === 'object' && args.file.jsondata[startItem][objKeys[i]][0] !== null)) {
 
           //Item is a literal 
@@ -655,7 +636,6 @@ class GraphDrawer {
           }
 
           if (this.nodeExists(this.nodes, args.file.jsondata[startItem][objKeys[i]])) {
-            //color = this.setColor(startContext[objKeys[i]]["@id"], this.colorObj)
             if (args.file.jsondata[startContext[objKeys[i]]["@id"]]) {
               for (let k = 0; k < args.file.jsondata[startContext[objKeys[i]]["@id"]]["label"].length; k++) {
                 if (args.file.jsondata[startContext[objKeys[i]]["@id"]]["label"][k].lang == this.lang) {
@@ -675,7 +655,6 @@ class GraphDrawer {
 
             } else {
 
-              //color = this.setColor(startContext[objKeys[i]]["@id"], this.colorObj)
               let edgeLabel = startContext[objKeys[i]]["@id"].replace("Property:", "");
 
 
@@ -694,7 +673,6 @@ class GraphDrawer {
 
           } else {
 
-            //color = this.setColor(startContext[objKeys[i]]["@id"], this.colorObj)
 
 
             if (args.file.jsondata[startContext[objKeys[i]]["@id"]]) {
@@ -761,15 +739,14 @@ class GraphDrawer {
 
           ///////////////////////////////createGraphNE(args.file, id, args.file.jsondata[startItem][objKeys[i]]);
 
-          //console.log(args.file.jsondata[startItem][objKeys[i]])
-
+         
+        // if value of current key is in start context but property is not in jsondata; args.mode => literals shall be displayed
         } else if (objKeys[i] in startContext && args.mode) {
 
           //Is a literal 
 
           let nodeLabel;
           let loopLength;
-          //color = this.setColor(startContext[objKeys[i]]["@id"], this.colorObj)
           if (Array.isArray(args.file.jsondata[startItem][objKeys[i]])) {
             loopLength = args.file.jsondata[startItem][objKeys[i]].length;
           } else {
@@ -838,14 +815,13 @@ class GraphDrawer {
 
           }
 
+        // if not in context and property is not in jsondata. 
         } else {
 
           //Is a literal (not in context)
-
           if (args.mode) {
 
             //console.log(args.file.jsondata[startItem][objKeys[i]])
-            //color = this.setColor(startContext[objKeys[i]]["@id"], this.colorObj)
             this.nodes.push({
               id: this.id,
               label: args.file.jsondata[startItem][objKeys[i]],
@@ -863,68 +839,23 @@ class GraphDrawer {
               objectKey: objKeys[i]
             });
             this.id++;
-            //console.log(args.file.jsondata[startItem][objKeys[i]])
+           
 
           }
         }
 
-        //console.log(args.file.jsondata[startItem][objKeys[i]])
       }
     }
-
-
-
-    //startItem = oldStrtItm;
-
-    //console.log(nodes);
-    //console.log(edges);
-    return startContext;
+    return startContext; // TODO return something meaningful, like nodes and edges.
   }
-
-  //Creates a context object out of the multidimensional array created by the recursive context function
-  createContext(file, item) {
-
-    let itemSchema = file.jsondata[item].type[0];
-
-    let contextArrayOfObjects = this.contextRecursion(file, itemSchema);
-
-
-    let context = {};
-
-    for (let i = 0; i < contextArrayOfObjects.length; i++) {
-
-      let partContextKeys = Object.keys(contextArrayOfObjects[i]);
-
-      for (let j = 0; j < partContextKeys.length; j++) {
-
-        context[partContextKeys[j]] = contextArrayOfObjects[i][partContextKeys[j]];
-      }
-    }
-    if (this.handleCallbacks({
-        id: 'onBeforeCreateContext',
-        params: {
-          graph: this,
-          context: context
-        }
-      })) {
-
-      return context;
-    }
-  }
-
-  // createContext(file, item){
-
-  //   let data = {graph: this, file: file, item: item};
-  //   return this.config.callbacks.createContext(data);
-
-  // }
 
 }
 
-class GraphTool {
-  constructor(_config, div_id, config) {
 
-    this.clicked = {};
+class GraphTool {
+  constructor(div_id, config, _config) {
+
+    
     // create all necessary elements/divs and set them up
     this.container = document.getElementById(div_id);
     this.vis_container = document.createElement("div");
@@ -939,16 +870,17 @@ class GraphTool {
     this.container.append(this.vis_container);
     this.container.append(this.options_container);
 
-    const defaultConfig = {
+    this.clicked = {} // object to store expanded nodes TODO: rename to expandedNodes
+
+    const default_config = { // TODO: add standard callback configurations: ColorByValue, Search, etc. ?? 
       callbacks: {
         onBeforeSearchNodes: [(graph, searchString) => true],
-
       }
     };
 
-    this._config = utils.mergeDeep(defaultConfig, _config);
+    this._config = utils.mergeDeep(default_config, _config); // overwrite default config with user _config
 
-    this.keyObject = {
+    this.keyObject = {   // to be removed, was inteded for callback implementation
       doubleclick: (params) => {
         this.expandNodes(params)
       },
@@ -963,25 +895,21 @@ class GraphTool {
     };
     this.options = config.options;
     this.network = new vis.Network(this.vis_container, this.data, this.options);
+
+    // variables containing keyboard and mouse state
     this.pressed_keys = []
     this.mouseX = 0
     this.mouseY = 0
+
+    // for copying function
     this.copiedNodes = []
     this.copiedEdges = []
-    this.classRegistry = new Map
+
+    // for having different node classes. 
+    this.classRegistry = new Map // maps from typeString to class
     this.classRegistry.register = (cls) => {
       this.classRegistry.set((new cls).typeString, cls)
     }
-
-    this.colorPicker(this);
-    this.loadSaveFunctionality();
-    this.createLegend();
-    this.createSearchUI()
-    this.oldNodeColors = {};
-    this.oldEdgeColors = {};
-
-
-
     for (let cls of [NodeClasses.RocketBase, NodeClasses.RocketBase, NodeClasses.Fountain, NodeClasses.DelayNode, NodeClasses.TextSpeechNode, NodeClasses.VideoNode,
         NodeClasses.DrawNode,
         NodeClasses.CameraNode, NodeClasses.ImageNode, NodeClasses.CsvNode,
@@ -990,17 +918,26 @@ class GraphTool {
       console.log(cls)
       this.classRegistry.register(cls)
     }
+
+    // Initialize GUI for various functions acting on the graph.
+    this.colorPicker(this);
+    this.loadSaveFunctionality();
+    this.createLegend();
+    this.createSearchUI()
+    this.oldNodeColors = {};
+    this.oldEdgeColors = {};
+
+
+    // set visjs network callbacks
+
     this.network.on("click", (params) => {
       console.log(
         "Click event, ",
       );
-
       this.showSelectionOptions()
-
+      // TODO: move definition of keyboard shortcuts to this.registerKeyboardShortcuts
       if (this.pressed_keys.includes('a')) {
-        //console.log(params)
-
-        console.log("vor new BaseNode", this)
+        //add a node to position of mouse if a is pressed during click
         let addNode = new NodeClasses.BaseNode(this)
         addNode.x = params.pointer.canvas.x
         addNode.y = params.pointer.canvas.y
@@ -1008,116 +945,73 @@ class GraphTool {
       }
 
       if (this.pressed_keys.includes('q')) {
-
+        // show global JSON vis JSONeditor in options div
 
         let optionsDivId = this.options_container.id
         console.log('show global JSON')
         document.getElementById(optionsDivId).innerHTML = "<button id='setButton'>set!</button><br><div id='editor_div'></div>"
-        let setButton = document.getElementById("setButton")
-        console.log(this.network)
+        let setButton = document.getElementById("setButton") // todo: implement changes
 
 
-        let nodes = []
-        for (let id of this.nodes.getIds()) {
-          nodes.push(this.nodes.get(id))
-        }
-        let edges = []
-        for (let id of this.edges.getIds()) {
-          edges.push(this.edges.get(id))
+        let options = {
+          mode: 'tree',
+          modes: ['code', 'tree'] // ['code', 'form', 'text', 'tree', 'view', 'preview']}
         }
 
-
-        let editor = new JSONEditor(editor_div)
-
-        console.log({
-          edges: edges,
-          nodes: nodes
-        })
+        let editor_div = document.getElementById("editor_div",options)
+        // create a JSONEdior in options div
+        let editor = new JSONEditor(editor_div)  // TODO: Editor is currently not rendered. find error.
+        
         editor.set({
-          edges: edges,
-          nodes: nodes
+          edges: this.edges.get(),
+          nodes: this.nodes.get()
         })
-
       }
     });
 
     this.network.on("doubleClick", (params) => {
 
-      this.keyObject.doubleclick(params);
-
+      this.keyObject.doubleclick(params); // TODO: implement central callback object
     });
 
 
-
-
-
-
-    //console.log(this.classRegistry)
-    // set extended behavior of visjs Network 
-    this.network.on("click", (params) => {
-      //console.log("Click event, ",);
-      //console.log(this.edges.get(params.edges[0]))
-      if (params.nodes.length > 0) {
-        //console.log("show options")
-        let node = this.nodes.get(params.nodes[0])
-        //console.log("clicked node:", node.constructor, node, "with prototype:", Object.getPrototypeOf(node))
-        if (typeof node.showOptions === 'function') {
-          node.showOptions(optionsDivId = this.options_container.id)
-        } else {
-          this.showOptions_default(node, this.options_container.id)
-        }
-      }
-      if (this.pressed_keys.includes('a')) {
-        //console.log(params)
-        addNode = new NodeClasses.CameraNode
-        addNode.x = params.pointer.canvas.x
-        addNode.y = params.pointer.canvas.y
-        this.nodes.update(addNode)
-      }
-    });
-    // this.network.on("doubleClick", (params) => {
-    //   //console.log("doubleClick event, getNodeAt returns: " + params.nodes);
-    //   let node_id = params.nodes[0]
-    //   if (params.nodes.length > 0) {
-    //     this.fire_recursive(node_id)
-    //   }
-    //   //console.log('doubleClick event finished')
-    // });
-    // right click
     this.network.on("oncontext", (params) => {
-      console.log('in this.network.on(oncontext)')
+      console.log('in this.network.on(oncontext)') // TODO: implement right click, probably Property-List, but as callback function.
     });
+
     this.network.on('dragStart', (params) => {
       console.log("dragStart");
-      //this.network.unselectAll();
+      
       if (params.nodes.length > 0) {
         let newNodeIds = []
         params.nodes.forEach((node_id, index) => {
           let node = this.nodes.get(node_id)
           let position = this.network.getPosition(node_id) //setting the current position is necessary to prevent snap-back to initial position
-          //console.log(position)
+          
           node.x = position.x
           node.y = position.y
+
           // duplicate Node if ctrl is pressed
           if (params.event.srcEvent.ctrlKey) {
-            let newNode = this.duplicateNode(node)
-            newNode.fixed = false;
 
+            //now: duplicate node and connect to original one. TODO: check if this should create a new node as property of the original.
+            let newNode = this.duplicateNode(node)
+
+            // added node shall move with cursor until button is released
+            newNode.fixed = false;
             newNode.id = config.graph.id;
             newNode.depth = this.nodes.get(this.network.getSelectedNodes()[index]).depth + 1;
-
             config.graph.id += 1;
-
+            
             this.copiedEdges = this.network.getSelectedEdges()
 
             let newEdge = {
               from: node.id,
               to: newNode.id,
-              label: this.edges.get(this.copiedEdges[index]).label,
+              label: "InitializedByCopyFrom", //this.edges.get(this.copiedEdges[index]).label,
               color: newNode.color,
               group: newNode.group
             }
-
 
             this.nodes.update(newNode)
             this.edges.update(newEdge) //{from: node.id, to: newNode.id}
@@ -1134,12 +1028,12 @@ class GraphTool {
         }
       }
     });
+
     this.network.on('dragEnd', (params) => {
-      //console.log(params.nodes)
+    
       params.nodes.forEach((node_id) => {
         let node = this.nodes.get(node_id)
         let position = this.network.getPosition(node_id)
-        //console.log(node)
         //setting the current position is necessary to prevent snap-back to initial position
         node.x = position.x
         node.y = position.y
@@ -1148,11 +1042,9 @@ class GraphTool {
       })
 
     });
+    
+
     // keyboard callback functions
-    this.vis_container.onmousemove = (event) => {
-      this.mouseX = event.clientX
-      this.mouseY = event.clientY - 30
-    }
     document.addEventListener('keydown', (event) => {
       if (!this.pressed_keys.includes(event.key)) {
         this.pressed_keys.push(event.key)
@@ -1163,18 +1055,19 @@ class GraphTool {
       }
       // copy
       if (event.key == "c" && this.pressed_keys.includes("Control")) {
-        //console.log('copy')
-
         //copy nodes
         this.copiedNodes = this.network.getSelectedNodes()
         this.copiedEdges = this.network.getSelectedEdges()
-        //console.log(this.copiedNodes, this.copiedEdges)
       }
       // paste
       if (event.key == "v" && this.pressed_keys.includes("Control")) {
-        //paste copiec nodes
+        //paste copied nodes
+        
         if (this.copiedNodes.length > 0 && this.network.getSelectedNodes().length > 0) {
           //console.log('paste')
+
+          // TODO: encapsulate in: this.pasteNodeIntoExistingItem() 
+          // TODO: paste node into empty space and create corresponding item this.pasteNodeIntoNewItem(node,xy) 
           let xy = this.network.DOMtoCanvas({
             x: this.mouseX,
             y: this.mouseY
@@ -1184,8 +1077,6 @@ class GraphTool {
             if (this.nodes.get(this.network.getSelectedNodes()[index]).object) {
               let oldNode = this.nodes.get(node_id)
 
-              //console.log("copied nodes:", this.copiedNodes, oldNode)
-              //console.log("Name of Constructor: ", oldNode.constructor, oldNode.constructor.Name)
               let newNode = this.duplicateNode(oldNode)
               let keys = Object.getOwnPropertyNames(oldNode)
 
@@ -1196,14 +1087,13 @@ class GraphTool {
                 } else {
                   //console.log("don't copy:",key,oldNode[key])
                 }
-                var rect = this.vis_container.getBoundingClientRect();
                 newNode.x = xy.x
                 newNode.y = xy.y
               })
-              newNode.id = config.graph.id;
+              newNode.id = this.config.graph.id;
               newNode.depth = this.nodes.get(this.network.getSelectedNodes()[index]).depth + 1;
 
-              config.graph.id += 1;
+              this.config.graph.id += 1;
 
               let newEdge = {
                 from: this.network.getSelectedNodes()[0],
@@ -1213,19 +1103,20 @@ class GraphTool {
                 group: newNode.group,
                 objectKey: this.edges.get(this.copiedEdges[index]).objectKey
               }
+
               if (newNode.group != "root") {
                 this.nodes.update(newNode);
                 this.edges.update(newEdge);
-
+                console.log(this.config,this.config.file)
                 if (newNode.object) {
 
                   if (newNode.context) {
 
 
-                    config.graph.createGraphNE(config.file, newNode.id, newNode.object, newNode.context, newNode.depth, "", true);
+                    this.config.graph.createGraphNE(this.config.file, newNode.id, newNode.object, newNode.context, newNode.depth, "", true);   
 
                   } else {
-                    config.graph.createGraphNE(config.file, newNode.id, newNode.object, "", newNode.depth, "", true);
+                    this.config.graph.createGraphNE(this.config.file, newNode.id, newNode.object, "", newNode.depth, "", true);
 
                   }
 
@@ -1249,6 +1140,11 @@ class GraphTool {
     }, false);
 
     // Rectangular selection:
+    this.vis_container.onmousemove = (event) => {
+      this.mouseX = event.clientX
+      this.mouseY = event.clientY - 30
+    }
+
     this.initRectangleSelection()
     this.initDragAndDrop()
   }
@@ -1264,7 +1160,6 @@ class GraphTool {
     }
     return result;
   }
-
 
   initRectangleSelection() {
     // Multiselect functionality 
@@ -1371,6 +1266,7 @@ class GraphTool {
 
         let prev_selectedNodes = this.network.getSelectedNodes()
         console.log('drag', drag, prev_selectedNodes)
+
         if (prev_selectedNodes.length == 0) {
 
           selectNodesFromHighlight();
@@ -1522,7 +1418,13 @@ class GraphTool {
           "examples": [
             "18a96389-de88-492f-95d5-af74f467f424"
           ],
-          "type": "string"
+          "anyOf": [{
+              "type": "string"
+            },
+            {
+              "type": "integer"
+            }
+          ]
         },
         "x": {
           "title": "x",
@@ -1722,55 +1624,55 @@ class GraphTool {
 
     if (!node.object) {
 
-      if (config.file["jsondata"][receivingItem][edge.objectKey]) {
-        if (Array.isArray(config.file["jsondata"][receivingItem][edge.objectKey])) {
-          config.file["jsondata"][receivingItem][edge.objectKey].push(node.label);
+      if (this.config.file["jsondata"][receivingItem][edge.objectKey]) {
+        if (Array.isArray(this.config.file["jsondata"][receivingItem][edge.objectKey])) {
+          this.config.file["jsondata"][receivingItem][edge.objectKey].push(node.label);
         } else {
           let tempArray = [];
-          tempArray.push(config.file["jsondata"][receivingItem][edge.objectKey]);
+          tempArray.push(this.config.file["jsondata"][receivingItem][edge.objectKey]);
           tempArray.push(node.label);
 
-          config.file["jsondata"][receivingItem][edge.objectKey] = tempArray;
+          this.config.file["jsondata"][receivingItem][edge.objectKey] = tempArray;
         }
       } else {
 
-        config.file["jsondata"][receivingItem][edge.objectKey] = node.label;
+        this.config.file["jsondata"][receivingItem][edge.objectKey] = node.label;
 
       }
       //add literal to object
     } else {
 
       if (!receivingNode.hasOwnProperty('mainObjectId') && !node.hasOwnProperty('mainObjectId')) {
-        if (config.file["jsondata"][receivingItem][edge.objectKey]) {
-          if (Array.isArray(config.file["jsondata"][receivingItem][edge.objectKey])) {
-            config.file["jsondata"][receivingItem][edge.objectKey].push(node.object);
+        if (this.config.file["jsondata"][receivingItem][edge.objectKey]) {
+          if (Array.isArray(this.config.file["jsondata"][receivingItem][edge.objectKey])) {
+            this.config.file["jsondata"][receivingItem][edge.objectKey].push(node.object);
           } else {
             let tempArray = [];
-            tempArray.push(config.file["jsondata"][receivingItem][edge.objectKey]);
+            tempArray.push(this.config.file["jsondata"][receivingItem][edge.objectKey]);
             tempArray.push(node.object);
 
-            config.file["jsondata"][receivingItem][edge.objectKey] = tempArray;
+            this.config.file["jsondata"][receivingItem][edge.objectKey] = tempArray;
           }
         } else {
 
-          config.file["jsondata"][receivingItem][edge.objectKey] = node.object;
+          this.config.file["jsondata"][receivingItem][edge.objectKey] = node.object;
 
         }
       } else if (!receivingNode.hasOwnProperty('mainObjectId') && node.hasOwnProperty('mainObjectId')) {
 
-        if (config.file["jsondata"][receivingItem][edge.objectKey]) {
-          if (Array.isArray(config.file["jsondata"][receivingItem][edge.objectKey])) {
-            config.file["jsondata"][receivingItem][edge.objectKey].push(config.file["jsondata"][node.object]);
+        if (this.config.file["jsondata"][receivingItem][edge.objectKey]) {
+          if (Array.isArray(this.config.file["jsondata"][receivingItem][edge.objectKey])) {
+            this.config.file["jsondata"][receivingItem][edge.objectKey].push(this.config.file["jsondata"][node.object]);
           } else {
             let tempArray = [];
-            tempArray.push(config.file["jsondata"][receivingItem][edge.objectKey]);
-            tempArray.push(config.file["jsondata"][node.object]);
+            tempArray.push(this.config.file["jsondata"][receivingItem][edge.objectKey]);
+            tempArray.push(this.config.file["jsondata"][node.object]);
 
-            config.file["jsondata"][receivingItem][edge.objectKey] = tempArray;
+            this.config.file["jsondata"][receivingItem][edge.objectKey] = tempArray;
           }
         } else {
 
-          config.file["jsondata"][receivingItem][edge.objectKey] = config.file["jsondata"][node.object];
+          this.config.file["jsondata"][receivingItem][edge.objectKey] = this.config.file["jsondata"][node.object];
 
         }
 
@@ -1785,9 +1687,9 @@ class GraphTool {
         })[0].objectKey
 
 
-        config.file["jsondata"][mainObject.object][objKey].forEach((object, index) => {
+        this.config.file["jsondata"][mainObject.object][objKey].forEach((object, index) => {
 
-          if (Object.is(config.file["jsondata"][receivingNode.object], object)) {
+          if (Object.is(this.config.file["jsondata"][receivingNode.object], object)) {
 
             if (Array.isArray(object[edge.objectKey])) {
 
@@ -1813,13 +1715,13 @@ class GraphTool {
 
         let mainObject = this.nodes.get(receivingNode.mainObjectId)
 
-        config.file["jsondata"][mainObject.object][edge.objectKey].forEach((object, index) => {
+        this.config.file["jsondata"][mainObject.object][edge.objectKey].forEach((object, index) => {
 
-          if (Object.is(config.file["jsondata"][receivingNode.object], object)) {
+          if (Object.is(this.config.file["jsondata"][receivingNode.object], object)) {
 
             if (Array.isArray(object[edge.objectKey])) {
 
-              object[edge.objectKey].push(config.file["jsondata"][node.object]);
+              object[edge.objectKey].push(this.config.file["jsondata"][node.object]);
 
             } else {
               let tempArray = [];
@@ -1828,7 +1730,7 @@ class GraphTool {
                 tempArray.push(object[edge.objectKey]);
               }
 
-              tempArray.push(config.file["jsondata"][node.object]);
+              tempArray.push(this.config.file["jsondata"][node.object]);
               object[edge.objectKey] = tempArray;
 
             }
@@ -1844,7 +1746,7 @@ class GraphTool {
     }
 
 
-    console.log(config.file["jsondata"])
+    console.log(this.config.file["jsondata"])
 
   }
 
@@ -1919,7 +1821,7 @@ class GraphTool {
   recolorByProperty() {
     nodes[0].color = "#6dbfa9";
     for (let i = 0; i < edges.length; i++) {
-      edges[i].color = config.graph.colorObj[edges[i].label];
+      edges[i].color = this.config.graph.colorObj[edges[i].label];
       for (let j = 0; j < nodes.length; j++) {
         if (edges[i].to == nodes[j].id) {
           nodes[j].color = edges[i].color;
@@ -2307,7 +2209,7 @@ class GraphTool {
         if (node.context) {
           //file, lastId, item, oldContext, lastDepth, givenDepth, mode
           let args = {
-            file: config.file,
+            file: this.config.file,
             lastId: node.id,
             item: node.object,
             oldContext: node.context,
@@ -2316,12 +2218,12 @@ class GraphTool {
             mode: true
           }
 
-          config.graph.createGraphNE(args);
+          this.config.graph.createGraphNE(args);
 
         } else {
 
           let args = {
-            file: config.file,
+            file: this.config.file,
             lastId: node.id,
             item: node.object,
             oldContext: "",
@@ -2330,7 +2232,7 @@ class GraphTool {
             mode: true
           };
 
-          config.graph.createGraphNE(args);
+          this.config.graph.createGraphNE(args);
 
         }
 
@@ -2506,7 +2408,7 @@ class GraphTool {
     function saveState() {
 
       if (document.getElementById("setColorByValueInput")) {
-        config.file.state = {
+        this.config.file.state = {
           nodes: nodes,
           edges: edges,
           colorFunction: document.querySelector('#myDropdown select').value,
@@ -2519,7 +2421,7 @@ class GraphTool {
 
 
       } else {
-        config.file.state = {
+        this.config.file.state = {
           nodes: nodes,
           edges: edges,
           colorFunction: document.querySelector('#myDropdown select').value,
@@ -2528,7 +2430,7 @@ class GraphTool {
       }
 
 
-      const json = config.file
+      const json = this.config.file
       const filename = "data.txt";
       const text = JSON.stringify(json);
 
@@ -2570,8 +2472,8 @@ class GraphTool {
         reader.onload = function () {
           const jsonData = JSON.parse(reader.result);
           if (jsonData.state) {
-            config.nodes = jsonData.state.nodes;
-            config.edges = jsonData.state.edges;
+            this.config.nodes = jsonData.state.nodes;
+            this.config.edges = jsonData.state.edges;
 
             nodes = jsonData.state.nodes;
             edges = jsonData.state.edges;
@@ -2584,7 +2486,7 @@ class GraphTool {
               edges: jsonData.state.edges,
               options: options,
               graph: draw,
-              file: config.file
+              file: this.config.file
             };
 
             document.getElementById("mynetwork").innerHTML = "";
@@ -2598,7 +2500,7 @@ class GraphTool {
             if (document.getElementById('setPath')) {
               document.getElementById('setPath').remove();
             }
-            var graphtool = new GraphTool( "mynetwork", config);
+            var graphtool = new GraphTool("mynetwork", config);
           } else {
             let nodes = [];
             let edges = [];
@@ -2624,11 +2526,10 @@ class GraphTool {
               edges: edges,
               options: options,
               graph: draw,
-              file: config.file
+              file: this.config.file
             };
-            var graphtool = new GraphTool(_config, "mynetwork", config);
+            var graphtool = new GraphTool("mynetwork", config, _config, );
           }
-
 
           if (jsonData.state.colorFunction == "setColorByValue") {
             graphtool.changeColorDropdown("myDropdown", "setColorByValue")
@@ -2642,7 +2543,7 @@ class GraphTool {
           }
 
           delete jsonData.state;
-          config.file = jsonData;
+          this.config.file = jsonData;
 
 
         };
@@ -2714,12 +2615,6 @@ class GraphTool {
       }
     }
 
-    // Object.keys(legendSet).forEach((key) => {
-
-    //   options.groups[key] = {
-    //     hidden: false
-    //   };
-    // });
 
     this.setInvisibleLegendGroupsWhite(invisibleGroups);
   }
@@ -2798,28 +2693,7 @@ class GraphTool {
 
         this.nodes.update(node); //see also: https://visjs.github.io/vis-network/examples/network/data/datasets.html
       });
-
-      // console.log(this.nodes.get())
-      // this.nodes.update(nodes);
-      // this.edges.update(edges);
-
-      // nodes = this.nodes.get()
-      // edges = this.edges.get()
-
-
-
-
-      // this.network.setData({nodes: this.nodes.get(), edges: this.edges.get()});
-
-      // this.network.setOptions(this.options);
-      // this.network.body.emitter.emit('_dataChanged');
-      // this.network.redraw();
     }
-
-
-    // graphtool.network.setOptions(options);
-    // graphtool.network.body.emitter.emit('_dataChanged');
-
 
     var allFalse = Object.keys(options.groups).every(function (k) {
       if (k === 'useDefaultGroups') {
@@ -2839,7 +2713,11 @@ class GraphTool {
     let sel_nodes = this.network.getSelectedNodes()
     if (sel_nodes.length == 0) {
       // remove options
-      this.options_container.innerHTML = ""
+      if (!this.pressed_keys.includes('q')){
+        this.options_container.innerHTML = ""
+      }
+
+
     } else if (sel_nodes.length == 1) {
       // show options of single node
       console.log("show options")

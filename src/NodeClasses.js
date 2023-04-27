@@ -104,7 +104,10 @@ class BaseNode{
             "examples": [
               "18a96389-de88-492f-95d5-af74f467f424"
             ],
-            "type": "string"
+            "anyOf":[
+              {"type": "string"},
+              {"type": "integer"}
+            ]
           },
           "x": {
             "title": "x",

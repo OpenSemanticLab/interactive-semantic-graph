@@ -25,7 +25,18 @@ function uuidv4() {
     );
   }
 
+function valueFromObjectPath(obj, path){
+    if (path = ""){
+        return obj;
+    }
+    for (var i=0, path=path.split('.'), len=path.length; i<len; i++){
+        obj = obj[path[i]];
+    };
+    return obj;
+};
+
 export {
     mergeDeep,
-    uuidv4
+    uuidv4,
+    valueFromObjectPath,
 }

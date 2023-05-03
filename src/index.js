@@ -25,6 +25,8 @@ class GraphDrawer {
       },
 
       rootColor: "#6dbfa9",
+      nodeDistance: 150,
+      lang: "en"
     };
 
     this.config = utils.mergeDeep(defaultConfig, config);
@@ -37,11 +39,8 @@ class GraphDrawer {
     this.depth = args.depth;
     this.mode = args.mode;
     this.id = 0;
-    this.nodes = args.nodes;
-    this.edges = args.edges;
-    this.lang = "en";
+    this.lang = this.config.lang;
     this.first = true;
-    this.baseRootId;
     this.colorObj = {};
     this.h = Math.random();
     this.golden = 0.618033988749895;
@@ -57,6 +56,20 @@ class GraphDrawer {
 
  //   this.context = this.config.callbacks.createContext(this.file);
 
+    if (args.nodes){
+      this.nodes = new vis.DataSet(args.nodes);
+    }
+    else{
+      this.nodes = new vis.DataSet()
+    }
+
+    if (args.edges){
+      this.edges = new vis.DataSet(args.edges);
+    }
+    else{
+      this.edges = new vis.DataSet()
+    }
+    
     this.createGraphNodesEdges(this.createArgs);
 
     Object.filter = (obj, predicate) =>
@@ -92,11 +105,35 @@ class GraphDrawer {
       "80%,1)";
   }
 
-  getLabelFromContext(context, key) {
-    if (typeof(context[key]) == "object"){
-      return context[key]["@id"].replace("Property:", "")
+  getLabelFromLabelArray(labelArray){
+    let label
+    for (let key in labelArray){
+      label = labelArray[key]["text"]
+      if (labelArray[key]["lang"] == this.lang){
+        return(label)
+      }
     }
-    return(context[key].replace("Property:", ""))
+  }
+
+  getLabelFromContext(context, key) {
+
+    // get property string of shape: Property:PropertyLabel
+    let propertyFullName = key
+    if (typeof(context[key]) == "object"){
+      propertyFullName = context[key]["@id"]
+    }
+    // replace by name with correct language if available
+
+    if(this.file.jsondata[propertyFullName]){
+      propertyFullName = this.getLabelFromLabelArray(this.file.jsondata[propertyFullName]["label"])
+      //propertyFullName = this.file.jsondata[propertyFullName]["label"][this.lang]
+    }
+
+    if (propertyFullName.startsWith("Property:")){
+      return(propertyFullName.replace("Property:", ""))
+    }
+    return(propertyFullName)
+    
   }
 
   getStartItem(file){
@@ -163,49 +200,8 @@ class GraphDrawer {
   }
 
   
-
-  // createContext(file, item){
-
-  //   let data = {graph: this, file: file, item: item};
-  //   return this.config.callbacks.createContext(data);
-  // }
-
-  //Checks if node already exists inside of a nodes array
-  nodeExists(nodes, item) {
-    let exists = false;
-    for (let index = 0; index < nodes.length; index++) {
-      if (nodes[index].item && nodes[index].item == item) {
-        exists = index;
-      }
-    }
-    return exists;
-  }
-
-  nodeExists2(node_id){
-    let exists = false;
-    console.log("node_id, this.nodes",node_id, this.nodes)
-    for (let i in this.nodes) {
-      //console.log("loop,this.Nodes[i], node_id, i:",this.nodes[i].id, node_id, i)
-      if (this.nodes[i].id == node_id) {
-        exists = true;
-      }
-    }
-    return exists;
-  }
-
-  edgeExists(edge_id){
-    console.log("check if edge with id exists,",edge_id)
-    let exists = false;
-    for (let i in this.edges) {
-      if (this.edges[i].id == edge_id) {
-        exists = true;
-      }
-    }
-    return exists;
-  }
-
   // generates colors per property (per property, not per node! Todo: consider renaming: getColorByProperty)
-  setColor(property) {
+  registerPropertyColor(property) {
     // maps a property to a color, generates the color by randomness if not existing
 
     if (this.handleCallbacks({
@@ -226,8 +222,16 @@ class GraphDrawer {
     }
   }
 
+  getAngleFromProperty(property){
+    let hsla = this.colorObj[property]
+    console.log("hsla",hsla)
+    let angle = hsla.split(",")[0].split("(")[1]
+    angle=angle/180*Math.PI
+    return angle
+  }
+
   onBeforeCreateEdgeDefault(edge){
-    this.setColor(edge.label)
+    this.registerPropertyColor(edge.label)
     return edge
   }
 
@@ -235,7 +239,7 @@ class GraphDrawer {
 
     // set color
     if (node.incomingLabels.length > 0) {
-      node.color = this.setColor(node.incomingLabels[0])
+      node.color = this.registerPropertyColor(node.incomingLabels[0])
     }
 
     //set group
@@ -258,11 +262,7 @@ class GraphDrawer {
     let labelArray = this.file.jsondata[item].label
     let label = "item"
     if (labelArray){
-      for (let i = 0; i < labelArray.length; i++) {
-        if (labelArray[i].lang == this.lang) {
-          label = labelArray[i].text;
-        }
-      }
+      this.getLabelFromLabelArray(labelArray)
     }
     return(label)
   }
@@ -293,11 +293,17 @@ class GraphDrawer {
     //keys of args: file, lastId, item, relPath, oldContext, lastDepth, givenDepth, mode
 
     //console.log("args at beginning:", args)
+    // TODO: put variables to defaultArgs
+
+    let defaultArgs = {recurse:false,
+                       recursionRootId:this.rootId,
+                      targetDepth:2}
+
+    
+
+    args = utils.mergeDeep(defaultArgs, args);
+    
     let currentItem;
-    let recurse=false;
-    if (args.recurse){
-      recurse = args.recurse
-    }
     // set start Item
     if (args.item){
       currentItem = args.item
@@ -314,21 +320,15 @@ class GraphDrawer {
     else{
       currentPath = this.getItemPathArray(currentItem)
     }
+
+    
     //console.log("currentItem, currentPath:", currentItem, currentPath)
 
     let  currentContext = this.config.callbacks.createContext(this.file, currentItem)
     
     let label = this.getLabelFromPathArray(currentPath);
     
-    let rootId;
-    if (args.lastId){
-      rootId = args.lastId
-    }
-    else{
-      rootId = this.id;
-    }
-
-    let objKeys = Object.keys(this.file.jsondata[currentItem]);
+    
     let depth;
     if (args.lastDepth){
       depth = args.lastDepth
@@ -336,7 +336,9 @@ class GraphDrawer {
     else{
       depth = 0
     }  
+
     
+
     // loop through keys / indices of current item 
     
     let currentValue = this.getValueFromPathArray(currentPath)
@@ -344,8 +346,16 @@ class GraphDrawer {
     if (Object.keys(this.file.jsondata).includes(currentValue)){
       currentPath = this.getItemPathArray(currentValue)
       currentValue = this.file.jsondata[currentValue]
-      
-      //console.log("resolved reference:, resolvedValue, resolvedPath:",resolvedValue,resolvedPath)
+    }
+    let currentNodeId = String(currentPath)
+
+    // calculate distance by previous distances
+    let distances = {}
+    if (args.previousNode){
+      distances[args.recursionRootId] = args.previousNode.distances[args.recursionRootId] + 1
+    }
+    if (args.recursionRootId == currentNodeId){
+      distances[args.recursionRootId] = 0
     }
     // create edge 
     // register color for property and add edge to next node
@@ -358,63 +368,84 @@ class GraphDrawer {
       else{
         edgeLabel = args.key
       }
-      console.log(args.previousPath)
+      
       //let newEdgeId = utils.uuidv4() // String(args.previousPath.push(edgeLabel))
       let newEdgeId = String(args.previousPath) + String(edgeLabel)
 
-      this.setColor(edgeLabel)
       let newEdge = {
         id: newEdgeId,
-        from: String(args.previousPath),
-        to: String(currentPath),
+        from: args.previousNode.id,
+        to: currentNodeId,
         label: edgeLabel,
         group: edgeLabel,
         color: this.colorObj[edgeLabel],
         objectKey: args.key
       }
-      if (!this.edgeExists(newEdge.id)){
+      if (!this.edges.get(newEdge.id)){
         newEdge = this.config.callbacks.onBeforeCreateEdge(newEdge)
       // here the actual edge is created / initialized
-      this.edges.push(
+      this.edges.update(
         (newEdge)
       )
       }
-      
     }
+
+    // prepare position of new node (after edge is created, such that HSLA is registered)
+    let new_x;
+    let new_y;
+    if(!args.previousNode){
+      new_x = 0;
+      new_y = 0;
+    }
+    
+    else{
+      let angle = this.getAngleFromProperty(edgeLabel)
+      console.log("angle",angle)
+      new_x = args.previousNode.x + this.config.nodeDistance*Math.cos(angle);
+      new_y = args.previousNode.y + this.config.nodeDistance*Math.sin(angle);
+    } 
+    console.log("x,y",new_x,new_y)
 
     // create current Node
     let currentNode = {
-      id: String(currentPath),
+      id: currentNodeId,
       label: label,
       path: currentPath,
       item: currentItem,
       value: currentValue,
       incomingLabels: [edgeLabel],
-    //  color: this.colorObj[edgeLabel],
-    //  context: currentContext,
+      context: currentContext,
       depth: depth,
+      distances: distances,
+      x: new_x,
+      y: new_y,
+      //fixed:true
+
     }
     
-    if(!this.nodeExists2(currentNode.id)){
+    if(!this.nodes.get(currentNode.id)){
 
       currentNode = this.config.callbacks.onBeforeCreateNode(currentNode)
       console.log("createdNode",currentNode)
-      this.nodes.push(currentNode)
-      recurse = true
+      this.nodes.update(currentNode)
+      args.recurse = true
     
     }
-    if(recurse){
+    if(args.recurse){
       // loop through keys / indices of current item if it is an object / array
       if(typeof(currentValue) === "object"){
       
         for (let key in currentValue){
           let exclude_list = ["type","label"]
-          if (!exclude_list.includes(key)){
+          if (!exclude_list.includes(key) && currentNode.distances[args.recursionRootId] < args.targetDepth){
             //console.log("key",key)
             let nextPath = JSON.parse(JSON.stringify(currentPath))
             //console.log("currentPath, key, currentValue, typeof(currentValue):", currentPath, key, currentValue, typeof(currentValue))
             nextPath.push(key)
             //console.log("nextPath:", nextPath)
+
+            
+        
 
 
             let argsObj = {
@@ -424,6 +455,9 @@ class GraphDrawer {
                 previousPath:currentPath,
                 key: key,
                 previousContext: currentContext,
+                previousNode: currentNode,
+                recursionRootId: args.recursionRootId,
+                targetDepth: args.targetDepth,
                 lastDepth: depth + 1,
                 givenDepth: args.givenDepth,
                 mode: args.mode
@@ -438,687 +472,9 @@ class GraphDrawer {
       console.log("Node: ",currentNode.id," already exists")
     }
 
-
-    // if the current Object can be found in jsondata (TODO: or jsonschema,) create a node for it
-    /*
-    if (Object.keys(this.file.jsondata).includes(currentValue) && currentPath.length>2 ){
-
-      
-      let argsObj2 = {
-        //  lastId: oldId,
-          item: currentValue, //+ "" + eightDigitRandomNumber,: 
-          path: ["jsondata",currentValue],
-        //  oldContext: startContext,
-          lastDepth: depth + 1,
-          givenDepth: args.givenDepth,
-          mode: args.mode
-        }
-      console.log("argsObj2", argsObj2)
-      
-      let exists = this.nodeExists2(String(argsObj2.path))
-
-      console.log("this.nodes, String(argsObj2.path)", this.nodes, String(argsObj2.path), exists)
-      if (!exists){
-        this.createGraphNodesEdges(argsObj2)
-      }
-      
-    }*/
-
-    // recurse for References (if currentValue is in this.file.jsondata oder this.file.jsonschema)
-  //  else if (currentValue)
-
-    // recurse for References
-
       
   }
-
-  //creates nodes and edges out of a JSON file
-  createGraphNE(args) {
-    //keys of args: file, lastId, item, relPath, oldContext, lastDepth, givenDepth, mode
-
-    let currentItem;
-    // set start Item
-    if (args.item){
-      currentItem = args.item
-    }
-    else{
-      currentItem = this.getStartItem(args.file);
-    }
-    console.log("currentItem:", currentItem)
-
-    let currentPath; 
-    if (args.path){
-      currentPath = args.path
-    }
-    else{
-      currentPath = this.getItemPath(currentItem)
-    }
-    console.log("currentItem, currentPath:", currentItem, currentPath)
-
-    // set current Context
-    let startContext;
-    if (args.oldContext){
-      startContext = args.oldContext
-    }
-    else{
-      startContext = this.config.callbacks.createContext(args.file, currentItem)
-    }
-
-    let label;
-    let rootId;
-    if (args.lastId){
-      rootId = args.lastId
-    }
-    else{
-      rootId = this.id;
-    }
-
-    let objKeys = Object.keys(args.file.jsondata[currentItem]);
-    let depth;
-    if (args.lastDepth){
-      depth = args.lastDepth
-    }
-    else{
-      depth = 1
-    }
-
-    let color;
-    let rootNodeColor = '#6dbfa9';
-
-    //first run of the (recursive) function
-    if (!args.item && !args.lastId) {
-      //gets the item in the jsondata that is labelled with "start":true
-      //currentItem = this.getStartItem(args.file);
-      label = this.getLabelFromItem(currentItem)
-      
-      //creates the root node
-      this.nodes.push({
-        id: this.id,
-        label: label,
-        path: currentPath,
-        color: rootNodeColor,
-        depth: 0,
-        item: currentItem,    
-        group: "root"
-      });
-
-      this.baseRootId = rootId;
-      this.id++;
-
-    }
-    // no oldContext present and not first run. => context has to be created
-    else {
-      label = this.getLabelFromItem(currentItem)
-      this.id++;
-    }
-
-
-
-
-    // loops through an item
-    for (let i = 0; i < objKeys.length; i++) {
-
-      //ignore type and lable (in order not to generate nodes for them)
-      if (objKeys[i] != "type" && objKeys[i] != "label" && objKeys[i] != "start" && (depth <= args.givenDepth || !args.givenDepth)) {
-
-        //check if key is in startContext
-        if (objKeys[i] in startContext && args.file.jsondata[startContext[objKeys[i]]["@id"]]) {
-
-          for (let k = 0; k < args.file.jsondata[startContext[objKeys[i]]["@id"]]["label"].length; k++) {
-
-            if (args.file.jsondata[startContext[objKeys[i]]["@id"]]["label"][k].lang == this.lang) {
-              // color by property.
-              color = this.setColor(args.file.jsondata[startContext[objKeys[i]]["@id"]]["label"][k].text)
-
-            }
-          }
-          // if the key is in start context and Property is not present in jsondata
-        } else if (objKeys[i] in startContext && !(startContext[objKeys[i]]["@type"] == "@id")) {
-
-          let edgeLabel = startContext[objKeys[i]].replace("Property:", "");
-          color = this.setColor(edgeLabel)
-          // if the key is in start context and Property is present in jsondata and literal property
-        } else if (objKeys[i] in startContext && !(args.file.jsondata[startContext[objKeys[i]]["@id"]]) && startContext[objKeys[i]]["@type"] == "@id") {
-
-          let edgeLabel = this.getLabelFromContext(startContext, objKeys[i]);
-
-          color = this.setColor(edgeLabel)
-          // if no mapping/context is present for the key.
-        } else {
-          color = this.setColor(objKeys[i])
-        }
-        // end of setting color
-
-
-        // check if given key's value is an array and if the first element is an object
-        if (Array.isArray(args.file.jsondata[currentItem][objKeys[i]]) && typeof args.file.jsondata[currentItem][objKeys[i]][0] === 'object' && args.file.jsondata[currentItem][objKeys[i]][0] !== null) {
-          //Object inside an Object (recursively)
-          // recursively create objects for subobjects that shall be visible in the graph
-
-
-          // loop through array
-          for (let j = 0; j < args.file.jsondata[currentItem][objKeys[i]].length; j++) {
-
-            const randomNumber = Math.floor(Math.random() * 100000000);
-            const eightDigitRandomNumber = randomNumber.toString().padStart(8, '0');
-
-            args.file.jsondata[objKeys[i] + "" + eightDigitRandomNumber] = args.file.jsondata[currentItem][objKeys[i]][j];
-
-            // args.file.jsondata[objKeys[i]+""+j] = args.file.jsondata[currentItem][objKeys[i]][j];
-            // console.log(args.file.jsondata[objKeys[i]+""+j])
-
-            if (this.nodeExists(this.nodes, objKeys[i] + "" + eightDigitRandomNumber)) {
-              // only create edges
-
-              // create edge with correct language
-              if (args.file.jsondata[startContext[objKeys[i]]["@id"]]) {
-
-                for (let k = 0; k < args.file.jsondata[startContext[objKeys[i]]["@id"]]["label"].length; k++) {
-                  if (args.file.jsondata[startContext[objKeys[i]]["@id"]]["label"][k].lang == this.lang) {
-                    this.edges.push({
-                      from: rootId,
-                      to: this.nodes[this.nodeExists(this.nodes, objKeys[i] + "" + eightDigitRandomNumber)].id,
-                      label: args.file.jsondata[startContext[objKeys[i]]["@id"]]["label"][k].text,
-                      color: color,
-                      group: args.file.jsondata[startContext[objKeys[i]]["@id"]]["label"][k].text,
-                      objectKey: objKeys[i]
-                    });
-                    //console.log(args.file.jsondata[startContext[objKeys[i]]["@id"]]["label"][j].text)
-                  }
-                }
-
-              } else {
-                // if property is not mapped (no property in jsondata)
-               
-                let edgeLabel = this.getLabelFromContext(startContext, objKeys[i]);
-
-                this.edges.push({
-                  from: rootId,
-                  to: this.nodes[this.nodeExists(this.nodes, objKeys[i] + "" + eightDigitRandomNumber)].id,
-                  label: edgeLabel,
-                  color: color,
-                  group: edgeLabel,
-                  objectKey: objKeys[i]
-                });
-              }
-
-
-            // if node does not exist, create node and edge
-            } else {
-
-              if (startContext.hasOwnProperty(objKeys[i])) {
-
-                if (args.file.jsondata[startContext[objKeys[i]]["@id"]]) {
-                  for (let j = 0; j < args.file.jsondata[startContext[objKeys[i]]["@id"]]["label"].length; j++) {
-                    if (args.file.jsondata[startContext[objKeys[i]]["@id"]]["label"][j].lang == this.lang) {
-                      // insert node
-                      this.nodes.push({
-                        id: this.id,
-                        label: objKeys[i],
-                        path: currentPath,
-                        item: objKeys[i] + "" + eightDigitRandomNumber,
-                        context: startContext,
-                        depth: depth,
-                        color: color,
-                        group: args.file.jsondata[startContext[objKeys[i]]["@id"]]["label"][j].text,
-                        mainObjectId: rootId
-                      });
-                      
-                      this.edges.push({
-                        from: rootId,
-                        to: this.id,
-                        label: args.file.jsondata[startContext[objKeys[i]]["@id"]]["label"][j].text,
-                        color: color,
-                        group: args.file.jsondata[startContext[objKeys[i]]["@id"]]["label"][j].text,
-                        objectKey: objKeys[i]
-                      });
-                      //console.log(args.file.jsondata[startContext[objKeys[i]]["@id"]]["label"][j].text)
-                    }
-
-                  }
-
-
-                } else {
-
-                  let edgeLabel = this.getLabelFromContext(startContext, objKeys[i]);
-
-                  this.nodes.push({
-                    id: this.id,
-                    label: objKeys[i],
-                    path: currentPath,
-                    item: objKeys[i] + "" + eightDigitRandomNumber,
-                    context: startContext,
-                    depth: depth,
-                    color: color,
-                    group: edgeLabel,
-                    mainObjectId: rootId
-                  });
-
-                  this.edges.push({
-                    from: rootId,
-                    to: this.id,
-                    label: edgeLabel,
-                    color: color,
-                    group: edgeLabel,
-                    objectKey: objKeys[i]
-                  });
-
-                }
-              } else {
-
-
-                this.nodes.push({
-                  id: this.id,
-                  label: objKeys[i],
-                  path: currentPath,
-                  item: objKeys[i] + "" + eightDigitRandomNumber,
-                  context: startContext,
-                  depth: depth,
-                  color: color,
-                  group: objKeys[i],
-                  mainObjectId: rootId
-                });
-
-                this.edges.push({
-                  from: rootId,
-                  to: this.id,
-                  label: objKeys[i],
-                  color: color,
-                  group: objKeys[i],
-                  objectKey: objKeys[i]
-                });
-              }
-            }
-
-            // prepare arguments for recursive call
-
-            let oldId = this.id;
-            this.id++;
-
-            let nextPath = currentPath+"."+objKeys[i];
-
-            let argObj = {
-              file: args.file,
-              lastId: oldId,
-              item: args.item, //+ "" + eightDigitRandomNumber,: 
-              path: nextPath,
-              oldContext: startContext,
-              lastDepth: depth + 1,
-              givenDepth: args.givenDepth,
-              mode: args.mode
-            };
-
-            this.createGraphNE(argObj);
-          }
-
-        // if value of current key is an array of items 
-
-        } else if (objKeys[i] in startContext && startContext[objKeys[i]]["@type"] == "@id" && Array.isArray(args.file.jsondata[currentItem][objKeys[i]]) && !(typeof args.file.jsondata[currentItem][objKeys[i]][0] === 'object' && args.file.jsondata[currentItem][objKeys[i]][0] !== null)) {
-
-          //Array of Items (recursively)
-
-          //console.log(args.file.jsondata[currentItem][objKeys[i]]);
-
-          let rememberArray = args.file.jsondata[currentItem][objKeys[i]];
-
-          args.file.jsondata[currentItem][objKeys[i]] = "";
-
-
-          for (let j = 0; j < rememberArray.length; j++) {
-
-            label = this.getLabelFromItem(rememberArray[j])
-      
-
-            if (this.nodeExists(this.nodes, rememberArray[j])) {
-
-
-              // if property exists in jsondata
-              if (args.file.jsondata[startContext[objKeys[i]]["@id"]]) {
-                for (let k = 0; k < args.file.jsondata[startContext[objKeys[i]]["@id"]]["label"].length; k++) {
-
-                  if (args.file.jsondata[startContext[objKeys[i]]["@id"]]["label"][k].lang == this.lang) {
-                    
-                    this.edges.push({
-                      from: rootId,
-                      to: this.nodes[this.nodeExists(this.nodes, rememberArray[j])].id,
-                      label: args.file.jsondata[startContext[objKeys[i]]["@id"]]["label"][k].text,
-                      color: color,
-                      group: args.file.jsondata[startContext[objKeys[i]]["@id"]]["label"][k].text,
-                      objectKey: objKeys[i]
-                    });
-                    //console.log(args.file.jsondata[startContext[objKeys[i]]["@id"]]["label"][j].text)
-                  }
-
-                }
-
-
-              } else {
-                let edgeLabel = this.getLabelFromContext(startContext, objKeys[i]);
-
-
-                this.edges.push({
-                  from: rootId,
-                  to: this.nodes[this.nodeExists(this.nodes, rememberArray[j])].id,
-                  label: edgeLabel,
-                  color: color,
-                  group: edgeLabel,
-                  objectKey: objKeys[i]
-                });
-
-              }
-
-            } else {
-
-
-              if (args.file.jsondata[startContext[objKeys[i]]["@id"]]) {
-                for (let j = 0; j < args.file.jsondata[startContext[objKeys[i]]["@id"]]["label"].length; j++) {
-                  if (args.file.jsondata[startContext[objKeys[i]]["@id"]]["label"][j].lang == this.lang) {
-                    this.nodes.push({
-                      id: this.id,
-                      label: label,
-                      path: currentPath,
-                      item: rememberArray[j],
-                      depth: depth,
-                      color: color,
-                      group: args.file.jsondata[startContext[objKeys[i]]["@id"]]["label"][j].text
-                    });
-
-                    this.edges.push({
-                      from: rootId,
-                      to: this.id,
-                      label: args.file.jsondata[startContext[objKeys[i]]["@id"]]["label"][j].text,
-                      color: color,
-                      group: args.file.jsondata[startContext[objKeys[i]]["@id"]]["label"][j].text,
-                      objectKey: objKeys[i]
-                    });
-                    //console.log(args.file.jsondata[startContext[objKeys[i]]["@id"]]["label"][j].text)
-                  }
-
-                }
-
-
-              } else {
-                let edgeLabel = this.getLabelFromContext(startContext, objKeys[i]);
-
-                this.nodes.push({
-                  id: this.id,
-                  label: label,
-                  path: currentPath,
-                  item: rememberArray[j],
-                  depth: depth,
-                  color: color,
-                  group: edgeLabel
-                });
-
-                this.edges.push({
-                  from: rootId,
-                  to: this.id,
-                  label: edgeLabel,
-                  color: color,
-                  group: edgeLabel,
-                  objectKey: objKeys[i]
-                });
-
-              }
-
-              let nextPath = currentPath+"["+String(j)+"]";
-
-              let argObj2 = {
-                file: args.file,
-                lastId: this.id,
-                item: rememberArray[j],
-                path: nextPath,
-                oldContext: false,
-                lastDepth: depth + 1,
-                givenDepth: args.givenDepth,
-                mode: args.mode
-              }
-
-              this.createGraphNE(argObj2);
-            }
-            this.id++; //new maybe wrong
-
-
-            /////////////////////////////////createGraphNE(args.file, id, rememberArray[j]);
-
-          }
-
-          args.file.jsondata[currentItem][objKeys[i]] = rememberArray;
-          //console.log(args.file.jsondata[currentItem][objKeys[i]])
-
-
-        // if value of current key is an item string
-        } else if (objKeys[i] in startContext && startContext[objKeys[i]]["@type"] == "@id" && !(Array.isArray(args.file.jsondata[currentItem][objKeys[i]])) && !(typeof args.file.jsondata[currentItem][objKeys[i]][0] === 'object' && args.file.jsondata[currentItem][objKeys[i]][0] !== null)) {
-
-          //Item is a literal 
-
-          label = this.getLabelFromItem(args.file.jsondata[currentItem][objKeys[i]])
-
-          if (this.nodeExists(this.nodes, args.file.jsondata[currentItem][objKeys[i]])) {
-            if (args.file.jsondata[startContext[objKeys[i]]["@id"]]) {
-              for (let k = 0; k < args.file.jsondata[startContext[objKeys[i]]["@id"]]["label"].length; k++) {
-                if (args.file.jsondata[startContext[objKeys[i]]["@id"]]["label"][k].lang == this.lang) {
-                  this.edges.push({
-                    from: rootId,
-                    to: this.nodes[this.nodeExists(this.nodes, args.file.jsondata[currentItem][objKeys[i]])].id,
-                    label: args.file.jsondata[startContext[objKeys[i]]["@id"]]["label"][k].text,
-                    color: color,
-                    group: args.file.jsondata[startContext[objKeys[i]]["@id"]]["label"][k].text,
-                    objectKey: objKeys[i]
-                  });
-                  //console.log(args.file.jsondata[startContext[objKeys[i]]["@id"]]["label"][j].text)
-                }
-
-              }
-
-
-            } else {
-              
-
-              let edgeLabel = this.getLabelFromContext(startContext, objKeys[i]);
-
-
-              this.edges.push({
-                from: rootId,
-                to: this.nodes[this.nodeExists(this.nodes, args.file.jsondata[currentItem][objKeys[i]])].id,
-                label: edgeLabel,
-                color: color,
-                group: edgeLabel,
-                objectKey: objKeys[i]
-              });
-            }
-
-
-
-          } else {
-
-            
-
-            if (args.file.jsondata[startContext[objKeys[i]]["@id"]]) {
-              for (let j = 0; j < args.file.jsondata[startContext[objKeys[i]]["@id"]]["label"].length; j++) {
-                if (args.file.jsondata[startContext[objKeys[i]]["@id"]]["label"][j].lang == this.lang) {
-                  this.nodes.push({
-                    id: this.id,
-                    label: label,
-                    path: currentPath,
-                    item: args.file.jsondata[currentItem][objKeys[i]],
-                    depth: depth,
-                    color: color,
-                    group: args.file.jsondata[startContext[objKeys[i]]["@id"]]["label"][j].text
-                  });
-
-                  this.edges.push({
-                    from: rootId,
-                    to: this.id,
-                    label: args.file.jsondata[startContext[objKeys[i]]["@id"]]["label"][j].text,
-                    color: color,
-                    group: args.file.jsondata[startContext[objKeys[i]]["@id"]]["label"][j].text,
-                    objectKey: objKeys[i]
-                  });
-                  //console.log(args.file.jsondata[startContext[objKeys[i]]["@id"]]["label"][j].text)
-                }
-
-              }
-
-
-            } else {
-              let edgeLabel = this.getLabelFromContext(startContext, objKeys[i]);
-              this.nodes.push({
-                id: this.id,
-                label: label,
-                path: currentPath,
-                item: args.file.jsondata[currentItem][objKeys[i]],
-                depth: depth,
-                color: color,
-                group: edgeLabel
-              });
-
-              this.edges.push({
-                from: rootId,
-                to: this.id,
-                label: edgeLabel,
-                color: color,
-                group: edgeLabel,
-                objectKey: objKeys[i]
-              });
-
-            }
-
-            
-            let nextItem = args.file.jsondata[currentItem][objKeys[i]];
-            let nextPath = this.getItemPath(nextItem)
-
-            let argObj3 = {
-              file: args.file,
-              lastId: this.id,
-              item: nextItem,
-              path: nextPath,
-              oldContext: false,
-              lastDepth: depth + 1,
-              givenDepth: args.givenDepth,
-              mode: args.mode
-            }
-
-            this.createGraphNE(argObj3);
-          }
-          //edges.push({from: rootId, to: id, label: startContext[objKeys[i]]["@id"]});
-
-          ///////////////////////////////createGraphNE(args.file, id, args.file.jsondata[currentItem][objKeys[i]]);
-
-        // if value of current key is in start context but property is not in jsondata; args.mode => literals shall be displayed
-        } else if (objKeys[i] in startContext && args.mode) {
-
-          //Is a literal 
-
-          let nodeLabel;
-          let loopLength;
-          if (Array.isArray(args.file.jsondata[currentItem][objKeys[i]])) {
-            loopLength = args.file.jsondata[currentItem][objKeys[i]].length;
-          } else {
-            loopLength = 1;
-          }
-
-          for (let k = 0; k < loopLength; k++) {
-
-            if (Array.isArray(args.file.jsondata[currentItem][objKeys[i]])) {
-              nodeLabel = args.file.jsondata[currentItem][objKeys[i]][k]
-            } else {
-              nodeLabel = args.file.jsondata[currentItem][objKeys[i]];
-            }
-
-            if (args.file.jsondata[startContext[objKeys[i]]]) {
-
-              for (let j = 0; j < args.file.jsondata[startContext[objKeys[i]]]["label"].length; j++) {
-                if (args.file.jsondata[startContext[objKeys[i]]]["label"][j].lang == this.lang) {
-                  this.nodes.push({
-                    id: this.id,
-                    label: nodeLabel,
-                    path: currentPath,
-                    depth: depth,
-                    color: color,
-                    group: args.file.jsondata[startContext[objKeys[i]]["@id"]]["label"][j].text
-                  });
-
-                  this.edges.push({
-                    from: rootId,
-                    to: this.id,
-                    label: args.file.jsondata[startContext[objKeys[i]]["@id"]]["label"][j].text,
-                    color: color,
-                    group: args.file.jsondata[startContext[objKeys[i]]["@id"]]["label"][j].text,
-                    objectKey: objKeys[i]
-                  });
-                  //console.log(args.file.jsondata[startContext[objKeys[i]]["@id"]]["label"][j].text)
-                }
-
-              }
-
-
-            } else {
-              let edgeLabel = startContext[objKeys[i]].replace("Property:", "");
-              this.nodes.push({
-                id: this.id,
-                label: nodeLabel,
-                path: currentPath,
-                depth: depth,
-                color: color,
-                group: edgeLabel
-              });
-
-
-              this.edges.push({
-                from: rootId,
-                to: this.id,
-                label: edgeLabel,
-                color: color,
-                group: edgeLabel,
-                objectKey: objKeys[i]
-              });
-
-            }
-
-            //edges.push({from: rootId, to: id, label: startContext[objKeys[i]]});
-            this.id++;
-            //console.log(args.file.jsondata[currentItem][objKeys[i]])
-
-          }
-
-        // if not in context and property is not in jsondata. 
-        } else {
-
-          //Is a literal (not in context)
-          if (args.mode) {
-
-            //console.log(args.file.jsondata[currentItem][objKeys[i]])
-            this.nodes.push({
-              id: this.id,
-              label: args.file.jsondata[currentItem][objKeys[i]],
-              path: currentPath,
-              depth: depth,
-              color: color,
-              group: objKeys[i]
-            });
-
-            this.edges.push({
-              from: rootId,
-              to: this.id,
-              label: objKeys[i],
-              color: color,
-              group: objKeys[i],
-              objectKey: objKeys[i]
-            });
-            this.id++;
-           
-
-          }
-        }
-
-      }
-    }
-    return startContext; // TODO return something meaningful, like nodes and edges.
-  }
-
 }
-
 
 class GraphTool {
   constructor(div_id, config, callback_config) {
@@ -1159,14 +515,18 @@ class GraphTool {
     }
     // create a visjs network and attatch it to div
     //console.log(config)
-    this.nodes = new vis.DataSet(config.nodes)
-    this.edges = new vis.DataSet(config.edges)
+
+    
+    this.nodes = this.drawer.nodes//new vis.DataSet(config.nodes)
+    console.log("this.drawer.edges",this.drawer.edges)
+    this.edges = this.drawer.edges//new vis.DataSet(config.edges)
     this.data = {
       nodes: this.nodes,
       edges: this.edges,
     };
     this.options = config.options;
     this.network = new vis.Network(this.vis_container, this.data, this.options);
+   
 
     // variables containing keyboard and mouse state
     this.pressed_keys = []
@@ -1383,7 +743,6 @@ class GraphTool {
                 if (newNode.item) {
 
                   if (newNode.context) {
-
 
                     config.drawer.createGraphNodesEdges(config.file, newNode.id, newNode.item, newNode.context, newNode.depth, "", true);   
 
@@ -1799,6 +1158,8 @@ class GraphTool {
 
   searchNodes = (searchString) => {
 
+    this.updatePositions()
+
     if (this.handleCallbacks({
         id: 'onBeforeSearchNodes',
         params: {
@@ -2089,17 +1450,27 @@ class GraphTool {
   //         .filter( key => predicate(obj[key]) )
   //         .reduce( (res, key) => (res[key] = obj[key], res), {} );
 
-  //Sets the color of the nodes and edges that are saved inside the colorObj object
   recolorByProperty() {
-    nodes[0].color = "#6dbfa9";
-    for (let i = 0; i < edges.length; i++) {
-      edges[i].color = config.drawer.colorObj[edges[i].label];
-      for (let j = 0; j < nodes.length; j++) {
-        if (edges[i].to == nodes[j].id) {
-          nodes[j].color = edges[i].color;
+    this.updatePositions()
+    let nodes = this.nodes.get();
+    let edges = this.edges.get();
+    
+    
+    for (let edge of edges) {
+      edge.color = this.drawer.colorObj[edge.label];
+      this.edges.update(edge)
+      for (let node of nodes) {
+        if (edge.to == node.id) {
+          node.color = edge.color;
+          this.nodes.update(node)
         }
       }
     }
+    // root Node
+    let rootNode = this.nodes.get(this.drawer.rootId);
+    rootNode.color = this.drawer.config.rootColor;
+    this.nodes.update(rootNode)
+
   }
 
   //Colors all nodes and edges connected by the given path. The colors are a gradient between the given colors. 
@@ -2119,12 +1490,12 @@ class GraphTool {
     if (path.length == 1) {
 
       for (let index = 0; index < tempArray[0].length; index++) {
+        
+        for (let node of this.nodes.get()) {
 
-        for (let j = 0; j < nodes.length; j++) {
+          if (tempArray[0][index].from == node.id || tempArray[0][index].to == node.id) {
 
-          if (tempArray[0][index].from == nodes[j].id || tempArray[0][index].to == nodes[j].id) {
-
-            thingsToColor.push(nodes[j]);
+            thingsToColor.push(node);
 
           }
 
@@ -2367,6 +1738,8 @@ class GraphTool {
       console.log("removed edge with ID:", edgeID)
     })
 
+  
+
     // delete from drawer edges list. // TODO: sync drawer edges with GraphTool edges
 
  /*
@@ -2377,11 +1750,23 @@ class GraphTool {
     });
 
     for (var j = 0; j < fromEdges.length; j++) {
-      this.edges.remove(fromEdges[j]);
+      this.edges.remove(fromthis.edges.get(j));
 
-      edges = this.removeObjectWithId(edges, false, fromEdges[j])
+      edges = this.removeObjectWithId(edges, false, fromthis.edges.get(j))
     }*/
   }
+
+  updatePositions(){
+    this.nodes.forEach((node) => {
+     //setting the current position is necessary to prevent snap-back to initial position
+     
+     let position = this.network.getPosition(node.id)
+     
+     node.x = position.x
+     node.y = position.y
+     this.nodes.update(node)
+   })
+ }
 
   //repeats the invisibility of properties that are set invisible in the legend
   repeatInvisibility(options) {
@@ -2496,6 +1881,7 @@ class GraphTool {
   }
   // expands the object that is saved inside a node and on second doubleclick deletes nodes and edges that go out of the clicked node
   expandNodes(params) {
+     
 
     console.log("expandNodes, params:", params)
 
@@ -2513,13 +1899,16 @@ class GraphTool {
         let args = {
           //file: config.file, not needed since drawer has own file
           lastId: node.id,
+          targetDepth: 1,
+          recursionRootId: node.id,
           recurse: true,
           item: node.item,
           path: node.path,
           oldContext: "",
           lastDepth: node.depth,
           givenDepth: 1,
-          mode: true
+          mode: true,
+          previousNode: node,
         };
         console.log("expand nodes with args:",args)
         config.drawer.createGraphNodesEdges(args);
@@ -2537,8 +1926,8 @@ class GraphTool {
         // this.network.body.data.edges.update(edges);
 
 
-        this.nodes.update(nodes);
-        this.edges.update(edges);
+      //  this.nodes.update(nodes);
+      //  this.edges.update(edges);
 
       } else {
         // collapse Nodes
@@ -2557,12 +1946,14 @@ class GraphTool {
       }
 
     }
-
+    /*
+    
     this.repeatInvisibility(this.options);
 
     if (this.legendInvisibleGroups(this.options).length == 0) {
       this.resetNodesAndEdgesVisibility()
     }
+    */
 
     //this.createLegend()
 
@@ -2847,6 +2238,7 @@ class GraphTool {
   //generates the legend for the graph
   createLegend() {
     var invisibleGroups = [];
+    console.log('createLegend')
 
     if (!document.getElementById("legendContainer")) {
 
@@ -2874,25 +2266,27 @@ class GraphTool {
     legendDiv.id = "legendContainer";
     var legendColors = this.drawer.colorObj
     var legendSet = {}
-    for (var i = 0; i < edges.length; i++) {
-      //console.log("legendSet,edges",legendSet,edges[i])
-      if (!legendSet[edges[i].group]) {
-        //console.log('add item to legend, edges[i].group, legendSet[edges[i].group]',edges[i].group, legendSet[edges[i].group])
+    
+    for (let edge of this.edges.get()) {
+      //console.log("legendSet,edges",legendSet,edge)
+      
+      if (!legendSet[edge.group]) {
+        //console.log('add item to legend, edge.group, legendSet[edge.group]',edge.group, legendSet[edge.group])
         //legendColors[input.properties[i]] = colors[i];
         var propertyContainer = document.createElement("div");
         var propertyColor = document.createElement("div");
         var propertyName = document.createElement("div");
         propertyContainer.className = "legend-element-container";
-        propertyContainer.id = edges[i].label;
+        propertyContainer.id = edge.label;
         propertyColor.className = "color-container";
         propertyName.className = "name-container";
         propertyColor.style.float = "left";
         propertyName.style.float = "left";
         propertyColor.style.border = "1px solid black";
         propertyName.style.border = "1px solid black";
-        propertyColor.style.background = legendColors[edges[i].group]
+        propertyColor.style.background = legendColors[edge.group]
         propertyColor.innerHTML = "";
-        propertyName.innerHTML = edges[i].label;
+        propertyName.innerHTML = edge.label;
         propertyColor.style.width = "30px";
         propertyColor.style.height = "30px";
         propertyName.style.height = "30px";
@@ -2906,7 +2300,7 @@ class GraphTool {
         propertyContainer.append(propertyName);
 
         //console.log("legendColors:",legendColors)
-        legendSet[edges[i].group] = legendColors[edges[i].group];
+        legendSet[edge.group] = legendColors[edge.group];
       }
     }
 
@@ -2960,6 +2354,7 @@ class GraphTool {
     let strategy = "strategy2"
 
     console.log("begining of legend Functionality",e)
+    this.updatePositions()
     if (strategy == "strategy2") {
 
       if (!e.repeat) {

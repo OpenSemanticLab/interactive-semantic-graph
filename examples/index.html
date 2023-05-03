@@ -124,6 +124,12 @@
             "value": "10000",
           }, {
             "year": "2001",
+            "value": "20000",
+            "budget": [{
+            "year": "2000",
+            "value": "10000",
+          }, {
+            "year": "2001",
             "value": "20000"
           }, {
             "year": "2002",
@@ -132,6 +138,27 @@
             "year": "2003",
             "value": "40000"
           }]
+          }, {
+            "year": "2002",
+            "value": "30000"
+          }, {
+            "year": "2003",
+            "value": "40000"
+          },
+          {"budget_nested": [{
+            "year": "2000",
+            "value": "10000",
+          }, {
+            "year": "2001",
+            "value": "20000"
+          }, {
+            "year": "2002",
+            "value": "30000"
+          }, {
+            "year": "2003",
+            "value": "40000"
+          }]}
+        ]
         },
         "Item:SomePerson": {
           "type": ["Category:Item"],
@@ -146,6 +173,10 @@
           "label": [{
             "text": "Has Member",
             "lang": "en"
+          },
+          {
+            "text": "Hat Mitglied",
+            "lang": "de"
           }]
         },
         "Item:MyOtherItem": {
@@ -192,13 +223,7 @@
     let edges = [];
 
 
-    let callback_config = {
-      // callbacks: {
-      //   getStartItem: (data) => "Item:MyOtherItem",
-      //   setColor: (data) => "#491230"
-      //   createContext: (data) => ""
-      // }
-    };
+    
 
     let args = {
       file: new_json,
@@ -241,8 +266,8 @@
       }
     }
 
-    
-    let drawer = new isg.GraphDrawer(callback_config, args);
+
+    let drawer = new isg.GraphDrawer(drawer_config={lang:"en"}, args);
     let config = {
       nodes: nodes,
       edges: edges,
@@ -250,7 +275,7 @@
       file: new_json,
       drawer: drawer
     };
-    let graphtool = new isg.GraphTool("mynetwork", config, callback_config);
+    let graphtool = new isg.GraphTool("mynetwork", config);
 
   </script>
 </body>

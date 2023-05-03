@@ -79,7 +79,6 @@ class GraphDrawer {
       .reduce((res, key) => (res[key] = obj[key], res), {});
   }
 
-
   //Adds a callback function to config 
   registerCallback(params) {
     this.config.callbacks[params.name].push(params.func)
@@ -534,20 +533,8 @@ class GraphTool {
 
     console.log(this.config)
 
+    this.initGraphContainers(div_id);
     this.drawer = config.drawer
-    // create all necessary elements/divs and set them up
-    this.container = document.getElementById(div_id);
-    this.vis_container = document.createElement("div");
-    this.vis_container.setAttribute("id", "vis_container");
-    //this.vis_container.width = "70%"
-    this.vis_container.style = "width: 65%; height: 800px; border: 1px solid lightgray;  float:left;";
-    this.options_container = document.createElement("div");
-    this.options_container.setAttribute("id", "options_container");
-    this.options_container.setAttribute("style", "overflow-y:scroll");
-    //this.options_container.width = "30%"
-    this.options_container.style = "margin-left: 68%; width: 30%; height: 800px; border: 1px solid lightgray;";
-    this.container.append(this.vis_container);
-    this.container.append(this.options_container);
 
     this.clicked = {} // object to store expanded nodes TODO: rename to expandedNodes
 
@@ -585,63 +572,33 @@ class GraphTool {
     this.classRegistry.register = (cls) => {
       this.classRegistry.set((new cls).typeString, cls)
     }
-    /*for (let cls of [NodeClasses.RocketBase, NodeClasses.RocketBase, NodeClasses.Fountain, NodeClasses.DelayNode, NodeClasses.TextSpeechNode, NodeClasses.VideoNode,
-        NodeClasses.DrawNode,
-        NodeClasses.CameraNode, NodeClasses.ImageNode, NodeClasses.CsvNode,
-        NodeClasses.JSONNode, NodeClasses.JSONNode1, NodeClasses.JSONSchemaNode
-      ]) {
-      console.log(cls)
-      this.classRegistry.register(cls)
-    }*/
+    // for (let cls of [NodeClasses.RocketBase, NodeClasses.RocketBase, NodeClasses.Fountain, NodeClasses.DelayNode, NodeClasses.TextSpeechNode, NodeClasses.VideoNode,
+    //     NodeClasses.DrawNode,
+    //     NodeClasses.CameraNode, NodeClasses.ImageNode, NodeClasses.CsvNode,
+    //     NodeClasses.JSONNode, NodeClasses.JSONNode1, NodeClasses.JSONSchemaNode
+    //   ]) {
+    //   console.log(cls)
+    //   this.classRegistry.register(cls)
+    // }
 
     // Initialize GUI for various functions acting on the graph.
     this.colorPicker(this);
     this.loadSaveFunctionality();
     this.createLegend();
-    this.createSearchUI()
+    this.createSearchUI();
     this.oldNodeColors = {};
     this.oldEdgeColors = {};
-
+    this.addKeyEventListeners();
+    this.dataFile = config.clone.jsondata;
+    this.idsToColor = [];
+    this.initDeepSearch();
 
     // set visjs network callbacks
 
     this.network.on("click", (params) => {
-      console.log(
-        "Click event, ",
-      );
-      this.showSelectionOptions()
-      // TODO: move definition of keyboard shortcuts to this.registerKeyboardShortcuts
-      if (this.pressed_keys.includes('a')) {
-        //add a node to position of mouse if a is pressed during click
-        let addNode = new NodeClasses.BaseNode(this)
-        addNode.x = params.pointer.canvas.x
-        addNode.y = params.pointer.canvas.y
-        this.nodes.update(addNode)
-      }
 
-      if (this.pressed_keys.includes('q')) {
-        // show global JSON vis JSONeditor in options div
+      this.visOnClick(params);
 
-        let optionsDivId = this.options_container.id
-        console.log('show global JSON')
-        document.getElementById(optionsDivId).innerHTML = "<button id='setButton'>set!</button><br><div id='editor_div'></div>"
-        let setButton = document.getElementById("setButton") // todo: implement changes
-
-
-        let options = {
-          mode: 'tree',
-          modes: ['code', 'tree'] // ['code', 'form', 'text', 'tree', 'view', 'preview']}
-        }
-
-        let editor_div = document.getElementById("editor_div", options)
-        // create a JSONEdior in options div
-        let editor = new JSONEditor(editor_div) // TODO: Editor is currently not rendered. find error.
-
-        editor.set({
-          edges: this.edges.get(),
-          nodes: this.nodes.get()
-        })
-      }
     });
 
     this.network.on("doubleClick", (params) => {
@@ -651,72 +608,266 @@ class GraphTool {
 
 
     this.network.on("oncontext", (params) => {
-      console.log('in this.network.on(oncontext)') // TODO: implement right click, probably Property-List, but as callback function.
+
+      this.visOnContext(params); // TODO: implement right click, probably Property-List, but as callback function.
+
     });
 
     this.network.on('dragStart', (params) => {
-      console.log("dragStart");
 
-      if (params.nodes.length > 0) {
-        let newNodeIds = []
-        params.nodes.forEach((node_id, index) => {
-          let node = this.nodes.get(node_id)
-          let position = this.network.getPosition(node_id) //setting the current position is necessary to prevent snap-back to initial position
 
-          node.x = position.x
-          node.y = position.y
+      this.visOnDragStart(params);
 
-          // duplicate Node if ctrl is pressed
-          if (params.event.srcEvent.ctrlKey) {
-
-            //now: duplicate node and connect to original one. TODO: check if this should create a new node as property of the original.
-            let newNode = this.duplicateNode(node)
-
-            // added node shall move with cursor until button is released
-            newNode.fixed = false;
-            newNode.id = config.drawer.id;
-            newNode.depth = this.nodes.get(this.network.getSelectedNodes()[index]).depth + 1;
-            config.drawer.id += 1;
-
-            this.copiedEdges = this.network.getSelectedEdges()
-
-            let newEdge = {
-              from: node.id,
-              to: newNode.id,
-              label: "InitializedByCopyFrom", //this.edges.get(this.copiedEdges[index]).label,
-              color: newNode.color,
-              group: newNode.group
-            }
-
-            this.nodes.update(newNode)
-            this.edges.update(newEdge) //{from: node.id, to: newNode.id}
-            newNodeIds.push(newNode.id)
-          } else {
-            node.fixed = false
-            this.nodes.update(node)
-          }
-        })
-        if (params.event.srcEvent.ctrlKey) {
-          this.network.setSelection({
-            nodes: newNodeIds
-          })
-        }
-      }
     });
 
     this.network.on('dragEnd', (params) => {
 
-      params.nodes.forEach((node_id) => {
+
+      this.visOnDragEnd(params);
+    
+    });
+
+    // Rectangular selection:
+    this.vis_container.onmousemove = (event) => {
+      this.mouseX = event.clientX
+      this.mouseY = event.clientY - 30
+    }
+
+    this.initRectangleSelection()
+    this.initDragAndDrop()
+  }
+
+  initGraphContainers(div_id) {
+
+    // create all necessary elements/divs and set them up
+    this.container = document.getElementById(div_id);
+    this.vis_container = document.createElement("div");
+    this.vis_container.setAttribute("id", "vis_container");
+    //this.vis_container.width = "70%"
+    this.vis_container.style = "width: 65%; height: 800px; border: 1px solid lightgray;  float:left;";
+    this.options_container = document.createElement("div");
+    this.options_container.setAttribute("id", "options_container");
+    this.options_container.setAttribute("style", "overflow-y:scroll");
+    //this.options_container.width = "30%"
+    this.options_container.style = "margin-left: 68%; width: 30%; height: 800px; border: 1px solid lightgray;";
+    this.container.append(this.vis_container);
+    this.container.append(this.options_container);
+
+  }
+
+  visOnDragEnd(params) {
+
+    params.nodes.forEach((node_id) => {
+      let node = this.nodes.get(node_id)
+      let position = this.network.getPosition(node_id)
+      //setting the current position is necessary to prevent snap-back to initial position
+      node.x = position.x
+      node.y = position.y
+      node.fixed = true
+      this.nodes.update(node)
+    })
+
+  }
+
+  visOnDragStart(params) {
+
+    console.log("dragStart");
+      
+    if (params.nodes.length > 0) {
+      let newNodeIds = []
+      params.nodes.forEach((node_id, index) => {
+
         let node = this.nodes.get(node_id)
-        let position = this.network.getPosition(node_id)
-        //setting the current position is necessary to prevent snap-back to initial position
+        let position = this.network.getPosition(node_id) //setting the current position is necessary to prevent snap-back to initial position
+        
         node.x = position.x
         node.y = position.y
-        node.fixed = true
-        this.nodes.update(node)
+
+
+        // duplicate Node if ctrl is pressed
+        if (params.event.srcEvent.ctrlKey) {
+
+          //now: duplicate node and connect to original one. TODO: check if this should create a new node as property of the original.
+          let newNode = this.duplicateNode(node)
+
+          // added node shall move with cursor until button is released
+          newNode.fixed = false;
+          newNode.id = config.graph.id;
+          newNode.depth = this.nodes.get(this.network.getSelectedNodes()[index]).depth + 1;
+          config.graph.id += 1;
+          
+          this.copiedEdges = this.network.getSelectedEdges()
+
+          let newEdge = {
+            from: node.id,
+            to: newNode.id,
+            label: "InitializedByCopyFrom", //this.edges.get(this.copiedEdges[index]).label,
+            color: newNode.color,
+            group: newNode.group
+          }
+
+          this.nodes.update(newNode)
+          this.edges.update(newEdge) //{from: node.id, to: newNode.id}
+          newNodeIds.push(newNode.id)
+        } else {
+          node.fixed = false
+          this.nodes.update(node)
+        }
+      })
+      if (params.event.srcEvent.ctrlKey) {
+        this.network.setSelection({
+          nodes: newNodeIds
+        })
+      }
+    }
+
+  }
+
+  visOnContext(params) {
+
+    console.log('in this.network.on(oncontext)');
+
+  }
+
+  visOnClick(params) {
+    console.log(
+      "Click event, ",
+    );
+    this.showSelectionOptions()
+    // TODO: move definition of keyboard shortcuts to this.registerKeyboardShortcuts
+    if (this.pressed_keys.includes('a')) {
+      //add a node to position of mouse if a is pressed during click
+      // let addNode = new NodeClasses.BaseNode(this)
+      // addNode.x = params.pointer.canvas.x
+      // addNode.y = params.pointer.canvas.y
+      // this.nodes.update(addNode)
+    }
+
+    if (this.pressed_keys.includes('q')) {
+      // show global JSON vis JSONeditor in options div
+
+      let optionsDivId = this.options_container.id
+      console.log('show global JSON')
+      document.getElementById(optionsDivId).innerHTML = "<button id='setButton'>set!</button><br><div id='editor_div'></div>"
+      let setButton = document.getElementById("setButton") // todo: implement changes
+
+
+      let options = {
+        mode: 'tree',
+        modes: ['code', 'tree'] // ['code', 'form', 'text', 'tree', 'view', 'preview']}
+      }
+
+
+      let editor_div = document.getElementById("editor_div",options)
+      // create a JSONEdior in options div
+      let editor = new JSONEditor(editor_div)  // TODO: Editor is currently not rendered. find error.
+      
+      editor.set({
+        edges: this.edges.get(),
+        nodes: this.nodes.get()
+      })
+    }
+  }
+
+
+  keyUpEvent(event) {
+
+
+    const index = this.pressed_keys.indexOf(event.key);
+    if (index > -1) { // only splice array when item is found
+      this.pressed_keys.splice(index, 1); // 2nd parameter means remove one item only
+    }
+
+
+  }
+
+  copyNodesEdges() {
+
+
+    this.copiedNodes = this.network.getSelectedNodes()
+    this.copiedEdges = this.network.getSelectedEdges()
+
+  }
+
+  pasteNodeEdges() {
+    if (this.copiedNodes.length > 0 && this.network.getSelectedNodes().length > 0) {
+      //console.log('paste')
+
+      // TODO: encapsulate in: this.pasteNodeIntoExistingItem() 
+      // TODO: paste node into empty space and create corresponding item this.pasteNodeIntoNewItem(node,xy) 
+      let xy = this.network.DOMtoCanvas({
+        x: this.mouseX,
+        y: this.mouseY
       })
 
-    });
+
+      this.copiedNodes.forEach((node_id, index) => {
+        if (this.nodes.get(this.network.getSelectedNodes()[index]).object) {
+          let oldNode = this.nodes.get(node_id)
+
+
+          let newNode = this.duplicateNode(oldNode)
+          let keys = Object.getOwnPropertyNames(oldNode)
+
+          keys.forEach((key) => {
+            if (!(key === "id") && !((typeof (oldNode[key])) == "function")) {
+              newNode[key] = oldNode[key]
+              // console.log("copy:",key,oldNode[key])
+            } else {
+              //console.log("don't copy:",key,oldNode[key])
+            }
+            newNode.x = xy.x
+            newNode.y = xy.y
+          })
+          newNode.id = config.graph.id;
+          newNode.depth = this.nodes.get(this.network.getSelectedNodes()[index]).depth + 1;
+
+          config.graph.id += 1;
+
+          let newEdge = {
+            from: this.network.getSelectedNodes()[0],
+            to: newNode.id,
+            label: this.edges.get(this.copiedEdges[index]).label,
+            color: newNode.color,
+            group: newNode.group,
+            objectKey: this.edges.get(this.copiedEdges[index]).objectKey
+          }
+
+          if (newNode.group != "root") {
+            this.nodes.update(newNode);
+            this.edges.update(newEdge);
+            console.log(config,config.file)
+            if (newNode.object) {
+
+              if (newNode.context) {
+
+
+
+                config.graph.createGraphNE(config.file, newNode.id, newNode.object, newNode.context, newNode.depth, "", true);   
+
+              } else {
+                config.graph.createGraphNE(config.file, newNode.id, newNode.object, "", newNode.depth, "", true);
+
+              }
+
+              this.nodes.update(nodes);
+              this.edges.update(edges);
+            }
+
+            this.addToJSON(newNode, newEdge);
+
+          }
+        }
+      });
+    }
+  }
+
+  addKeyEventListeners(){
+
+    document.addEventListener('keyup', (event) => {
+      this.keyUpEvent(event);
+    }, false);
+
 
 
     // keyboard callback functions
@@ -731,96 +882,17 @@ class GraphTool {
       // copy
       if (event.key == "c" && this.pressed_keys.includes("Control")) {
         //copy nodes
-        this.copiedNodes = this.network.getSelectedNodes()
-        this.copiedEdges = this.network.getSelectedEdges()
+        this.copyNodesEdges()
       }
       // paste
       if (event.key == "v" && this.pressed_keys.includes("Control")) {
         //paste copied nodes
+        this.pasteNodeEdges();
 
-        if (this.copiedNodes.length > 0 && this.network.getSelectedNodes().length > 0) {
-          //console.log('paste')
-
-          // TODO: encapsulate in: this.pasteNodeIntoExistingItem() 
-          // TODO: paste node into empty space and create corresponding item this.pasteNodeIntoNewItem(node,xy) 
-          let xy = this.network.DOMtoCanvas({
-            x: this.mouseX,
-            y: this.mouseY
-          })
-
-          this.copiedNodes.forEach((node_id, index) => {
-            if (this.nodes.get(this.network.getSelectedNodes()[index]).item) {
-              let oldNode = this.nodes.get(node_id)
-
-              let newNode = this.duplicateNode(oldNode)
-              let keys = Object.getOwnPropertyNames(oldNode)
-
-              keys.forEach((key) => {
-                if (!(key === "id") && !((typeof (oldNode[key])) == "function")) {
-                  newNode[key] = oldNode[key]
-                  // console.log("copy:",key,oldNode[key])
-                } else {
-                  //console.log("don't copy:",key,oldNode[key])
-                }
-                newNode.x = xy.x
-                newNode.y = xy.y
-              })
-              newNode.id = config.drawer.id;
-              newNode.depth = this.nodes.get(this.network.getSelectedNodes()[index]).depth + 1;
-
-              config.drawer.id += 1;
-
-              let newEdge = {
-                from: this.network.getSelectedNodes()[0],
-                to: newNode.id,
-                label: this.edges.get(this.copiedEdges[index]).label,
-                color: newNode.color,
-                group: newNode.group,
-                objectKey: this.edges.get(this.copiedEdges[index]).objectKey
-              }
-
-              if (newNode.group != "root") {
-                this.nodes.update(newNode);
-                this.edges.update(newEdge);
-                console.log(config, config.file)
-                if (newNode.item) {
-
-                  if (newNode.context) {
-
-                    config.drawer.createGraphNodesEdges(config.file, newNode.id, newNode.item, newNode.context, newNode.depth, "", true);
-
-                  } else {
-                    config.drawer.createGraphNodesEdges(config.file, newNode.id, newNode.item, "", newNode.depth, "", true);
-
-                  }
-
-                  //this.nodes.update(nodes);
-                  // this.edges.update(edges);
-                }
-
-                this.addToJSON(newNode, newEdge);
-
-              }
-            }
-          });
-        }
-      }
-    }, false);
-    document.addEventListener('keyup', (event) => {
-      const index = this.pressed_keys.indexOf(event.key);
-      if (index > -1) { // only splice array when item is found
-        this.pressed_keys.splice(index, 1); // 2nd parameter means remove one item only
       }
     }, false);
 
-    // Rectangular selection:
-    this.vis_container.onmousemove = (event) => {
-      this.mouseX = event.clientX
-      this.mouseY = event.clientY - 30
-    }
 
-    // this.initRectangleSelection()
-    this.initDragAndDrop()
   }
 
   handleCallbacks(params) {
@@ -919,8 +991,15 @@ class GraphTool {
       }
     });
 
-    container.addEventListener("mousedown", function (e) {
+    container.addEventListener("mousedown", (e) => {
       console.log(e)
+
+      let clickPosition = {x: e.clientX, y: e.clientY}
+
+      let nodeId = this.network.getNodeAt(clickPosition);
+
+      console.log(nodeId)
+
       if (e.button == 0) {
         //var selectedNodes = e.ctrlKey ? this.network.getSelectedNodes() : null;
 
@@ -992,9 +1071,9 @@ class GraphTool {
           let reader = new FileReader(this);
           reader.onload = (event) => {
             //console.log(event.target.result);
-            let newNode = new NodeClasses.ImageNode(this, utils.uuidv4(), xy.x, xy.y, event.target.result)
-            console.log("create Image node", newNode)
-            this.nodes.update(newNode)
+            // let newNode = new NodeClasses.ImageNode(this, utils.uuidv4(), xy.x, xy.y, event.target.result)
+            // console.log("create Image node", newNode)
+            // this.nodes.update(newNode)
           };
           console.log(file);
           console.log(reader.readAsDataURL(file));
@@ -1015,9 +1094,9 @@ class GraphTool {
           let reader = new FileReader(this);
           reader.onload = (event) => {
             //console.log(event.target.result);
-            let newNode = new NodeClasses.CsvNode(this, utils.uuidv4(), xy.x, xy.y, event.target.result)
-            console.log("create CSV Node", newNode)
-            this.nodes.update(newNode)
+            // let newNode = new NodeClasses.CsvNode(this, utils.uuidv4(), xy.x, xy.y, event.target.result)
+            // console.log("create CSV Node", newNode)
+            // this.nodes.update(newNode)
           };
           console.log(file);
           console.log(reader.readAsText(file));
@@ -1037,13 +1116,13 @@ class GraphTool {
 
           let reader = new FileReader(this);
           reader.onload = (event) => {
-            console.log(event.target.result);
-            console.log(event.target)
-            console.log(reader.readAsDataURL(event.target.result))
-            let newNode = new NodeClasses.VideoNode(this, utils.uuidv4(), xy.x, xy.y, reader.readAsDataURL(event.target.result))
+            // console.log(event.target.result);
+            // console.log(event.target)
+            // console.log(reader.readAsDataURL(event.target.result))
+            // let newNode = new NodeClasses.VideoNode(this, utils.uuidv4(), xy.x, xy.y, reader.readAsDataURL(event.target.result))
 
-            console.log("create CSV Node", newNode)
-            this.nodes.update(newNode)
+            // console.log("create CSV Node", newNode)
+            // this.nodes.update(newNode)
           };
           console.log(file);
           console.log(reader.readAsText(file));
@@ -1327,6 +1406,7 @@ class GraphTool {
       if (!receivingNode.hasOwnProperty('mainObjectId') && !node.hasOwnProperty('mainObjectId')) {
         if (config.file["jsondata"][receivingItem][edge.objectKey]) {
           if (Array.isArray(config.file["jsondata"][receivingItem][edge.objectKey])) {
+
             config.file["jsondata"][receivingItem][edge.objectKey].push(node.item);
           } else {
             let tempArray = [];
@@ -1344,17 +1424,21 @@ class GraphTool {
 
         if (config.file["jsondata"][receivingItem][edge.objectKey]) {
           if (Array.isArray(config.file["jsondata"][receivingItem][edge.objectKey])) {
+
             config.file["jsondata"][receivingItem][edge.objectKey].push(config.file["jsondata"][node.item]);
           } else {
             let tempArray = [];
             tempArray.push(config.file["jsondata"][receivingItem][edge.objectKey]);
             tempArray.push(config.file["jsondata"][node.item]);
 
+
             config.file["jsondata"][receivingItem][edge.objectKey] = tempArray;
           }
         } else {
 
+
           config.file["jsondata"][receivingItem][edge.objectKey] = config.file["jsondata"][node.item];
+
 
         }
 
@@ -1397,6 +1481,7 @@ class GraphTool {
 
         let mainObject = this.nodes.get(receivingNode.mainObjectId)
 
+
         config.file["jsondata"][mainObject.item][edge.objectKey].forEach((object, index) => {
 
           if (Object.is(config.file["jsondata"][receivingNode.item], object)) {
@@ -1405,6 +1490,7 @@ class GraphTool {
 
               object[edge.objectKey].push(config.file["jsondata"][node.item]);
 
+
             } else {
               let tempArray = [];
 
@@ -1412,7 +1498,9 @@ class GraphTool {
                 tempArray.push(object[edge.objectKey]);
               }
 
+
               tempArray.push(config.file["jsondata"][node.item]);
+
               object[edge.objectKey] = tempArray;
 
             }
@@ -1500,6 +1588,7 @@ class GraphTool {
   //         .reduce( (res, key) => (res[key] = obj[key], res), {} );
 
   recolorByProperty() {
+
     this.updatePositions()
     let nodes = this.nodes.get();
     let edges = this.edges.get();
@@ -1940,6 +2029,7 @@ class GraphTool {
     if (params.nodes.length > 0) {
 
       let node = this.nodes.get(params.nodes[0]);
+
       console.log("node:", node)
       if ("item" in node && (this.clicked[params.nodes[0]] == false || !("" + params.nodes[0] in this.clicked)) && (this.network.getConnectedNodes(params.nodes[0], "to").length === 0)) {
         console.log("fist case", config)
@@ -1961,6 +2051,7 @@ class GraphTool {
         };
         console.log("expand nodes with args:", args)
         config.drawer.createGraphNodesEdges(args);
+
 
         this.createLegend()
 
@@ -2131,6 +2222,47 @@ class GraphTool {
   // loads or saves the graph to a .txt file
   loadSaveFunctionality() {
 
+    function saveState() {
+
+      if (document.getElementById("setColorByValueInput")) {
+        config.file.state = {
+          nodes: nodes,
+          edges: edges,
+          colorFunction: document.querySelector('#myDropdown select').value,
+          colorByValue: {
+            startColor: document.querySelector('#startColor').value,
+            endColor: document.querySelector('#endColor').value,
+            path: document.querySelector('#setColorByValueInput').value
+          }
+        };
+
+
+      } else {
+        config.file.state = {
+          nodes: nodes,
+          edges: edges,
+          colorFunction: document.querySelector('#myDropdown select').value,
+          colorByValue: {}
+        };
+      }
+
+
+      const json = config.file
+      const filename = "data.txt";
+      const text = JSON.stringify(json);
+
+      const element = document.createElement("a");
+      element.setAttribute("href", "data:text/plain;charset=utf-8," + encodeURIComponent(text));
+      element.setAttribute("download", filename);
+      element.style.display = "none";
+      document.body.appendChild(element);
+
+      element.click();
+
+      document.body.removeChild(element);
+
+    }
+
     let element = document.createElement("BUTTON");
     element.innerHTML = "Save state";
     element.id = "save";
@@ -2162,6 +2294,13 @@ class GraphTool {
         }
       };
 
+      input.addEventListener("change", function () {
+        const reader = new FileReader();
+        reader.onload = function () {
+          const jsonData = JSON.parse(reader.result);
+          if (jsonData.state) {
+            config.nodes = jsonData.state.nodes;
+            config.edges = jsonData.state.edges;
 
     } else {
       config.file.state = {
@@ -2173,6 +2312,13 @@ class GraphTool {
     }
 
 
+            config = {
+              nodes: jsonData.state.nodes,
+              edges: jsonData.state.edges,
+              options: options,
+              graph: draw,
+              file: config.file
+            };
     const json = config.file
     const filename = "data.txt";
     const text = JSON.stringify(json);
@@ -2185,7 +2331,41 @@ class GraphTool {
 
     element.click();
 
-    document.body.removeChild(element);
+
+            if (document.getElementById('setPath')) {
+              document.getElementById('setPath').remove();
+            }
+            var graphtool = new GraphTool("mynetwork", config);
+          } else {
+            let nodes = [];
+            let edges = [];
+            let draw = new GraphDrawer(_config, jsonData, 5, true, nodes, edges); //createGraph.GraphDrawer(_config, jsonData, 5, true, nodes, edges);
+
+            let options = {
+              interaction: {
+                hover: true,
+                multiselect: true,
+              },
+              manipulation: {
+                enabled: true,
+              },
+              edges: {
+                arrows: "to"
+              },
+              groups: {
+                useDefaultGroups: false
+              }
+            }
+            let config = {
+              nodes: nodes,
+              edges: edges,
+              options: options,
+              graph: draw,
+              file: config.file
+            };
+            var graphtool = new GraphTool("mynetwork", config, _config, );
+          }
+
 
   }
 
@@ -2227,7 +2407,12 @@ class GraphTool {
           file: config.file
         };
 
+
+          delete jsonData.state;
+          config.file = jsonData;
+
         document.getElementById("mynetwork").innerHTML = "";
+
 
         document.getElementById('myDropdown').remove();
         document.getElementById('save').remove();
@@ -2287,6 +2472,7 @@ class GraphTool {
     reader.readAsText(input.target.files[0]);
 
   }
+
   //generates the legend for the graph
   createLegend() {
     var invisibleGroups = [];
@@ -2702,34 +2888,23 @@ class GraphTool {
     }
 
   }
-}
 
 
-//let clicked = {};
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-$(document).ready(() => {
-
-  //let result = jsonpath.query(this.drawer.file, '$..[?(@=="2000")]');
-
-  let data = clone.jsondata;
-
-
-  console.log(data)
-
-  function findKeyPath(obj, key, path = '', results = []) {
+  findKeyPath(obj, key, path = '', results = []) {
     for (let prop in obj) {
       if (prop === key && Array.isArray(obj[prop]) && obj[prop].every(item => typeof item === 'object' && item !== null)) {
         results.push(path + prop);
       }
       if (typeof obj[prop] === 'object' && obj[prop] !== null) {
-        findKeyPath(obj[prop], key, path + prop + '.', results);
+        this.findKeyPath(obj[prop], key, path + prop + '.', results);
       }
     }
     return results;
   }
 
-
-  function searchJSON(data, searchValue) {
+  searchJSON(data, searchValue) {
 
     // const searchValue = '2022';
     // const jsonPathExpression = `$..[?(@=="${searchValue}")]`;
@@ -2744,11 +2919,8 @@ $(document).ready(() => {
     return result;
 
   }
-  var idsToColor = [];
 
-  var coloredNodesConnectedToRoot = [];
-
-  function IsStartObjectInGraph(foundPaths, searchValue, initialSearchValue) {
+  IsStartObjectInGraph(foundPaths, searchValue, initialSearchValue) {
 
     //console.log(foundPaths)
 
@@ -2765,7 +2937,7 @@ $(document).ready(() => {
         let path2 = foundPaths[i].split(".");
 
 
-        if (Array.isArray(data[path2[1]][path2[2]]) && typeof data[path2[1]][path2[2]][0] === 'object' && data[path2[1]][path2[2]][0] !== null) {
+        if (Array.isArray(this.dataFile[path2[1]][path2[2]]) && typeof this.dataFile[path2[1]][path2[2]][0] === 'object' && this.dataFile[path2[1]][path2[2]][0] !== null) {
 
           let startId = 0;
           let nodes = graphtool.nodes.get();
@@ -2785,11 +2957,11 @@ $(document).ready(() => {
 
           if (!(path2[1] == nodes[0].item) && nodesWithLabel.length == 0) {
 
-            let searchExistingNodes = searchJSON(data, path2[1]);
+            let searchExistingNodes = this.searchJSON(this.dataFile, path2[1]);
             //console.log(searchExistingNodes)
-            let found = IsStartObjectInGraph(searchExistingNodes, false, initialSearchValue);
+            let found = this.IsStartObjectInGraph(searchExistingNodes, false, initialSearchValue);
             //console.log(found)
-            idsToColor.push(found[0].id);
+            this.idsToColor.push(found[0].id);
 
             let params = {
               nodes: [found[0].id]
@@ -2797,14 +2969,14 @@ $(document).ready(() => {
 
             graphtool.expandNodes(params);
 
-            let objectInOnject = findKeyPath(data, initialSearchValue);
+            let objectInOnject = this.findKeyPath(this.dataFile, initialSearchValue);
 
             if (objectInOnject.length == 0) {
 
               console.log("here")
-              searchExistingNodes = searchJSON(data, searchValue);
+              searchExistingNodes = this.searchJSON(this.dataFile, searchValue);
 
-              found = IsStartObjectInGraph(searchExistingNodes, false, initialSearchValue);
+              found = this.IsStartObjectInGraph(searchExistingNodes, false, initialSearchValue);
             } else {
 
               const nodesWithLabel = graphtool.nodes.get({
@@ -2815,7 +2987,7 @@ $(document).ready(() => {
 
               for (let i = 0; i < nodesWithLabel.length; i++) {
 
-                idsToColor.push(nodesWithLabel[i].id);
+                this.idsToColor.push(nodesWithLabel[i].id);
 
                 let params = {
                   nodes: [nodesWithLabel[i].id]
@@ -2824,19 +2996,21 @@ $(document).ready(() => {
                 graphtool.expandNodes(params);
               }
 
-              console.log(idsToColor)
+              console.log(this.idsToColor)
 
               let nodes = graphtool.nodes.get();
 
               nodes.forEach((node) => {
 
+
                 if (node.label == initialSearchValue || idsToColor.includes(node.id)) {
                   node.color = this.drawer.colorObj[node.group];
+
                   graphtool.nodes.update(node);
-                  idsToColor.push(node.id)
+                  this.idsToColor.push(node.id)
                 }
 
-                if (!(idsToColor.includes(node.id)) && node.id != 0 && node.label != initialSearchValue) {
+                if (!(this.idsToColor.includes(node.id)) && node.id != 0 && node.label != initialSearchValue) {
                   node.color = "#ffffff"
                   graphtool.nodes.update(node);
                 }
@@ -2847,12 +3021,13 @@ $(document).ready(() => {
 
               edges.forEach((edge) => {
 
-                if (idsToColor.includes(edge.to)) {
+                if (this.idsToColor.includes(edge.to)) {
                   edge.color = this.drawer.colorObj[edge.group];
+
                   graphtool.edges.update(edge);
                 }
 
-                if (!(idsToColor.includes(edge.to))) {
+                if (!(this.idsToColor.includes(edge.to))) {
                   edge.color = "#000000"
                   graphtool.edges.update(edge);
                 }
@@ -2879,7 +3054,7 @@ $(document).ready(() => {
 
                 if (connectedNodeIds.length == 0) {
 
-                  idsToColor.push(startId);
+                  this.idsToColor.push(startId);
 
                   let params = {
                     nodes: [startId]
@@ -2897,7 +3072,7 @@ $(document).ready(() => {
 
                 const filteredNodeIds = filteredNodes.map(node => node.id);
 
-                idsToColor.push(filteredNodeIds[path2[i + 1]]);
+                this.idsToColor.push(filteredNodeIds[path2[i + 1]]);
 
                 let params = {
                   nodes: [filteredNodeIds[path2[i + 1]]]
@@ -2924,13 +3099,15 @@ $(document).ready(() => {
 
 
 
-              if (node.label == initialSearchValue || idsToColor.includes(node.id)) {
+
+              if (node.label == initialSearchValue || this.idsToColor.includes(node.id)) {
                 node.color = this.drawer.colorObj[node.group];
+
                 graphtool.nodes.update(node);
-                idsToColor.push(node.id)
+                this.idsToColor.push(node.id)
               }
 
-              if (!(idsToColor.includes(node.id)) && node.id != 0 && node.label != initialSearchValue) {
+              if (!(this.idsToColor.includes(node.id)) && node.id != 0 && node.label != initialSearchValue) {
                 node.color = "#ffffff"
                 graphtool.nodes.update(node);
               }
@@ -2943,14 +3120,16 @@ $(document).ready(() => {
 
             edges.forEach((edge) => {
 
-              if (idsToColor.includes(edge.to)) {
+
+              if (this.idsToColor.includes(edge.to)) {
                 edge.color = this.drawer.colorObj[edge.group];
+
                 graphtool.edges.update(edge);
               }
 
 
 
-              if (!(idsToColor.includes(edge.to))) {
+              if (!(this.idsToColor.includes(edge.to))) {
                 edge.color = "#000000"
                 graphtool.edges.update(edge);
               }
@@ -2965,7 +3144,7 @@ $(document).ready(() => {
 
           if (path == nodes[0].item) {
 
-            if (idsToColor.length == 0) {
+            if (this.idsToColor.length == 0) {
 
               let connectedNodesToRoot = graphtool.network.getConnectedNodes(0, "to");
 
@@ -2988,13 +3167,13 @@ $(document).ready(() => {
             }
 
             nodes.forEach((node) => {
-              if (node.label == initialSearchValue || idsToColor.includes(node.id)) {
+              if (node.label == initialSearchValue || this.idsToColor.includes(node.id)) {
 
                 node.color = this.drawer.colorObj[node.group];
 
                 graphtool.nodes.update(node);
-                if (!(idsToColor.includes(node.id))) {
-                  idsToColor.push(node.id);
+                if (!(this.idsToColor.includes(node.id))) {
+                  this.idsToColor.push(node.id);
                 }
 
               }
@@ -3002,8 +3181,10 @@ $(document).ready(() => {
             });
 
             edges.forEach((edge) => {
-              if (idsToColor.includes(edge.to) || idsToColor.includes(edge.to)) {
+
+              if (this.idsToColor.includes(edge.to) || idsToColor.includes(edge.to)) {
                 edge.color = this.drawer.colorObj[edge.group];
+
                 graphtool.edges.update(edge);
               }
             });
@@ -3028,8 +3209,8 @@ $(document).ready(() => {
           });
           if (nodesWithObject.length == 0) {
 
-            let searchExistingNodes = searchJSON(data, path);
-            let found = IsStartObjectInGraph(searchExistingNodes);
+            let searchExistingNodes = this.searchJSON(this.dataFile, path);
+            let found = this.IsStartObjectInGraph(searchExistingNodes);
             nodesWithObject.push(found);
           }
 
@@ -3049,13 +3230,7 @@ $(document).ready(() => {
 
   }
 
-  function objectInOnjectNodes(path, searchValue, initialSearchValue) {
-
-
-
-  }
-
-  function expandNodesTillFoundValue(startingNode, searchValue) {
+  expandNodesTillFoundValue(startingNode, searchValue) {
 
 
     if (startingNode.length == 0) {
@@ -3063,7 +3238,7 @@ $(document).ready(() => {
     }
 
     for (let i = 0; i < startingNode.length; i++) {
-      idsToColor.push(startingNode[i].id);
+      this.idsToColor.push(startingNode[i].id);
       let params = {
         nodes: [startingNode[i].id]
       }
@@ -3086,13 +3261,15 @@ $(document).ready(() => {
 
 
 
-      if (node.label == searchValue || idsToColor.includes(node.id)) {
+
+      if (node.label == searchValue || this.idsToColor.includes(node.id)) {
         node.color = this.drawer.colorObj[node.group];
+
         graphtool.nodes.update(node);
-        idsToColor.push(node.id);
+        this.idsToColor.push(node.id);
       }
 
-      if (!(idsToColor.includes(node.id)) && node.id != 0 && node.label != searchValue) {
+      if (!(this.idsToColor.includes(node.id)) && node.id != 0 && node.label != searchValue) {
         node.color = "#ffffff"
         graphtool.nodes.update(node);
       }
@@ -3104,12 +3281,14 @@ $(document).ready(() => {
 
     edges.forEach((edge) => {
 
-      if (idsToColor.includes(edge.to)) {
+
+      if (this.idsToColor.includes(edge.to)) {
         edge.color = this.drawer.colorObj[edge.group];
+
         graphtool.edges.update(edge);
       }
 
-      if (!(idsToColor.includes(edge.to))) {
+      if (!(this.idsToColor.includes(edge.to))) {
         edge.color = "#000000"
         graphtool.edges.update(edge);
       }
@@ -3137,97 +3316,114 @@ $(document).ready(() => {
 
     if (nodeExists === false) {
       console.log("here")
-      let found = searchJSON(data, searchValue);
-      let nodesToStart = IsStartObjectInGraph(found);
+      let found = this.searchJSON(this.dataFile, searchValue);
+      let nodesToStart = this.IsStartObjectInGraph(found);
       //console.log(nodesToStart)
-      let done = expandNodesTillFoundValue(nodesToStart, searchValue);
+      let done = this.expandNodesTillFoundValue(nodesToStart, searchValue);
       return;
     }
 
   }
 
-  function pathIsObjectInObject(paths) {
-
-    for (let i = 0; i < paths.length; i++) {
-
-      let path = paths[i].split(".");
-
-      if (Array.isArray(data[path[1]][path[2]]) && typeof data[path[1]][path[2]][0] === 'object' && data[path[1]][path[2]][0] !== null) {
-
-        let startId = 0;
-
-        for (let i = 2; i < path.length; i += 2) {
-
-          if (!(path[i + 1] == undefined)) {
-            const connectedNodeIds = graphtool.network.getConnectedNodes(startId, "to");
-
-            const connectedNodes = graphtool.nodes.get(connectedNodeIds);
-
-            const filteredNodes = connectedNodes.filter(node => node.label === path[i]);
-
-            const filteredNodeIds = filteredNodes.map(node => node.id);
-
-            let params = {
-              nodes: [filteredNodeIds[path[i + 1]]]
-            }
-
-            graphtool.expandNodes(params);
-
-            startId = filteredNodeIds[path[i + 1]];
-
-          }
-
-        }
-
-
-      } else {
-
-      }
-    }
-  }
-
-  function searchFunctionality(data, searchValue) {
+  searchFunctionality(data, searchValue) {
 
     let found;
 
-    if (findKeyPath(data, searchValue).length > 0) {
-      found = findKeyPath(data, searchValue);
+    if (this.findKeyPath(data, searchValue).length > 0) {
+      found = this.findKeyPath(data, searchValue);
 
       for (let i = 0; i < found.length; i++) {
         found[i] = '$.' + found[i];
       }
     } else {
-      found = searchJSON(data, searchValue)
+      found = this.searchJSON(data, searchValue)
     }
 
-    let nodesToStart = IsStartObjectInGraph(found, searchValue, searchValue);
+    let nodesToStart = this.IsStartObjectInGraph(found, searchValue, searchValue);
 
 
-    let done = expandNodesTillFoundValue(nodesToStart, searchValue);
+    let done = this.expandNodesTillFoundValue(nodesToStart, searchValue);
 
   }
 
-  const container = document.getElementById('title');
+  initDeepSearch(){
 
-  const inputField = document.createElement('input');
-  inputField.type = 'text';
-  inputField.id = 'input-field';
+    const container = document.getElementById('title');
 
-  const submitButton = document.createElement('button');
-  submitButton.id = 'submit-button';
-  submitButton.textContent = 'Submit';
+    const inputField = document.createElement('input');
+    inputField.type = 'text';
+    inputField.id = 'input-field';
+  
+    const submitButton = document.createElement('button');
+    submitButton.id = 'submit-button';
+    submitButton.textContent = 'Submit';
+  
+    container.appendChild(inputField);
+    container.appendChild(submitButton);
+  
+    submitButton.addEventListener('click', () => {
+      const inputValue = inputField.value;
+  
+      let inputString = inputValue;
+  
+      this.searchFunctionality(this.dataFile, inputString)
+  
+    });
 
-  container.appendChild(inputField);
-  container.appendChild(submitButton);
+  }
+  
 
-  submitButton.addEventListener('click', function () {
-    const inputValue = inputField.value;
+}
 
-    let inputString = inputValue;
 
-    searchFunctionality(data, inputString)
+//let clicked = {};
 
-  });
+$(document).ready(function () {
+
+  //let result = jsonpath.query(draw.file, '$..[?(@=="2000")]');
+
+  // function pathIsObjectInObject(paths) {
+
+  //   for (let i = 0; i < paths.length; i++) {
+
+  //     let path = paths[i].split(".");
+
+  //     if (Array.isArray(data[path[1]][path[2]]) && typeof data[path[1]][path[2]][0] === 'object' && data[path[1]][path[2]][0] !== null) {
+
+  //       let startId = 0;
+
+  //       for (let i = 2; i < path.length; i += 2) {
+
+  //         if (!(path[i + 1] == undefined)) {
+  //           const connectedNodeIds = graphtool.network.getConnectedNodes(startId, "to");
+
+  //           const connectedNodes = graphtool.nodes.get(connectedNodeIds);
+
+  //           const filteredNodes = connectedNodes.filter(node => node.label === path[i]);
+
+  //           const filteredNodeIds = filteredNodes.map(node => node.id);
+
+  //           let params = {
+  //             nodes: [filteredNodeIds[path[i + 1]]]
+  //           }
+
+  //           graphtool.expandNodes(params);
+
+  //           startId = filteredNodeIds[path[i + 1]];
+
+  //         }
+
+  //       }
+
+
+  //     } else {
+
+  //     }
+  //   }
+  // }
+
+
+
 
 
 });

@@ -619,9 +619,9 @@ class GraphTool {
     });
 
     this.network.on('dragEnd', (params) => {
-
-
+      console.log("drageEnd, params: ", params)
       this.visOnDragEnd(params);
+
 
     });
 
@@ -631,7 +631,7 @@ class GraphTool {
       this.mouseY = event.clientY - 30
     }
 
-    this.initRectangleSelection()
+    //this.initRectangleSelection()
     this.initDragAndDrop()
   }
 
@@ -664,6 +664,10 @@ class GraphTool {
       node.fixed = true
       this.nodes.update(node)
     })
+    // show selection options if multiple nodes are selected i.e. not a single one was dragged
+    if(this.network.getSelectedNodes().length > 0){
+      this.showSelectionOptions()
+    }
 
   }
 
@@ -775,7 +779,6 @@ class GraphTool {
     if (index > -1) { // only splice array when item is found
       this.pressed_keys.splice(index, 1); // 2nd parameter means remove one item only
     }
-
 
   }
 
@@ -905,141 +908,141 @@ class GraphTool {
     return result;
   }
 
-  initRectangleSelection() {
-    // Multiselect functionality 
-    this.network.setOptions({
-      interaction: {
-        dragView: false,
-        multiselect: true
-      }
-    })
+  // initRectangleSelection() {
+  //   // Multiselect functionality 
+  //   this.network.setOptions({
+  //     interaction: {
+  //     //  dragView: false,
+  //       multiselect: true
+  //     }
+  //   })
 
-    var canvas;
-    var ctx;
-    var container = this.vis_container
-
-
-    canvas = this.network.canvas.frame.canvas;
-    ctx = canvas.getContext('2d');
-
-    var rect = {},
-      drag = false;
-    var drawingSurfaceImageData;
-
-    const saveDrawingSurface = () => {
-      drawingSurfaceImageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    }
-
-    const restoreDrawingSurface = () => {
-      ctx.putImageData(drawingSurfaceImageData, 0, 0);
-    }
-
-    const selectNodesFromHighlight = () => {
-      var fromX, toX, fromY, toY;
-      var nodesIdInDrawing = [];
-      var xRange = getStartToEnd(rect.startX, rect.w);
-      var yRange = getStartToEnd(rect.startY, rect.h);
+  //   var canvas;
+  //   var ctx;
+  //   var container = this.vis_container
 
 
-      var allNodes = this.nodes.get();
-      for (var i = 0; i < allNodes.length; i++) {
-        var curNode = allNodes[i];
-        var nodePosition = this.network.getPositions([curNode.id]);
-        var nodeXY = this.network.canvasToDOM({
-          x: nodePosition[curNode.id].x,
-          y: nodePosition[curNode.id].y
-        });
-        if (xRange.start <= nodeXY.x && nodeXY.x <= xRange.end && yRange.start <= nodeXY.y && nodeXY.y <= yRange
-          .end) {
-          nodesIdInDrawing.push(curNode.id);
-        }
-      }
-      console.log(nodesIdInDrawing)
+  //   canvas = this.network.canvas.frame.canvas;
+  //   ctx = canvas.getContext('2d');
 
-      console.log("network.selectNodes")
-      this.network.selectNodes(nodesIdInDrawing);
+  //   var rect = {},
+  //     drag = false;
+  //   var drawingSurfaceImageData;
 
+  //   const saveDrawingSurface = () => {
+  //     drawingSurfaceImageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  //   }
 
-    }
+  //   const restoreDrawingSurface = () => {
+  //     ctx.putImageData(drawingSurfaceImageData, 0, 0);
+  //   }
 
-    const getStartToEnd = (start, theLen) => {
-      return theLen > 0 ? {
-        start: start,
-        end: start + theLen
-      } : {
-        start: start + theLen,
-        end: start
-      };
-    }
-
-    container.addEventListener("mousemove", function (e) {
-      if (drag) {
-
-        drag = "mousemove"
-        restoreDrawingSurface();
-        rect.w = (e.pageX - this.offsetLeft) - rect.startX;
-        rect.h = (e.pageY - this.offsetTop) - rect.startY;
-
-        ctx.setLineDash([5]);
-        ctx.strokeStyle = "rgb(0, 102, 0)";
-        ctx.strokeRect(rect.startX, rect.startY, rect.w, rect.h);
-        ctx.setLineDash([]);
-        ctx.fillStyle = "rgba(0, 255, 0, 0.2)";
-        ctx.fillRect(rect.startX, rect.startY, rect.w, rect.h);
-      }
-    });
-
-    container.addEventListener("mousedown", (e) => {
-      console.log(e)
-
-      let clickPosition = {
-        x: e.clientX,
-        y: e.clientY
-      }
-
-      let nodeId = this.network.getNodeAt(clickPosition);
-
-      console.log(nodeId)
-
-      if (e.button == 0) {
-        //var selectedNodes = e.ctrlKey ? this.network.getSelectedNodes() : null;
-
-        saveDrawingSurface();
-        var that = this;
-        rect.startX = e.pageX - this.offsetLeft;
-        rect.startY = e.pageY - this.offsetTop;
-        drag = "mousedown";
-        container.style.cursor = "crosshair";
-      }
-    });
-
-    container.addEventListener("mouseup", (e) => {
-      if (e.button == 0) {
+  //   const selectNodesFromHighlight = () => {
+  //     var fromX, toX, fromY, toY;
+  //     var nodesIdInDrawing = [];
+  //     var xRange = getStartToEnd(rect.startX, rect.w);
+  //     var yRange = getStartToEnd(rect.startY, rect.h);
 
 
+  //     var allNodes = this.nodes.get();
+  //     for (var i = 0; i < allNodes.length; i++) {
+  //       var curNode = allNodes[i];
+  //       var nodePosition = this.network.getPositions([curNode.id]);
+  //       var nodeXY = this.network.canvasToDOM({
+  //         x: nodePosition[curNode.id].x,
+  //         y: nodePosition[curNode.id].y
+  //       });
+  //       if (xRange.start <= nodeXY.x && nodeXY.x <= xRange.end && yRange.start <= nodeXY.y && nodeXY.y <= yRange
+  //         .end) {
+  //         nodesIdInDrawing.push(curNode.id);
+  //       }
+  //     }
+  //     console.log(nodesIdInDrawing)
 
-        let prev_selectedNodes = this.network.getSelectedNodes()
-        console.log('drag', drag, prev_selectedNodes)
+  //     console.log("network.selectNodes")
+  //     this.network.selectNodes(nodesIdInDrawing);
 
-        if (prev_selectedNodes.length == 0) {
 
-          selectNodesFromHighlight();
-          this.showSelectionOptions();
-        }
-        restoreDrawingSurface();
-        drag = false;
+  //   }
 
-        container.style.cursor = "default";
+  //   const getStartToEnd = (start, theLen) => {
+  //     return theLen > 0 ? {
+  //       start: start,
+  //       end: start + theLen
+  //     } : {
+  //       start: start + theLen,
+  //       end: start
+  //     };
+  //   }
 
-      }
-      console.log("end of mouse up", )
-    });
+  //   container.addEventListener("mousemove", function (e) {
+  //     if (drag) {
 
-    document.body.oncontextmenu = function () {
-      console.log('oncontextmenu');
-      return false;
-    };
-  }
+  //       drag = "mousemove"
+  //       restoreDrawingSurface();
+  //       rect.w = (e.pageX - this.offsetLeft) - rect.startX;
+  //       rect.h = (e.pageY - this.offsetTop) - rect.startY;
+
+  //       ctx.setLineDash([5]);
+  //       ctx.strokeStyle = "rgb(0, 102, 0)";
+  //       ctx.strokeRect(rect.startX, rect.startY, rect.w, rect.h);
+  //       ctx.setLineDash([]);
+  //       ctx.fillStyle = "rgba(0, 255, 0, 0.2)";
+  //       ctx.fillRect(rect.startX, rect.startY, rect.w, rect.h);
+  //     }
+  //   });
+
+  //   container.addEventListener("mousedown", (e) => {
+  //     console.log(e)
+
+  //     let clickPosition = {
+  //       x: e.clientX,
+  //       y: e.clientY
+  //     }
+
+  //     let nodeId = this.network.getNodeAt(clickPosition);
+
+  //     console.log(nodeId)
+
+  //     if (e.button == 0) {
+  //       //var selectedNodes = e.ctrlKey ? this.network.getSelectedNodes() : null;
+
+  //       saveDrawingSurface();
+  //       var that = this;
+  //       rect.startX = e.pageX - this.offsetLeft;
+  //       rect.startY = e.pageY - this.offsetTop;
+  //       drag = "mousedown";
+  //       container.style.cursor = "crosshair";
+  //     }
+  //   });
+
+  //   container.addEventListener("mouseup", (e) => {
+  //     if (e.button == 0) {
+
+
+
+  //       let prev_selectedNodes = this.network.getSelectedNodes()
+  //       console.log('drag', drag, prev_selectedNodes)
+
+  //       if (prev_selectedNodes.length == 0) {
+
+  //         selectNodesFromHighlight();
+  //         this.showSelectionOptions();
+  //       }
+  //       restoreDrawingSurface();
+  //       drag = false;
+
+  //       container.style.cursor = "default";
+
+  //     }
+  //     console.log("end of mouse up", )
+  //   });
+
+  //   document.body.oncontextmenu = function () {
+  //     console.log('oncontextmenu');
+  //     return false;
+  //   };
+  // }
 
 
   initDragAndDrop() {

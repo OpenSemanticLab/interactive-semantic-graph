@@ -1,198 +1,282 @@
 <!DOCTYPE html>
 <html>
-  <head>  
-    <meta charset="utf-8" />  
-    <title>GraphTool Test Page</title>  
-    <script src="../dist/isg.umd.js"></script>
-    <style type="text/css">    #mynetwork {
-  width: 100%;
-  height: 800px;
-  border: 1px solid lightgray;
-}
-</style>
+
+<head>
+  <meta charset="utf-8" />
+  <title>GraphTool Test Page</title>
+  <script src="../dist/isg.umd.js"></script>
+  <style type="text/css">
+    #mynetwork {
+      width: 100%;
+      height: 800px;
+      border: 1px solid lightgray;
+    }
+
+  </style>
 
 
-<link href="https://unpkg.com/tabulator-tables@4.3.0/dist/css/tabulator.min.css" rel="stylesheet">
-<script type="text/javascript" src="https://unpkg.com/tabulator-tables@4.3.0/dist/js/tabulator.min.js"></script>
+  <link href="https://unpkg.com/tabulator-tables@4.3.0/dist/css/tabulator.min.css" rel="stylesheet">
+  <script type="text/javascript" src="https://unpkg.com/tabulator-tables@4.3.0/dist/js/tabulator.min.js"></script>
 
-<!--for jsoneditor-->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jsoneditor/9.10.0/jsoneditor.min.js"></script>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jsoneditor/9.10.0/jsoneditor.css" integrity="sha512-/JghmMAi5bleEgj1BT7h7Jm2+o4I4AbJYRVaY3eGGfdyTzV+yW3n0IedWH4ysbws5zpNK1beCqVJh0MSZxvNaA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-<script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.4/lodash.min.js"></script>
 
-<!--for json-editor-->
-<!--
+
+  <!--for jsoneditor-->
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jsoneditor/9.10.0/jsoneditor.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jsoneditor/9.10.0/jsoneditor.css"
+    integrity="sha512-/JghmMAi5bleEgj1BT7h7Jm2+o4I4AbJYRVaY3eGGfdyTzV+yW3n0IedWH4ysbws5zpNK1beCqVJh0MSZxvNaA=="
+    crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.4/lodash.min.js"></script>
+
+
+
+  <!--for json-editor-->
+  <!--
 <link rel='stylesheet' id='theme-link' href = 'https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css'>
 <link rel='stylesheet' id='iconlib-link', href = 'https://use.fontawesome.com/releases/v5.6.1/css/all.css'>
 -->
-</head><body>
+</head>
+
+<body>
   <h1 id="title">GraphTool Test Page</h1>
 
-<div id="mynetwork"></div>  <script>
-
-let new_json = {"jsonschema": {
-  "Category:Entity": {
-      "@context": {
-          "label": "Property:HasLabel"
-      }
-  },
-  "Category:Item": {
-      "@context": [
-          "Category:Entity",
-          {
-              "member": {"@id": "Property:HasMember", "@type": "@id"},
-              "other": {"@id": "Property:HasOther", "@type": "@id"},
-              "budget": {"@id": "Property:HasBudget", "@type": "@id"},
-              "some_property": {"@id": "Property:HasSomeItem", "@type": "@id"},
-              "some_literal": "Property:HasSomeLiteral"
+  <div id="mynetwork"></div>
+  <script>
+    let new_json = {
+      "jsonschema": {
+        "Category:Entity": {
+          "@context": {
+            "label": "Property:HasLabel"
           }
+        },
+        "Category:Item": {
+          "@context": [
+            "Category:Entity",
+            {
+              "member": {
+                "@id": "Property:HasMember",
+                "@type": "@id"
+              },
+              "other": {
+                "@id": "Property:HasOther",
+                "@type": "@id"
+              },
+              "budget": {
+                "@id": "Property:HasBudget",
+                "@type": "@id"
+              },
+              "some_property": {
+                "@id": "Property:HasSomeItem",
+                "@type": "@id"
+              },
+              "some_literal": "Property:HasSomeLiteral"
+            }
           ],
-      "properties": {
-          "label": [{
+          "properties": {
+            "label": [{
               "type": "array",
               "title": "Labels",
               "items": {
-                  "type": "object",
-                  "title": "Label",
-                  "properties": {
-                      "text": {},
-                      "lang": {}
-                  }
+                "type": "object",
+                "title": "Label",
+                "properties": {
+                  "text": {},
+                  "lang": {}
+                }
               }
-          }],
-          "member": {
+            }],
+            "member": {
               "type": "string",
               "title": "Member"
-          },
-          "budget": {
+            },
+            "budget": {
               "type": "array",
               "title": "Budgets",
               "items": {
-                  "type": "object",
-                  "title": "Budget",
-                  "properties": {
-                      "year": {"title": "Year"},
-                      "value": {"title": "BudgetValue"}
+                "type": "object",
+                "title": "Budget",
+                "properties": {
+                  "year": {
+                    "title": "Year"
+                  },
+                  "value": {
+                    "title": "BudgetValue"
                   }
+                }
               }
+            }
           }
-      }
-  }
-  
-  }, 
-"jsondata": {
-  "Item:MyProject": {
-      "type": ["Category:Item"],
-      "label": [{"text": "My Project", "lang": "en"}],
-      "member": ["Item:SomePerson", "Item:SomePerson"], //"Item:MyOtherItem"
-      "start": true,
-      "some_literal": ["Some string","Some","string",],
-      "not_in_context": "Not in Context",
-      "budget": [{
-          "year": "2000",
-          "value": "10000",
-          "budget":[{
-            "year": "2023",
-            "value": "10"}, {
-              "year": "2022",
-              "value": "20"}]
-      },{
-        "year": "2001",
-        "value": "20000"
-    },{
-      "year": "2002",
-      "value": "30000"
-  },{
-    "year": "2003",
-    "value": "40000"
-}]
-  },
-  "Item:SomePerson": {
-      "type": ["Category:Item"],
-      "label": [{"text": "Max Mustermann", "lang": "en"}],
-      "some_property": "Item:MyOtherItem"
-  },
-  "Property:HasMember": {
-      "type": ["Category:Property"],
-      "label": [{"text": "Has Member", "lang": "en"}]
-  },
-  "Item:MyOtherItem": {
-    "type": ["Category:Item"],
-    "label": [{"text": "My Other", "lang": "en"}],
-    "member": ["Item:MyNewItem"],
-    "some_literal": "Some string",
-    "not_in_context": "Not in Context",
-    "budget":[{
+        }
+
+      },
+      "jsondata": {
+        "Item:MyProject": {
+          "type": ["Category:Item"],
+          "label": [{
+            "text": "My Project",
+            "lang": "en"
+          }],
+          "member": ["Item:SomePerson", "Item:SomePerson"], //"Item:MyOtherItem"
+          "some_literal": ["Some string", "Some", "string", ],
+          "key_not_in_context": "Value of Not in Context",
+          "budget": [{
+            "year": "2000",
+            "value": "10000",
+          }, {
+            "year": "2001",
+            "value": "20000",
+            "budget": [{
+            "year": "2000",
+            "value": "10000",
+          }, {
+            "year": "2001",
+            "value": "20000"
+          }, {
+            "year": "2002",
+            "value": "30000"
+          }, {
+            "year": "2003",
+            "value": "40000"
+          }]
+          }, {
+            "year": "2002",
+            "value": "30000"
+          }, {
+            "year": "2003",
+            "value": "40000"
+          },
+          {"budget": [{
+            "year": "2000",
+            "value": "10000",
+          }, {
+            "year": "2001",
+            "value": "20000"
+          }, {
+            "year": "2002",
+            "value": "30000"
+          }, {
+            "year": "2003",
+            "value": "40000"
+          }]}
+        ]
+        },
+        "Item:SomePerson": {
+          "type": ["Category:Item"],
+          "label": [{
+            "text": "John Doe",
+            "lang": "en"
+          },
+          {
+            "text": "Max Mustermann",
+            "lang": "de"
+          }],
+          "some_property": "Item:MyOtherItem"
+        },
+        "Property:HasMember": {
+          "type": ["Category:Property"],
+          "label": [{
+            "text": "Has Member",
+            "lang": "en"
+          },
+          {
+            "text": "Hat Mitglied",
+            "lang": "de"
+          }]
+        },
+        "Item:MyOtherItem": {
+          "type": ["Category:Item"],
+          "label": [{
+            "text": "My Other",
+            "lang": "en"
+          }],
+          "member": ["Item:MyNewItem"],
+          "some_literal": "Some string",
+          "not_in_context": "Not in Context",
+          "budget": [{
             "year": "2022",
-            "value": "10"}, {
-              "year": "2022",
-              "value": "20"}]
-    
-  },
-  "Item:MyNewItem": {
-    "type": ["Category:Item"],
-    "label": [{"text": "My New Other", "lang": "en"}],
-    "other":["Item:MySecondItem"]
-    
-  },
-  "Item:MySecondItem": {
-    "type": ["Category:Item"],
-    "label": [{"text": "My Second Other", "lang": "en"}]
-    
-  },
+            "value": "10"
+          }, {
+            "year": "2022",
+            "value": "20"
+          }]
 
-}};
+        },
+        "Item:MyNewItem": {
+          "type": ["Category:Item"],
+          "label": [{
+            "text": "My New Other",
+            "lang": "en"
+          }],
+          "other": ["Item:MySecondItem"]
+        },
+        "Item:MySecondItem": {
+          "type": ["Category:Item"],
+          "label": [{
+            "text": "My Second Other",
+            "lang": "en"
+          }]
 
-const clone = structuredClone(new_json);
+        },
 
-let nodes = [];
-let edges = [];
+      }
+    };
 
+    const clone = structuredClone(new_json);
 
-let _config = {
-  // callbacks: {
-  //   getStartItem: (data) => "Item:MyOtherItem",
-  //   setColor: (data) => "#491230"
-  //   createContext: (data) => ""
-  // }
-};
-
-let args = {file: new_json, depth:1, mode: true, nodes: nodes, edges: edges}
-
-var draw = new isg.GraphDrawer(_config, args);
-
-
-
-
-var options = {interaction: {hover: true,multiselect: true,},
-      manipulation: {enabled: true,},
+    var options = {
+      interaction: {
+        hover: true,
+        multiselect: true,
+      },
+      manipulation: {
+        enabled: true,
+      },
       physics: {
         stabilization: {
-            enabled: true,
+          enabled: true,
         },
         barnesHut: {
-            gravitationalConstant: -40000,
-            centralGravity: 0,
-            springLength: 0,
-            springConstant: 0.5,
-            damping: 1,
-            avoidOverlap: 0
+          gravitationalConstant: -40000,
+          centralGravity: 0,
+          springLength: 0,
+          springConstant: 0.5,
+          damping: 1,
+          avoidOverlap: 0
         },
         maxVelocity: 5
       },
-      edges: {arrows: "to"},
+      edges: {
+        arrows: "to",
+        
+      },
       groups: {
         useDefaultGroups: false
       }
     }
+    
 let config = {nodes:nodes,edges:edges,options:options, graph: draw, file: new_json, clone: clone};
 
-  // let _config = {
+    let args = {
+      file: new_json,
+      depth: 1,
+      mode: true,
+     // nodes: nodes,
+     // edges: edges,
+      rootItem: "Item:MyProject",
+      recursionDepth: 10,
+    }
 
-  // }
+    let drawer = new isg.GraphDrawer(drawer_config={lang:"en",contractArrayPaths: true}, args);
+    let config = {
+     // nodes: nodes,
+     // edges: edges,
+      options: options,
+      file: new_json,
+      drawer: drawer
+    };
+    let graphtool = new isg.GraphTool("mynetwork", config);
 
-var graphtool = new isg.GraphTool("mynetwork", config, _config);
+  </script>
+</body>
 
-
-
-</script></body></html>
+</html>

@@ -253,9 +253,7 @@
         useDefaultGroups: false
       }
     }
-    
-let config = {nodes:nodes,edges:edges,options:options, graph: draw, file: new_json, clone: clone};
-
+   
     let args = {
       file: new_json,
       depth: 1,
@@ -272,7 +270,8 @@ let config = {nodes:nodes,edges:edges,options:options, graph: draw, file: new_js
      // edges: edges,
       options: options,
       file: new_json,
-      drawer: drawer
+      drawer: drawer,
+      clone: clone,
     };
     let graphtool = new isg.GraphTool("mynetwork", config);
 

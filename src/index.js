@@ -295,7 +295,7 @@ class GraphDrawer {
         return (this.getLabelFromLabelArray(value.label))
       }
     }
-    return (pathArr[pathArr.length - 2]+"[" + pathArr[pathArr.length - 1]+"]")
+    return (pathArr[pathArr.length - 2] + "[" + pathArr[pathArr.length - 1] + "]")
   }
 
   createGraphNodesEdges(args) {
@@ -363,9 +363,9 @@ class GraphDrawer {
     }
     // create edge and node
     let currentNode
-    
+
     if (!(Array.isArray(currentValue) && this.config.contractArrayPaths)) {
-      
+
 
 
       let edgeLabel
@@ -377,7 +377,7 @@ class GraphDrawer {
         }
 
         //let newEdgeId = utils.uuidv4() // String(args.previousPath.push(edgeLabel))
-        let newEdgeId = String(args.previousPath) +"=="+ String(edgeLabel)+"=>"+String(currentPath)
+        let newEdgeId = String(args.previousPath) + "==" + String(edgeLabel) + "=>" + String(currentPath)
 
         let newEdge = {
           id: newEdgeId,
@@ -388,14 +388,13 @@ class GraphDrawer {
           color: this.colorObj[edgeLabel],
           objectKey: args.key
         }
-        console.log("newEdge",newEdge)
+        console.log("newEdge", newEdge)
         if (!this.edges.get(newEdge.id)) {
           newEdge = this.config.callbacks.onBeforeCreateEdge(newEdge)
           // here the actual edge is created / initialized
           this.edges.update(newEdge)
           console.log("updated edge:", newEdge)
-        }
-        else{
+        } else {
           console.log("edge already exists")
         }
       }
@@ -408,11 +407,11 @@ class GraphDrawer {
         new_y = 0;
       } else {
         let angle = this.getAngleFromProperty(edgeLabel)
-        
+
         new_x = args.previousNode.x + this.config.nodeDistance * Math.cos(angle);
         new_y = args.previousNode.y + this.config.nodeDistance * Math.sin(angle);
       }
-      
+
 
       // create current Node
       currentNode = {
@@ -434,29 +433,28 @@ class GraphDrawer {
       if (!this.nodes.get(currentNode.id)) {
 
         currentNode = this.config.callbacks.onBeforeCreateNode(currentNode)
-       
+
         this.nodes.update(currentNode)
         console.log("updated node:", currentNode)
         args.recurse = true
 
       }
 
+    } else {
+      args.recurse = true;
     }
-    else{
-      args.recurse = true; 
-         }
-   if (args.recurse) {
+    if (args.recurse) {
       // loop through keys / indices of current item if it is an object / array
       if (typeof (currentValue) === "object") {
-        
-        console.log('value is object',currentValue)
+
+        console.log('value is object', currentValue)
 
         if (Array.isArray(currentValue) && this.config.contractArrayPaths) {
-          
+
           for (let i in currentValue) {
-            console.log("at array: i:", i, "currentValue[i]:", currentValue[i],"args.recursioinRootId:",args.recursionRootId,"depthObject[args.recursionRootId]",depthObject[args.recursionRootId])
+            console.log("at array: i:", i, "currentValue[i]:", currentValue[i], "args.recursioinRootId:", args.recursionRootId, "depthObject[args.recursionRootId]", depthObject[args.recursionRootId])
             let exclude_list = ["type", "label"]
-            if (!exclude_list.includes(i) && depthObject[args.recursionRootId] < args.recursionDepth+1) {
+            if (!exclude_list.includes(i) && depthObject[args.recursionRootId] < args.recursionDepth + 1) {
               let nextPath = JSON.parse(JSON.stringify(currentPath))
               nextPath.push(i)
               let argsObj = {
@@ -473,8 +471,8 @@ class GraphDrawer {
                 givenDepth: args.givenDepth,
                 mode: args.mode
               }
-              console.log("argsObj",argsObj)
-           
+              console.log("argsObj", argsObj)
+
               this.createGraphNodesEdges(argsObj)
             }
           }
@@ -624,7 +622,7 @@ class GraphTool {
 
 
       this.visOnDragEnd(params);
-    
+
     });
 
     // Rectangular selection:
@@ -672,14 +670,14 @@ class GraphTool {
   visOnDragStart(params) {
 
     console.log("dragStart");
-      
+
     if (params.nodes.length > 0) {
       let newNodeIds = []
       params.nodes.forEach((node_id, index) => {
 
         let node = this.nodes.get(node_id)
         let position = this.network.getPosition(node_id) //setting the current position is necessary to prevent snap-back to initial position
-        
+
         node.x = position.x
         node.y = position.y
 
@@ -695,7 +693,7 @@ class GraphTool {
           newNode.id = config.graph.id;
           newNode.depth = this.nodes.get(this.network.getSelectedNodes()[index]).depth + 1;
           config.graph.id += 1;
-          
+
           this.copiedEdges = this.network.getSelectedEdges()
 
           let newEdge = {
@@ -758,10 +756,10 @@ class GraphTool {
       }
 
 
-      let editor_div = document.getElementById("editor_div",options)
+      let editor_div = document.getElementById("editor_div", options)
       // create a JSONEdior in options div
-      let editor = new JSONEditor(editor_div)  // TODO: Editor is currently not rendered. find error.
-      
+      let editor = new JSONEditor(editor_div) // TODO: Editor is currently not rendered. find error.
+
       editor.set({
         edges: this.edges.get(),
         nodes: this.nodes.get()
@@ -836,14 +834,14 @@ class GraphTool {
           if (newNode.group != "root") {
             this.nodes.update(newNode);
             this.edges.update(newEdge);
-            console.log(config,config.file)
+            console.log(config, config.file)
             if (newNode.object) {
 
               if (newNode.context) {
 
 
 
-                config.graph.createGraphNE(config.file, newNode.id, newNode.object, newNode.context, newNode.depth, "", true);   
+                config.graph.createGraphNE(config.file, newNode.id, newNode.object, newNode.context, newNode.depth, "", true);
 
               } else {
                 config.graph.createGraphNE(config.file, newNode.id, newNode.object, "", newNode.depth, "", true);
@@ -862,7 +860,7 @@ class GraphTool {
     }
   }
 
-  addKeyEventListeners(){
+  addKeyEventListeners() {
 
     document.addEventListener('keyup', (event) => {
       this.keyUpEvent(event);
@@ -994,7 +992,10 @@ class GraphTool {
     container.addEventListener("mousedown", (e) => {
       console.log(e)
 
-      let clickPosition = {x: e.clientX, y: e.clientY}
+      let clickPosition = {
+        x: e.clientX,
+        y: e.clientY
+      }
 
       let nodeId = this.network.getNodeAt(clickPosition);
 
@@ -1160,51 +1161,52 @@ class GraphTool {
   showOptions_default(node, optionsDivId = 'optionsDiv') {
     document.getElementById(optionsDivId).innerHTML = "<button id='setButton'>set!</button><br><div id='visual_options_editor_div'></div><div id='data_editor_div'></div>"
     let setButton = document.getElementById("setButton")
-    let schema = {/*
-      "title": "Node Options",
-      "description": "Node Options",
-      "type": "object",
-      "properties": {
-        "id": {
-          "title": "ID",
-          "description": "The Id of the node",
-          "examples": [
-            "18a96389-de88-492f-95d5-af74f467f424"
-          ],
-          "anyOf": [{
-              "type": "string"
-            },
-            {
-              "type": "integer"
-            }
-          ]
-        },
-        "x": {
-          "title": "x",
-          "examples": [0],
-          "type": "number"
-        },
-        "y": {
-          "title": "y",
-          "examples": [0],
-          "type": "number"
-        },
-        "label": {
-          "title": "Label",
-          "examples": ["Label"],
-          "type": "string"
-        },
-        "color": {
-          "title": "color",
-          "examples": ["blue", "#ffffff"],
-          "type": "string"
-        },
-        "shape": {
-          "title": "shape",
-          "type": "string",
-          "enum": ["ellipse", "circle", "database", "box", "text", "image", "circularImage", "diamond", "dot", "star", "triangle", "triangleDown", "hexagon", "square", "icon"]
-        }
-      },*/
+    let schema = {
+      /*
+            "title": "Node Options",
+            "description": "Node Options",
+            "type": "object",
+            "properties": {
+              "id": {
+                "title": "ID",
+                "description": "The Id of the node",
+                "examples": [
+                  "18a96389-de88-492f-95d5-af74f467f424"
+                ],
+                "anyOf": [{
+                    "type": "string"
+                  },
+                  {
+                    "type": "integer"
+                  }
+                ]
+              },
+              "x": {
+                "title": "x",
+                "examples": [0],
+                "type": "number"
+              },
+              "y": {
+                "title": "y",
+                "examples": [0],
+                "type": "number"
+              },
+              "label": {
+                "title": "Label",
+                "examples": ["Label"],
+                "type": "string"
+              },
+              "color": {
+                "title": "color",
+                "examples": ["blue", "#ffffff"],
+                "type": "string"
+              },
+              "shape": {
+                "title": "shape",
+                "type": "string",
+                "enum": ["ellipse", "circle", "database", "box", "text", "image", "circularImage", "diamond", "dot", "star", "triangle", "triangleDown", "hexagon", "square", "icon"]
+              }
+            },*/
     }
     let options = {
       schema: schema,
@@ -1227,9 +1229,9 @@ class GraphTool {
       this.nodes.update(node)
     })
     let data_editor = new JSONEditor(data_editor_div, options)
-    console.log(this.drawer,this.drawer.file,node.path)
-    
-    console.log("data: ",this.drawer.getValueFromPathArray(node.path),this.drawer.file, node.path)
+    console.log(this.drawer, this.drawer.file, node.path)
+
+    console.log("data: ", this.drawer.getValueFromPathArray(node.path), this.drawer.file, node.path)
     data_editor.set(this.drawer.getValueFromPathArray(node.path))
   }
 
@@ -2295,21 +2297,21 @@ class GraphTool {
       };
 
       input.addEventListener("change", function () {
-        const reader = new FileReader();
-        reader.onload = function () {
-          const jsonData = JSON.parse(reader.result);
-          if (jsonData.state) {
-            config.nodes = jsonData.state.nodes;
-            config.edges = jsonData.state.edges;
+          const reader = new FileReader();
+          reader.onload = function () {
+            const jsonData = JSON.parse(reader.result);
+            if (jsonData.state) {
+              config.nodes = jsonData.state.nodes;
+              config.edges = jsonData.state.edges;
 
-    } else {
-      config.file.state = {
-        nodes: this.nodes.get(),
-        edges: this.edges.get(),
-        colorFunction: document.querySelector('#myDropdown select').value,
-        colorByValue: {}
-      };
-    }
+            } else {
+              config.file.state = {
+                nodes: this.nodes.get(),
+                edges: this.edges.get(),
+                colorFunction: document.querySelector('#myDropdown select').value,
+                colorByValue: {}
+              };
+            }
 
 
             config = {
@@ -2319,54 +2321,57 @@ class GraphTool {
               graph: draw,
               file: config.file
             };
-    const json = config.file
-    const filename = "data.txt";
-    const text = JSON.stringify(json);
+            const json = config.file
+            const filename = "data.txt";
+            const text = JSON.stringify(json);
 
-    const element = document.createElement("a");
-    element.setAttribute("href", "data:text/plain;charset=utf-8," + encodeURIComponent(text));
-    element.setAttribute("download", filename);
-    element.style.display = "none";
-    document.body.appendChild(element);
+            const element = document.createElement("a");
+            element.setAttribute("href", "data:text/plain;charset=utf-8," + encodeURIComponent(text));
+            element.setAttribute("download", filename);
+            element.style.display = "none";
+            document.body.appendChild(element);
 
-    element.click();
+            element.click();
 
 
             if (document.getElementById('setPath')) {
               document.getElementById('setPath').remove();
-            }
-            var graphtool = new GraphTool("mynetwork", config);
-          } else {
-            let nodes = [];
-            let edges = [];
-            let draw = new GraphDrawer(_config, jsonData, 5, true, nodes, edges); //createGraph.GraphDrawer(_config, jsonData, 5, true, nodes, edges);
 
-            let options = {
-              interaction: {
-                hover: true,
-                multiselect: true,
-              },
-              manipulation: {
-                enabled: true,
-              },
-              edges: {
-                arrows: "to"
-              },
-              groups: {
-                useDefaultGroups: false
+
+            } else {
+              let nodes = [];
+              let edges = [];
+              let draw = new GraphDrawer(_config, jsonData, 5, true, nodes, edges); //createGraph.GraphDrawer(_config, jsonData, 5, true, nodes, edges);
+
+              let options = {
+                interaction: {
+                  hover: true,
+                  multiselect: true,
+                },
+                manipulation: {
+                  enabled: true,
+                },
+                edges: {
+                  arrows: "to"
+                },
+                groups: {
+                  useDefaultGroups: false
+                }
               }
+              let config = {
+                nodes: nodes,
+                edges: edges,
+                options: options,
+                graph: draw,
+                file: config.file
+              };
             }
-            let config = {
-              nodes: nodes,
-              edges: edges,
-              options: options,
-              graph: draw,
-              file: config.file
-            };
-            var graphtool = new GraphTool("mynetwork", config, _config, );
+
+
           }
-
-
+        }
+      )
+    }
   }
 
   createLoadStateFunctionality() {
@@ -2408,8 +2413,8 @@ class GraphTool {
         };
 
 
-          delete jsonData.state;
-          config.file = jsonData;
+        delete jsonData.state;
+        config.file = jsonData;
 
         document.getElementById("mynetwork").innerHTML = "";
 
@@ -2890,7 +2895,7 @@ class GraphTool {
   }
 
 
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   findKeyPath(obj, key, path = '', results = []) {
     for (let prop in obj) {
@@ -3346,32 +3351,32 @@ class GraphTool {
 
   }
 
-  initDeepSearch(){
+  initDeepSearch() {
 
     const container = document.getElementById('title');
 
     const inputField = document.createElement('input');
     inputField.type = 'text';
     inputField.id = 'input-field';
-  
+
     const submitButton = document.createElement('button');
     submitButton.id = 'submit-button';
     submitButton.textContent = 'Submit';
-  
+
     container.appendChild(inputField);
     container.appendChild(submitButton);
-  
+
     submitButton.addEventListener('click', () => {
       const inputValue = inputField.value;
-  
+
       let inputString = inputValue;
-  
+
       this.searchFunctionality(this.dataFile, inputString)
-  
+
     });
 
   }
-  
+
 
 }
 

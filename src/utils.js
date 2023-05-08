@@ -35,8 +35,41 @@ function valueFromObjectPath(obj, path){
     return obj;
 };
 
+function callbackObjectRecursion(obj,callback, args){
+   
+    if (args.recursionDepth === undefined){
+        args.recursionDepth = 0;
+    }
+    if (args.baseObj === undefined){
+        args.baseObj = obj;
+    }
+    if (!args.currentPath){
+        args.currentPath = [];
+    }
+    callback(obj, args)
+
+    if (typeof(obj)==="object" && obj !== null){
+    
+        for (let key in obj){
+            
+            let nextPath = JSON.parse(JSON.stringify(args.currentPath))
+            nextPath.push(key)
+            
+            let nextArgs = JSON.parse(JSON.stringify(args))
+            nextArgs.currentPath = nextPath 
+            nextArgs.previousPath = args.currentPath
+            nextArgs.previousObj = obj
+            nextArgs.key = key
+            nextArgs.recursionDepth = args.recursionDepth + 1
+            callbackObjectRecursion(obj[key],callback, nextArgs);
+        
+        }
+    }
+}
+
 export {
     mergeDeep,
     uuidv4,
     valueFromObjectPath,
+    callbackObjectRecursion
 }

@@ -42,184 +42,119 @@
 
   <div id="mynetwork"></div>
   <script>
-    let new_json = {
-      "jsonschema": {
-        "Category:Entity": {
-          "@context": {
-            "label": "Property:HasLabel"
-          }
-        },
-        "Category:Item": {
-          "@context": [
-            "Category:Entity",
-            {
-              "member": {
-                "@id": "Property:HasMember",
-                "@type": "@id"
-              },
-              "other": {
-                "@id": "Property:HasOther",
-                "@type": "@id"
-              },
-              "budget": {
-                "@id": "Property:HasBudget",
-                "@type": "@id"
-              },
-              "some_property": {
-                "@id": "Property:HasSomeItem",
-                "@type": "@id"
-              },
+    let new_json = {"jsonschema": {
+  "Category:Entity": {
+      "@context": {
+          "label": "Property:HasLabel"
+      }
+  },
+  "Category:Item": {
+      "@context": [
+          "Category:Entity",
+          {
+              "member": {"@id": "Property:HasMember", "@type": "@id"},
+              "other": {"@id": "Property:HasOther", "@type": "@id"},
+              "budget": {"@id": "Property:HasBudget", "@type": "@id"},
+              "some_property": {"@id": "Property:HasSomeItem", "@type": "@id"},
               "some_literal": "Property:HasSomeLiteral"
-            }
+          }
           ],
-          "properties": {
-            "label": [{
+      "properties": {
+          "label": [{
               "type": "array",
               "title": "Labels",
               "items": {
-                "type": "object",
-                "title": "Label",
-                "properties": {
-                  "text": {},
-                  "lang": {}
-                }
+                  "type": "object",
+                  "title": "Label",
+                  "properties": {
+                      "text": {},
+                      "lang": {}
+                  }
               }
-            }],
-            "member": {
+          }],
+          "member": {
               "type": "string",
               "title": "Member"
-            },
-            "budget": {
+          },
+          "budget": {
               "type": "array",
               "title": "Budgets",
               "items": {
-                "type": "object",
-                "title": "Budget",
-                "properties": {
-                  "year": {
-                    "title": "Year"
-                  },
-                  "value": {
-                    "title": "BudgetValue"
+                  "type": "object",
+                  "title": "Budget",
+                  "properties": {
+                      "year": {"title": "Year"},
+                      "value": {"title": "BudgetValue"}
                   }
-                }
               }
-            }
           }
-        }
-
-      },
-      "jsondata": {
-        "Item:MyProject": {
-          "type": ["Category:Item"],
-          "label": [{
-            "text": "My Project",
-            "lang": "en"
-          }],
-          "member": ["Item:SomePerson", "Item:SomePerson"], //"Item:MyOtherItem"
-          "some_literal": ["Some string", "Some", "string", ],
-          "key_not_in_context": "Value of Not in Context",
-          "budget": [{
-            "year": "2000",
-            "value": "10000",
-          }, {
-            "year": "2001",
-            "value": "20000",
-            "budget": [{
-            "year": "2000",
-            "value": "10000",
-          }, {
-            "year": "2001",
-            "value": "20000"
-          }, {
-            "year": "2002",
-            "value": "30000"
-          }, {
-            "year": "2003",
-            "value": "40000"
-          }]
-          }, {
-            "year": "2002",
-            "value": "30000"
-          }, {
-            "year": "2003",
-            "value": "40000"
-          },
-          {"budget": [{
-            "year": "2000",
-            "value": "10000",
-          }, {
-            "year": "2001",
-            "value": "20000"
-          }, {
-            "year": "2002",
-            "value": "30000"
-          }, {
-            "year": "2003",
-            "value": "40000"
-          }]}
-        ]
-        },
-        "Item:SomePerson": {
-          "type": ["Category:Item"],
-          "label": [{
-            "text": "John Doe",
-            "lang": "en"
-          },
-          {
-            "text": "Max Mustermann",
-            "lang": "de"
-          }],
-          "some_property": "Item:MyOtherItem"
-        },
-        "Property:HasMember": {
-          "type": ["Category:Property"],
-          "label": [{
-            "text": "Has Member",
-            "lang": "en"
-          },
-          {
-            "text": "Hat Mitglied",
-            "lang": "de"
-          }]
-        },
-        "Item:MyOtherItem": {
-          "type": ["Category:Item"],
-          "label": [{
-            "text": "My Other",
-            "lang": "en"
-          }],
-          "member": ["Item:MyNewItem"],
-          "some_literal": "Some string",
-          "not_in_context": "Not in Context",
-          "budget": [{
-            "year": "2022",
-            "value": "10"
-          }, {
-            "year": "2022",
-            "value": "20"
-          }]
-
-        },
-        "Item:MyNewItem": {
-          "type": ["Category:Item"],
-          "label": [{
-            "text": "My New Other",
-            "lang": "en"
-          }],
-          "other": ["Item:MySecondItem"]
-        },
-        "Item:MySecondItem": {
-          "type": ["Category:Item"],
-          "label": [{
-            "text": "My Second Other",
-            "lang": "en"
-          }]
-
-        },
-
       }
-    };
+  }
+  
+  }, 
+"jsondata": {
+  "Item:MyProject": {
+      "type": ["Category:Item"],
+      "label": [{"text": "My Project", "lang": "en"}, {"text": "Projekt", "lang": "de"}],
+      "member": ["Item:SomePerson", "Item:SomePerson"], //"Item:MyOtherItem"
+      "other": ["Item:SomePerson"],
+      "some_literal": ["Some string","Some","string",],
+      "not_in_context": "Not in Context",
+      "budget": [{
+          "year": "2000",
+          "value": "10000",
+          "budget":[{
+            "year": "2023",
+            "value": "10"}, {
+              "year": "2022",
+              "value": "20"}]
+      },{
+        "year": "2001",
+        "value": "20000"
+    },{
+      "year": "2002",
+      "value": "30000"
+  },{
+    "year": "2003",
+    "value": ["40000","50000"]
+}]
+  },
+  "Item:SomePerson": {
+      "type": ["Category:Item"],
+      "label": [{"text": "Max Mustermann", "lang": "en"}],
+      "some_property": "Item:MyOtherItem",
+      "member": ["Item:MyProject"],
+  },
+  "Property:HasMember": {
+      "type": ["Category:Property"],
+      "label": [{"text": "Has Member", "lang": "en"}]
+  },
+  "Item:MyOtherItem": {
+    "type": ["Category:Item"],
+    "label": [{"text": "My Other", "lang": "en"}],
+    "member": ["Item:MyNewItem"],
+    "some_literal": "Some string",
+    "not_in_context": "Not in Context",
+    "budget":[{
+            "year": "2022",
+            "value": "10"}, {
+              "year": "2022",
+              "value": "20"}]
+    
+  },
+  "Item:MyNewItem": {
+    "type": ["Category:Item"],
+    "label": [{"text": "My New Other", "lang": "en"}],
+    "other":["Item:MySecondItem"]
+    
+  },
+  "Item:MySecondItem": {
+    "type": ["Category:Item"],
+    "label": [{"text": "My Second Other", "lang": "en"}]
+    
+  },
+
+}};
 
     //const clone = structuredClone(new_json);
 

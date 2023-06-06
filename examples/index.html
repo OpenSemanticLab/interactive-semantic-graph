@@ -123,7 +123,6 @@
       "type": ["Category:Item"],
       "label": [{"text": "Max Mustermann", "lang": "en"}],
       "some_property": "Item:MyOtherItem",
-      "member": ["Item:MyProject"],
   },
   "Property:HasMember": {
       "type": ["Category:Property"],
@@ -196,7 +195,7 @@
      // nodes: nodes,
      // edges: edges,
       rootItem: "Item:MyProject",
-      recursionDepth: 10,
+      recursionDepth: 1,
     }
 
     let drawer = new isg.GraphDrawer(drawer_config={lang:"en",contractArrayPaths: true}, args);

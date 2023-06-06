@@ -447,6 +447,23 @@ class GraphDrawer {
     colorByPath(visNodes, path)
   }
 
+  getCurrentJSONKey(pathArray){
+
+    let jsonKey;
+
+    if(isNaN(pathArray[pathArray.length-1])){
+
+      jsonKey = pathArray[pathArray.length-1]
+
+    }else{
+
+      jsonKey = pathArray[pathArray.length-2]
+
+    }
+
+    return jsonKey;
+  }
+
   createGraphNodesEdges(args) {
     //keys of args: file, lastId, item, relPath, oldContext, lastDepth, givenDepth, mode
 
@@ -463,7 +480,6 @@ class GraphDrawer {
     let currentItem;
     // set start Item / temporary root
     if (args.item) {
-      console.log("here")
       currentItem = args.item
     } else {
       currentItem = this.getStartItem(this.file);
@@ -490,6 +506,8 @@ class GraphDrawer {
     } else {
       depth = 0
     }
+
+    let jsonKey = this.getCurrentJSONKey(currentPath);
 
     // loop through keys / indices of current item 
 
@@ -550,17 +568,17 @@ class GraphDrawer {
       }
 
       // prepare position of new node
-      let new_x;
-      let new_y;
-      if (!args.previousNode) {
-        new_x = 0;
-        new_y = 0;
-      } else {
-        let angle = this.getAngleFromProperty(edgeLabel)
+      // let new_x;
+      // let new_y;
+      // if (!args.previousNode) {
+      //   new_x = 0;
+      //   new_y = 0;
+      // } else {
+      //   let angle = this.getAngleFromProperty(edgeLabel)
 
-        new_x = args.previousNode.x + this.config.nodeDistance * Math.cos(angle);
-        new_y = args.previousNode.y + this.config.nodeDistance * Math.sin(angle);
-      }
+      //   new_x = args.previousNode.x + this.config.nodeDistance * Math.cos(angle);
+      //   new_y = args.previousNode.y + this.config.nodeDistance * Math.sin(angle);
+      // }
 
 
       // create current Node
@@ -568,14 +586,15 @@ class GraphDrawer {
         id: currentNodeId,
         label: label,
         path: currentPath,
+        key: jsonKey,
         item: currentItem,
         value: currentValue,
         incomingLabels: [edgeLabel],
         context: currentContext,
         depth: depth,
         depthObject: depthObject,
-        x: new_x,
-        y: new_y,
+        // x: new_x,
+        // y: new_y,
         //fixed:true
 
       }
@@ -727,8 +746,11 @@ class GraphTool {
     this.oldNodeColors = {};
     this.oldEdgeColors = {};
     this.addKeyEventListeners();
-    // this.dataFile = config.clone.jsondata;
+    this.dataFile = this.drawer.file;
     this.idsToColor = [];
+    this.deepSearchExpands = [];
+    this.fullGraph;
+    this.saveColorsOfPreviousExpandedNodes = [];
     this.initDeepSearch();
 
     // set visjs network callbacks
@@ -928,44 +950,96 @@ class GraphTool {
   //creates an ID for a new node that is to be created by copying an existing one
   createIDForNewNode(node, receivingNode, copiedEdges) {
 
+    //id when pasted into empty space
+    if(receivingNode === false){
+
+      return "test";
+    }
+
+    let tempPath = node.id.split('/');
+
+    //if nodes path length is 2, that means its an item and it puts out its id so that only an edge is created
+    if(this.drawer.file[tempPath[0]][tempPath[1]] && node.path.length === 2){
+
+      return node.id;
+
+    }
+
     let id;
     let keyExists = false;
-    let samplePath; 
-    
-    if(!isNaN(Number(node.id.split('/')[node.id.split('/').length - 1]))){
-      let connectedEdges = this.network.getConnectedEdges(receivingNode.id)
-      let coppiedEdgeObject = this.edges.get(copiedEdges[0])
+    let receivingNodePath; 
 
-      connectedEdges.forEach((edge) => {
-        let edgeObj = this.edges.get(edge)
+    let connectedEdges = this.network.getConnectedEdges(receivingNode.id)
+    let coppiedEdgeObject = this.edges.get(copiedEdges[0])
 
-        if(edgeObj.from === receivingNode.id && coppiedEdgeObject.label === edgeObj.label ){
+    //checks if the edge/key already exists
+    connectedEdges.forEach((edge) => {
+      let edgeObj = this.edges.get(edge)
 
-          keyExists = true;
-          
-        }
-      });
+      if(edgeObj.from === receivingNode.id && coppiedEdgeObject.label === edgeObj.label ){
 
-      //
-      if(keyExists){
-
-        samplePath = receivingNode.path
-
-        var valueOfPath = this.drawer.file;
-
-        for(let i = 0; i < samplePath.length; i++){
-
-          let key = samplePath[i];
-          valueOfPath = valueOfPath[key];
-
-        }
-        id = receivingNode.id + '/' + node.id.split('/')[node.id.split('/').length - 2] + '/' + valueOfPath[node.id.split('/')[node.id.split('/').length - 2]].length
+        keyExists = true;
+        
       }
 
-      id = receivingNode.id + '/' + node.id.split('/')[node.id.split('/').length - 2] + '/0'
-    }else{
-      id = receivingNode.id + '/' + node.id.split('/')[node.id.split('/').length - 1]
+    });
+
+
+    receivingNodePath = receivingNode.path
+
+    var valueOfPath = this.drawer.file;
+
+    //gets the value at the end of the receiving node path
+    for(let i = 0; i < receivingNodePath.length; i++){
+
+      let key = receivingNodePath[i];
+      valueOfPath = valueOfPath[key];
+
     }
+
+  //checks if the last element of the path is not a number    
+    if(isNaN(Number(node.id.split('/')[node.id.split('/').length - 1]))){
+
+      //checks if the key does not exist
+      if(!keyExists){
+
+        id = receivingNode.id + '/' + node.id.split('/')[node.id.split('/').length - 1] + '/0'
+
+        return id;
+
+      }
+
+      ////////
+
+      //if the value of the path is not an array, but the key exists it creates the id with the number 1 (because its the second element of the array)
+      if(!(Array.isArray(valueOfPath[node.id.split('/')[node.id.split('/').length - 1]]))){
+
+        id = receivingNode.id + '/' + node.id.split('/')[node.id.split('/').length - 1] + '/1';
+
+        return id;
+
+      }
+
+      //if the value of the path is an array, it creates the id with the length of the array - 1
+      id = receivingNode.id + '/' + node.id.split('/')[node.id.split('/').length - 1] + '/' + valueOfPath[node.id.split('/')[node.id.split('/').length - 1]].length;
+      
+      return id;
+
+    }
+
+    //c it checks if the key exists
+    if(!keyExists){
+
+      id = receivingNode.id + '/' + node.id.split('/')[node.id.split('/').length - 2] + '/0'
+
+      return id;
+
+    }
+
+    ////////
+
+    //if the last element of the path is a number, and the key exists, it creates the id with the length of the array - 2
+    id = receivingNode.id + '/' + node.id.split('/')[node.id.split('/').length - 2] + '/' + valueOfPath[node.id.split('/')[node.id.split('/').length - 2]].length;
 
     return id;
   }
@@ -989,7 +1063,8 @@ class GraphTool {
 
   }
 
-  createNewEdgeForNewNode(newNode, copiedEdges, receivingNode) {
+  createNewEdgeForNewNode(newNode) {
+    
     let newEdge = {
       id: ''+this.network.getSelectedNodes()[0] + '=' + this.edges.get(this.copiedEdges[0]).label + '=>' + newNode.id,
       from: this.network.getSelectedNodes()[0],
@@ -1005,69 +1080,88 @@ class GraphTool {
 
   pasteNodeEdges(copiedNodes, copiedEdges) {
 
+    let xy = this.network.DOMtoCanvas({
+      x: this.mouseX,
+      y: this.mouseY
+    })
+
     //paste nodes and edges into existing nodes
     if (copiedNodes.length > 0 && this.network.getSelectedNodes().length > 0) {
 
-      // console.log(copiedNodes)
-      // console.log(copiedEdges)
-
-
       // TODO: encapsulate in: this.pasteNodeIntoExistingItem() 
       // TODO: paste node into empty space and create corresponding item this.pasteNodeIntoNewItem(node,xy) 
-      let xy = this.network.DOMtoCanvas({
-        x: this.mouseX,
-        y: this.mouseY
-      })
 
       let receivingNode = this.nodes.get(this.network.getSelectedNodes()[0])
-      //let testNodes = this.createNewNodesFromCopiedNodes(copiedNodes, copiedEdges, receivingNode);
 
-      this.copiedNodes.forEach((node_id, index) => {
+      let json = this.drawer.file;
 
-        if (this.nodes.get(this.network.getSelectedNodes()[index]).item) {
+      for(let i = 0; i < receivingNode.path.length; i++){
 
-          let oldNode = this.nodes.get(node_id)
+        json = json[receivingNode.path[i]];
+  
+      }
+
+      //if literal, then return
+      if(typeof json === 'string' && this.drawer.file[receivingNode.path[receivingNode.path.length - 1]] === undefined){
+
+        return;
+
+      }
+
+      if (this.nodes.get(this.network.getSelectedNodes()[0]).item) {
 
 
-          let newNode = this.createNewNodesFromCopiedNodes(copiedNodes, copiedEdges, receivingNode);
-          
-          newNode.depth = this.nodes.get(this.network.getSelectedNodes()[index]).depth + 1;
+        let newNode = this.createNewNodesFromCopiedNodes(copiedNodes, copiedEdges, receivingNode);
+        
+        newNode.depth = this.nodes.get(this.network.getSelectedNodes()[0]).depth + 1;
 
-          newNode.x = xy.x;
-          newNode.y = xy.y;
+        newNode.x = xy.x;
+        newNode.y = xy.y;
 
-          //config.graph.id += 1;
+        //config.graph.id += 1;
 
-          let newEdge = this.createNewEdgeForNewNode(newNode, receivingNode, copiedEdges, oldNode);
+        let newEdge = this.createNewEdgeForNewNode(newNode);
 
-          if (newNode.group != "root") {
-            this.nodes.update(newNode);
-            this.edges.update(newEdge);
+        if (newNode.group != "root") {
+          this.nodes.update(newNode);
+          this.edges.update(newEdge);
 
-            if (newNode.object) {
+          this.addToJSON(newNode, newEdge, receivingNode);
+          console.log(config.file.jsondata)
 
-              if (newNode.context) {
-
-                config.graph.createGraphNE(config.file, newNode.id, newNode.object, newNode.context, newNode.depth, "", true);
-
-              } else {
-                config.graph.createGraphNE(config.file, newNode.id, newNode.object, "", newNode.depth, "", true);
-
-              }
-
-              this.nodes.update(nodes);
-              this.edges.update(edges);
-            }
-
-            this.addToJSON(newNode, newEdge, receivingNode);
-
-            //console.log(config.file.jsondata)
-
-          }
         }
-      });
-    }else{
+      }
+
+
+    }
+
+    if(copiedNodes.length > 0 && this.network.getSelectedNodes().length === 0){
       //paste nodes and edges into empty space
+
+      let newNode = this.createNewNodesFromCopiedNodes(copiedNodes, copiedEdges, false);
+
+      if(this.drawer.file.jsondata[newNode.path[1]]){
+        
+        newNode.depth = 0;
+
+        newNode.x = xy.x;
+        newNode.y = xy.y;
+        
+        newNode.group = "root"
+
+        newNode.key = newNode.path[1];
+
+        newNode.incomingLabels = [];
+
+        newNode.color = "#6dbfa9";
+
+        newNode.fixed = true;
+
+        this.nodes.update(newNode);
+
+        //TODO: add to json, id is not correct
+      }
+
     }
   }
 
@@ -1315,7 +1409,7 @@ initDragAndDrop() {
 
     visual_options_editor.set(node)
     visual_options_editor.onChange = (param) => {
-      //console.log(param)
+
     }
     setButton.addEventListener('click', () => {
 
@@ -1337,10 +1431,19 @@ initDragAndDrop() {
     inputField.id = 'search_input';
 
     // add the event listener to the input element
+    let debounceTimer;
+
     inputField.addEventListener('input', () => {
 
-      this.searchNodes(inputField.value)
+      // Clear previous debounce timer
+      clearTimeout(debounceTimer);
+      document.getElementById('input-field').value = "";
 
+      // Set a new debounce timer
+      debounceTimer = setTimeout(() => {
+        // Execute the search after the debounce timeout
+        this.searchNodes(inputField.value)
+      }, 300); // Adjust the debounce timeout as needed (e.g., 300ms)
 
     });
 
@@ -1375,78 +1478,36 @@ initDragAndDrop() {
 
   }
 
-  //saves the colors of all nodes and edges in the graph to the oldNodeColors and oldEdgeColors arrays
-  saveColorsOfNodesAndEdges() {
-
-    this.nodes.forEach((node) => {
-      if (!this.oldNodeColors[node.id]) {
-
-        this.oldNodeColors[node.id] = node.color;
-
-      }
-    });
-
-    this.edges.forEach((edge) => {
-      if (!this.oldEdgeColors[edge.id]) {
-
-        this.oldEdgeColors[edge.id] = edge.color;
-
-      }
-    });
-
-
-
-  }
-  //sets the colors of all nodes and edges in the graph to the colors saved in the oldNodeColors and oldEdgeColors arrays
-  setSavedColorsOfNodesAndEdges() {
-
-    this.nodes.forEach((node) => {
-
-      node.color = this.oldNodeColors[node.id];
-      this.nodes.update(node);
-    });
-
-    this.edges.forEach((edge) => {
-
-      edge.color = this.oldEdgeColors[edge.id]
-      this.edges.update(edge);
-    });
-
-  }
-
   searchNodes = (searchString) => {
 
-    this.updatePositions()
+    //this.updatePositions()
 
     if (this.handleCallbacks({id: 'onBeforeSearchNodes', params: {graph: this, searchString: searchString}})) {
-      // let nodes = this.nodes.get();
-      // let edges = this.edges.get();
 
-      this.saveColorsOfNodesAndEdges();
-
-      this.setSavedColorsOfNodesAndEdges();
+      this.recolorByProperty();
+      this.deepSearchExpands = [];
 
       //searches for edges with the given search string
       if (document.getElementById('search_select').value === 'search_edge') {
+
+
         this.edges.forEach((edge) => {
 
           if(edge.label.toLowerCase().includes(searchString.toLowerCase())){
-            return;
-          }
 
-          edge.color = "#000000";
-          this.edges.update(edge);
+            let paths = this.findAllPaths(this.drawer.rootId, edge.to);
 
-          this.nodes.forEach((node) => {
+            for(let i = 0; i < paths.length; i++){
 
-            if (edge.to == node.id) {
-              node.color = "#ffffff";
-              this.nodes.update(node);
+              for(let j = 0; j < paths[i].length; j++){
+
+                this.deepSearchExpands.push(paths[i][j]);
+
+              }
+
             }
 
-          });
-
-          
+          }
 
         });
       }
@@ -1456,50 +1517,86 @@ initDragAndDrop() {
           if (node.label) {
 
             if(node.label.toLowerCase().includes(searchString.toLowerCase()) || node.group == "root"){
-              return;
-            }
 
-            node.color = "#ffffff";
-            this.nodes.update(node);
+              let paths = this.findAllPaths(this.drawer.rootId, node.id);
+  
+              for(let i = 0; i < paths.length; i++){
+  
+                for(let j = 0; j < paths[i].length; j++){
+  
+                  this.deepSearchExpands.push(paths[i][j]);
+  
+                }
+  
+              }
+            }
             
           }
 
         });
 
-        if (searchString != "") {
-
-          this.edges.forEach((edge) => {
-
-
-            edge.color = "#000000";
-            this.edges.update(edge);
-
-
-          });
-        }
       }
 
-      // this.nodes.update(nodes);
-      // this.edges.update(edges);
+      this.deepSearchColorPath([]);
 
     }
   }
 
+  //adds copied nodes to the json file
+  addToJSON(newNode, newEdge, receivingNode) {
 
-  addToJSON(node, edge, receivingNode) {
+    //finalPlace is the place where the new node will be added
+    let finalPlace = this.drawer.file;
 
-    console.log(node) 
-    console.log(edge)
-    console.log(receivingNode)
+    //goes through the path of the receiving node to find the place where the new node will be added
+    for(let i = 0; i < receivingNode.path.length; i++){
 
-    let selectedNodes = this.copiedNodes;
+      finalPlace = finalPlace[receivingNode.path[i]];
 
-    let nodeObject = this.nodes.get(selectedNodes[0]);
+    }
 
-    // console.log(node.path)
-    // console.log(edge)
+    //contains the value of the node that will be added
+    let valueToBeAdded = this.drawer.file;
 
+    //path of the copied node gets split into an array
+    let valuePath = this.copiedNodes[0].split("/");
 
+    //goes through the path of the copied node to find the value of the node that will be added
+    for(let i = 0; i < valuePath.length; i++){
+
+      valueToBeAdded = valueToBeAdded[valuePath[i]];
+
+    }
+
+    //if the path of the copied node is only two elements long, take the second element of the path as the value that will be added (only relevant for items)
+    if(valuePath.length == 2){
+        
+        valueToBeAdded = valuePath[1];
+    }
+
+    //if key of the final place is not defined, create the key and add the value inside an array
+    if(!(finalPlace[newNode.key])){
+
+      finalPlace[newNode.key] = [valueToBeAdded];
+
+      return;
+
+    }
+
+    //if key of the final place key is defined but the value is not an array, create an array and add the old value of the key and then the new value
+    if(!(Array.isArray(finalPlace[newNode.key]))){
+
+      finalPlace[newNode.key] = [finalPlace[newNode.key]]
+
+      finalPlace[newNode.key].push(valueToBeAdded);
+      
+      return;
+    }
+
+    //if final place key is defined and the value is an array, add the new value to the array
+    finalPlace[newNode.key].push(valueToBeAdded);
+
+    return;
 
   }
 
@@ -1643,7 +1740,7 @@ initDragAndDrop() {
     }
 
   }
-
+  //creates a copy of a given node
   duplicateNode(node) {
 
     let newNode = {}
@@ -1662,6 +1759,7 @@ initDragAndDrop() {
     return (newNode)
   }
 
+  //not used
   run_recursive(node_id) {
     let node = this.nodes.get(node_id)
     if ("run" in node) {
@@ -1711,9 +1809,10 @@ initDragAndDrop() {
   //         .filter( key => predicate(obj[key]) )
   //         .reduce( (res, key) => (res[key] = obj[key], res), {} );
 
+  //recolos all nodes and edges
   recolorByProperty() {
 
-    this.updatePositions()
+    //this.updatePositions()
     let nodes = this.nodes.get();
     let edges = this.edges.get();
 
@@ -1784,6 +1883,7 @@ initDragAndDrop() {
 
     let reachableNodesTo = [];
     reachableNodesTo = this.getAllReachableNodesTo(this.drawer.rootId, excludedIds, reachableNodesTo);
+
     let nodesToDelete = [];
     let allIds = this.nodes.getIds();
 
@@ -1957,13 +2057,16 @@ initDragAndDrop() {
   }
   // expands the object that is saved inside a node and on second doubleclick deletes nodes and edges that go out of the clicked node
   expandNodes(params) {
-
+    
     this.searchNodes("");
     document.getElementById("search_input").value = "";
 
     if (params.nodes.length > 0) {
 
       let node = this.nodes.get(params.nodes[0]);
+      // console.log(params.nodes)
+      // console.log(node)
+      // console.log(this.nodes.get())
 
       if ("item" in node && (this.clicked[params.nodes[0]] == false || !("" + params.nodes[0] in this.clicked)) && (this.network.getConnectedNodes(params.nodes[0], "to").length === 0)) {
 
@@ -1985,7 +2088,7 @@ initDragAndDrop() {
         };
 
         config.drawer.createGraphNodesEdges(args);
-        //this.recolorByProperty()
+        this.recolorByProperty()
 
         this.createLegend()
 
@@ -1995,6 +2098,7 @@ initDragAndDrop() {
         }
         this.clicked[params.nodes[0]] = true;
 
+
         // this.network.body.data.nodes.update(nodes);
         // this.network.body.data.edges.update(edges);
 
@@ -2003,6 +2107,7 @@ initDragAndDrop() {
         //  this.edges.update(edges);
 
       } else {
+
         // collapse Nodes
         this.clicked[params.nodes[0]] = false;
         //let conEdges = this.network.getConnectedEdges(params.nodes[0], "from")
@@ -2472,7 +2577,7 @@ initDragAndDrop() {
     let strategy = "strategy2"
 
 
-    this.updatePositions()
+    //this.updatePositions()
     if (strategy == "strategy2") {
 
       if (!e.repeat) {
@@ -2766,20 +2871,315 @@ initDragAndDrop() {
 
   }
 
+//checks if the given node id exists in the current graph
+itemExists(node_id){
 
-  ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  if(this.nodes.get(node_id)){
 
-  findKeyPath(obj, key, path = '', results = []) {
-    for (let prop in obj) {
-      if (prop === key && Array.isArray(obj[prop]) && obj[prop].every(item => typeof item === 'object' && item !== null)) {
-        results.push(path + prop);
+    return true;
+
+  }
+
+  return false;
+
+}
+//checks if the given node is open/expanded
+isNodeOpen(node_id) {
+  const edges = this.edges.get();
+  
+  for (const edge of edges) {
+    if (edge.from === node_id.trim()) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+searchItem(node_id, search) {
+  //if node id is not in the current graph
+  if (!this.itemExists(node_id)) {
+    //get node from this.fullGraph
+    const searchValue = search.nodes.get(node_id);
+    //get parent item from this.fullGraph of the given node id
+    const parentItem = this.searchJSON(this.drawer.file, `${searchValue.path[1]}`);
+    //get parent item id
+    const parentItemId = `${parentItem[0].split('.')[1]}/${parentItem[0].split('.')[2]}`;
+
+    //if the parent item node is not in the current graph, go recursively back in the graph until you find a node that is in the current graph
+    if (!this.itemExists(parentItemId)) {
+      this.searchItem(parentItemId, search);
+      this.expandNodesCleanedUp({ nodes: [parentItemId] });
+
+      return;
+    }
+
+    //if the parent item node is in the current graph, expand it 
+    this.expandNodesCleanedUp({ nodes: [parentItemId] });
+
+    return;
+  }
+
+  this.expandNodesCleanedUp({ nodes: [node_id] });
+
+}
+
+deepSearchExpandNodes(foundNode, search) {
+
+  
+  const path = foundNode.path;
+  const firstPath = `${path[0]}/${path[1]}`;
+  const firstPathExists = this.itemExists(firstPath);
+  let currentID = firstPath;
+
+
+  // If the node is already open, don't expand it again but note the nodes that would have been expanded
+  
+  if (this.itemExists(foundNode.id)) {
+   
+    return;
+    
+  }
+
+
+  //if the path starting node is not open, open it
+  if (!firstPathExists) {
+    this.searchItem(firstPath, search);
+    this.expandNodesCleanedUp({ nodes: [firstPath] });
+
+
+    this.deepSearchExpandNodes(foundNode);
+    
+    return;
+  }
+
+
+  //expand path if starting node is given
+  for (let i = 2; i < path.length; i += 2) {
+    if (path[i + 1] === undefined) {
+      break;
+    }
+    currentID += `/${path[i]}/${path[i + 1]}`;
+
+    if (this.itemExists(currentID) && !this.isNodeOpen(currentID)) {
+      this.expandNodesCleanedUp({ nodes: [currentID] });
+
+    }
+  }
+
+}
+
+//collapses all nodes that were expanded during deep search
+collapseSearch(){
+
+  if(!document.getElementById("myCheckbox").checked ){
+    
+  
+    this.deepSearchExpands.forEach(node => {
+
+      if(this.itemExists(node)){
+
+        this.expandNodesCleanedUp({nodes:[node]});
+
       }
-      if (typeof obj[prop] === 'object' && obj[prop] !== null) {
-        this.findKeyPath(obj[prop], key, path + prop + '.', results);
+
+    });
+
+    this.deepSearchExpands = [];
+    this.clicked = {};
+
+  }
+  
+
+}
+
+//colors the nodes and edges that were found during deep search
+deepSearchColorPath(foundNodes){
+
+  this.nodes.get().forEach(node => {
+    //if the node is not expanded by deep search and is not in the found nodes, color it white
+    if(!this.deepSearchExpands.includes(node.id) && !foundNodes.some(obj => obj.id === node.id) && !this.saveColorsOfPreviousExpandedNodes.includes(node.id)){
+
+
+      if(node.group != "root"){
+
+        //console.log(node.id)
+
+        node.color = "#ffffff"
+
+        this.nodes.update(node);
+
+      }
+
+    }else{
+
+      // this.saveColorsOfPreviousExpandedNodes.push(node.id);
+
+    }
+
+  });
+
+  this.edges.get().forEach(edge => {
+
+    //if the edge is connected to colored nodes but not white nodes, color it black
+    if(!(this.nodes.get(edge.from).color != "#ffffff" && this.nodes.get(edge.to).color != "#ffffff") && !this.saveColorsOfPreviousExpandedNodes.includes(edge.id)){
+
+      edge.color = "#000000"
+
+      this.edges.update(edge);
+
+    }else{
+
+      // this.saveColorsOfPreviousExpandedNodes.push(edge.id);
+
+    }
+
+  });
+
+  //console.log(this.saveColorsOfPreviousExpandedNodes)
+
+
+}
+
+expandNodesCleanedUp(params) {
+    
+  if (params.nodes.length > 0) {
+
+    let node = this.nodes.get(params.nodes[0]);
+
+    if ("item" in node && (this.clicked[params.nodes[0]] == false || !("" + params.nodes[0] in this.clicked)) && (this.network.getConnectedNodes(params.nodes[0], "to").length === 0)) {
+
+      // expand node
+
+      let args = {
+        //file: config.file, not needed since drawer has own file
+        lastId: node.id,
+        recursionDepth: 1,
+        recursionRootId: node.id,
+        recurse: true,
+        item: node.item,
+        path: node.path,
+        oldContext: "",
+        lastDepth: node.depth,
+        givenDepth: 1,
+        mode: true,
+        previousNode: node,
+      };
+
+      config.drawer.createGraphNodesEdges(args);
+
+      this.clicked[params.nodes[0]] = true;
+
+    } else {
+
+      // collapse Nodes
+      this.clicked[params.nodes[0]] = false;
+
+      this.deleteNodesChildren(params.nodes[0]);
+
+    }
+
+  }
+
+}
+
+deepSearch(searchValue){
+
+  //console.log(this.saveColorsOfPreviousExpandedNodes)
+
+  //args to generate full graph
+  let args = {
+    file: this.drawer.file,
+    depth: this.drawer.depth,
+    mode: this.drawer.mode,
+    rootItem: this.drawer.rootItem,
+    recursionDepth: 100000000000,
+  }
+
+  //if full graph is not generated, generate it else use it
+  if(this.fullGraph == undefined){
+      
+      this.fullGraph = new isg.GraphDrawer(drawer_config={lang:this.drawer.lang,contractArrayPaths: true}, args);
+
+      var search = this.fullGraph;
+  }else{
+      
+      var search = this.fullGraph;
+  }
+
+  //if search value is empty, collapse all expanded nodes and return
+  if(searchValue == ""){
+
+    this.collapseSearch();
+    this.recolorByProperty();
+    // this.saveColorsOfPreviousExpandedNodes = [];
+    return;
+
+  }
+
+  //before searching, collapse all expanded nodes from previous search
+  this.collapseSearch();
+
+  //search for nodes with label containing search value
+  let foundNodes = [];
+
+  const lowercaseSearchValue = searchValue.toLowerCase();
+  foundNodes = search.nodes.get().filter(node =>
+    node.label.toLowerCase().includes(lowercaseSearchValue)
+  );
+
+  if(foundNodes.length == 0){
+
+    this.collapseSearch();
+    this.recolorByProperty();
+    if(document.getElementById("myCheckbox").checked){
+
+      this.setGraphColorsBlackAndWhite(this.nodes.get(), this.edges.get());
+
+    }
+    return;
+
+  }
+
+  this.deepSearchExpands = [];
+  
+  foundNodes.forEach(node => {
+
+    //expand the paths to the found nodes
+    this.deepSearchExpandNodes(node, search);
+
+    let pathsToColor = this.findAllPaths(this.drawer.rootId, node.id);
+
+    for(let i = 0; i < pathsToColor.length; i++){
+        
+      for(let j = 0; j < pathsToColor[i].length; j++){
+
+        if(!this.deepSearchExpands.includes(pathsToColor[i][j])){
+
+          this.deepSearchExpands.push(pathsToColor[i][j]);
+
+        }
+
       }
     }
-    return results;
-  }
+
+  });
+
+  this.recolorByProperty();
+  this.deepSearchColorPath(foundNodes);
+
+
+  //let search1 = this.searchJSON(this.drawer.file, searchValue)
+
+  //this.expandNodes({nodes:["jsondata/Item:SomePerson"]})
+
+  //console.log(this.itemExists("jsondata/Item:SomePersons"))
+
+}
+
+
+
+  ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   searchJSON(data, searchValue) {
 
@@ -2797,456 +3197,55 @@ initDragAndDrop() {
 
   }
 
-  IsStartObjectInGraph(foundPaths, searchValue, initialSearchValue) {
-    // does more than that
-    // searches path backward from search Value iterativiely 
-
-    this.drawer.createNxGraph()
-
-
-
-    let nodesWithObject = [];
-    let objectInObject = [] //findKeyPath(data, searchValue);
-
-    if (objectInObject.length == 0) {
-
-      for (let i = 0; i < foundPaths.length; i++) {
-
-        let path = foundPaths[i].split(".")[1];
-
-        let path2 = foundPaths[i].split(".");
-
-
-        // checks if there is an object in the object
-        if (Array.isArray(this.drawer.file[path2[1]][path2[2]]) && typeof this.drawer.file[path2[1]][path2[2]][0] === 'object' && this.drawer.file[path2[1]][path2[2]][0] !== null) {
-
-          let startId = this.drawer.rootId;
-          let nodes = this.nodes.get();
-          //let idsToColor = [];
-
-          // to be changed. (intermediate nodes are not generated anymore)
-          const nodesWithLabel = this.nodes.get({
-            filter: function (node) {
-              return (node.item === path2[1]);
-            }
-          });
-
-          // set start Id on found node
-
-          if (nodesWithLabel.length > 0) {
-
-            startId = nodesWithLabel[0].id;
-
-          }
-          // if no nodes with labels are found
-          if (!(path2[1] == nodes[0].item) && nodesWithLabel.length == 0) {
-            // search for budget
-            let searchExistingNodes = this.searchJSON(this.drawer.file, path2[1]);
-
-            let found = this.IsStartObjectInGraph(searchExistingNodes, false, initialSearchValue);
-
-            // save ids that shall not be colored black/white
-            this.idsToColor.push(found[0].id);
-
-            let params = {
-              nodes: [found[0].id]
-            }
-
-            this.expandNodes(params);
-            // returns the Object in which the Key is found
-            let objectInObject = this.findKeyPath(this.drawer.file, initialSearchValue);
-
-            // if object is found
-            if (objectInObject.length == 0) {
-
-
-              searchExistingNodes = this.searchJSON(this.drawer.file, searchValue);
-
-              found = this.IsStartObjectInGraph(searchExistingNodes, false, initialSearchValue);
-            } else {
-              // Object with key is found  check if found node is on path to obect. 
-
-              const nodesWithLabel = this.nodes.get({
-                filter: function (node) {
-                  return (node.item === path2[1]);
-                }
-              });
-
-              for (let i = 0; i < nodesWithLabel.length; i++) {
-
-                this.idsToColor.push(nodesWithLabel[i].id);
-
-                let params = {
-                  nodes: [nodesWithLabel[i].id]
-                }
-
-                this.expandNodes(params);
-              }
-
-              // set nodes and edges
-              let nodes = this.nodes.get();
-
-              nodes.forEach((node) => {
-
-
-                if (node.label == initialSearchValue || idsToColor.includes(node.id)) {
-                  node.color = this.drawer.colorObj[node.group];
-
-                  this.nodes.update(node);
-                  this.idsToColor.push(node.id)
-                }
-
-                if (!(this.idsToColor.includes(node.id)) && node.id != 0 && node.label != initialSearchValue) {
-                  node.color = "#ffffff"
-                  this.nodes.update(node);
-                }
-
-              });
-
-              let edges = this.edges.get();
-
-              edges.forEach((edge) => {
-
-                if (this.idsToColor.includes(edge.to)) {
-                  edge.color = this.drawer.colorObj[edge.group];
-
-                  this.edges.update(edge);
-                }
-
-                if (!(this.idsToColor.includes(edge.to))) {
-                  edge.color = "#000000"
-                  this.edges.update(edge);
-                }
-
-              });
-
-            }
-
-          }
-          if (nodesWithLabel.length > 0 || path2[1] == nodes[0].item) {
-
-
-            for (let i = 2; i < path2.length; i += 2) {
-
-              if (!(path2[i + 1] == undefined)) {
-
-
-                let connectedNodeIds = this.network.getConnectedNodes(startId, "to");
-
-                if (connectedNodeIds.length == 0) {
-
-                  this.idsToColor.push(startId);
-
-                  let params = {
-                    nodes: [startId]
-                  }
-
-                  this.expandNodes(params);
-
-                }
-
-                connectedNodeIds = this.network.getConnectedNodes(startId, "to");
-
-                const connectedNodes = this.nodes.get(connectedNodeIds);
-
-                const filteredNodes = connectedNodes.filter(node => node.label === path2[i]);
-
-                const filteredNodeIds = filteredNodes.map(node => node.id);
-
-                this.idsToColor.push(filteredNodeIds[path2[i + 1]]);
-
-                let params = {
-                  nodes: [filteredNodeIds[path2[i + 1]]]
-                }
-
-                let connectedNodesSet = this.network.getConnectedNodes(filteredNodeIds[path2[i + 1]], "to");
-
-                if (connectedNodesSet.length == 0) {
-
-                  this.expandNodes(params);
-
-                }
-
-                startId = filteredNodeIds[path2[i + 1]];
-
-              }
-
-            }
-
-
-            let nodes = this.nodes.get();
-
-            nodes.forEach((node) => {
-
-              if (node.label == initialSearchValue || this.idsToColor.includes(node.id)) {
-                node.color = this.drawer.colorObj[node.group];
-
-                this.nodes.update(node);
-                this.idsToColor.push(node.id)
-              }
-
-              if (!(this.idsToColor.includes(node.id)) && node.id != this.drawer.rootId && node.label != initialSearchValue) {
-                node.color = "#ffffff"
-                this.nodes.update(node);
-              }
-
-
-
-            });
-
-            let edges = this.edges.get();
-
-            edges.forEach((edge) => {
-
-
-              if (this.idsToColor.includes(edge.to)) {
-                edge.color = this.drawer.colorObj[edge.group];
-
-                this.edges.update(edge);
-              }
-
-
-
-              if (!(this.idsToColor.includes(edge.to))) {
-                edge.color = "#000000"
-                this.edges.update(edge);
-              }
-
-            });
-          }
-
-        } else {
-
-          // not an object in an object
-
-          let nodes = this.nodes.get();
-          let edges = this.edges.get();
-
-          if (path == nodes[0].item) {
-
-            if (this.idsToColor.length == 0) {
-
-              let connectedNodesToRoot = this.network.getConnectedNodes(0, "to");
-
-              for (let i = 0; i < connectedNodesToRoot.length; i++) {
-
-                this.nodes.get(connectedNodesToRoot[i]).color = "#ffffff";
-                this.nodes.update(this.nodes.get(connectedNodesToRoot[i]));
-
-              }
-
-              let connectedEdgesToRoot = this.network.getConnectedEdges(this.drawer.rootId);
-
-              for (let i = 0; i < connectedEdgesToRoot.length; i++) {
-
-                this.edges.get(connectedEdgesToRoot[i]).color = "#000000";
-                this.edges.update(this.edges.get(connectedEdgesToRoot[i]));
-
-              }
-
-            }
-
-            nodes.forEach((node) => {
-              if (node.label == initialSearchValue || this.idsToColor.includes(node.id)) {
-
-                node.color = this.drawer.colorObj[node.group];
-
-                this.nodes.update(node);
-                if (!(this.idsToColor.includes(node.id))) {
-                  this.idsToColor.push(node.id);
-                }
-
-              }
-
-            });
-
-            edges.forEach((edge) => {
-
-              if (this.idsToColor.includes(edge.to) || idsToColor.includes(edge.to)) {
-                edge.color = this.drawer.colorObj[edge.group];
-
-                this.edges.update(edge);
-              }
-            });
-
-            continue;
-          }
-
-          nodes = this.nodes.get();
-
-          nodes.forEach((node) => {
-
-            if (node.item === path) {
-
-              nodesWithObject.push(node);
-
-            }
-
-          });
-          if (nodesWithObject.length == 0) {
-
-            let searchExistingNodes = this.searchJSON(this.drawer.file, path);
-            let found = this.IsStartObjectInGraph(searchExistingNodes);
-            nodesWithObject.push(found);
-          }
-
-        }
-
-      }
-    } else {
-      for (let i = 0; i < objectInObject.length; i++) {
-        objectInObjectNodes(objectInObject[i], searchValue, initialSearchValue)
-      }
-    }
-    nodesWithObject = [...new Set(nodesWithObject.map(obj => JSON.stringify(obj)))].map(str => JSON.parse(str));
-
-    nodesWithObject = nodesWithObject.flat(Infinity);
-
-    return nodesWithObject;
-
-  }
-
-  expandNodesTillFoundValue(startingNode, searchValue) {
-
-    if (startingNode.length == 0) {
-      return;
-    }
-
-    for (let i = 0; i < startingNode.length; i++) {
-      this.idsToColor.push(startingNode[i].id);
-      let params = {
-        nodes: [startingNode[i].id]
-      }
-
-      let connectedNodesTo = this.network.getConnectedNodes(startingNode[i].id, "to");
-      if (connectedNodesTo.length == 0) {
-        this.drawer.expandNodes(params);
-      }
-
-    }
-
-    let nodes = this.nodes.get();
-
-    let nodeExists = false;
-
-
-    nodes.forEach((node) => {
-
-
-
-
-      if (node.label == searchValue || this.idsToColor.includes(node.id)) {
-        node.color = this.drawer.colorObj[node.group];
-
-        this.nodes.update(node);
-        this.idsToColor.push(node.id);
-      }
-
-      if (!(this.idsToColor.includes(node.id)) && node.id != 0 && node.label != searchValue) {
-        node.color = "#ffffff"
-        this.nodes.update(node);
-      }
-
-
-
-    });
-    let edges = this.edges.get();
-
-    edges.forEach((edge) => {
-
-
-      if (this.idsToColor.includes(edge.to)) {
-        edge.color = this.drawer.colorObj[edge.group];
-
-        this.edges.update(edge);
-      }
-
-      if (!(this.idsToColor.includes(edge.to))) {
-        edge.color = "#000000"
-        this.edges.update(edge);
-      }
-
-    });
-
-    nodes.forEach((node) => {
-
-      if (node.label === searchValue) {
-
-        var edgesToNode = this.network.getConnectedEdges(node.id, {
-          to: true
-        }).filter(function (edgeId) {
-          return this.edges.get(edgeId).to == node.id;
-        });
-
-        if (this.edges.get(edgesToNode)[0].from != 0) {
-
-          nodeExists = true;
-          return;
-
-        }
-      }
-    });
-
-    if (nodeExists === false) {
-
-      let found = this.searchJSON(this.drawer.file, searchValue);
-      let nodesToStart = this.IsStartObjectInGraph(found);
-
-      let done = this.expandNodesTillFoundValue(nodesToStart, searchValue);
-      return;
-    }
-
-  }
 
   searchFunctionality(data, searchValue) {
 
-    let found;
+    document.getElementById('search_input').value = "";
 
-    if (this.findKeyPath(data, searchValue).length > 0) {
-
-
-      found = this.findKeyPath(data, searchValue);
-
-
-
-      for (let i = 0; i < found.length; i++) {
-        found[i] = '$.' + found[i];
-      }
-    } else {
-      found = this.searchJSON(data, searchValue)
-    }
-
-    let nodesToStart = this.IsStartObjectInGraph(found, searchValue, searchValue);
-
-    let done = this.expandNodesTillFoundValue(nodesToStart, searchValue);
+    this.deepSearch(searchValue);
 
   }
 
-  initDeepSearch() {
+  initDeepSearch(){
 
     const container = document.getElementById('title');
 
     const inputField = document.createElement('input');
     inputField.type = 'text';
     inputField.id = 'input-field';
-
+  
     const submitButton = document.createElement('button');
     submitButton.id = 'submit-button';
     submitButton.textContent = 'Submit';
-
+  
     container.appendChild(inputField);
     container.appendChild(submitButton);
 
+    //this.deepSearch("");
+
+    // Create the checkbox element
+    var checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    
+    // Optionally set additional properties for the checkbox
+    checkbox.id = 'myCheckbox';
+    container.appendChild(checkbox);
+ 
     submitButton.addEventListener('click', () => {
       const inputValue = inputField.value;
-
+  
       let inputString = inputValue;
-
-      this.searchFunctionality(this.drawer.file, inputString)
-
+  
+      this.searchFunctionality(this.dataFile, inputString)
+  
     });
 
   }
+
+
+
+
+
 //Removes the given value from the given array
 removeItem(arr, value) {
   var index = arr.indexOf(value);
@@ -3636,7 +3635,7 @@ createColorArray(startColor, endColor, valueArray) {
 //Colors all nodes and edges connected by the given path. The colors are a gradient between the given colors. 
 colorByValue(path, nodes, edges, startColor, endColor){
 
-  this.updatePositions()
+  //this.updatePositions()
 
   //All start and end nodes for the given path
   let startEndNodes = this.getStartAndEndNodesForPath(path);

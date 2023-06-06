@@ -2977,9 +2977,10 @@ collapseSearch(){
   
     this.deepSearchExpands.forEach(node => {
 
-      if(this.itemExists(node)){
+      if(this.itemExists(node) && node != this.drawer.rootId){
 
         this.expandNodesCleanedUp({nodes:[node]});
+        this.nodes.update(this.nodes.get(node));
 
       }
 

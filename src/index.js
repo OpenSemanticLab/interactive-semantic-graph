@@ -2082,7 +2082,7 @@ initDragAndDrop() {
           previousNode: node,
         };
 
-        config.drawer.createGraphNodesEdges(args);
+        this.createGraphNodesEdges(args);
         this.recolorByProperty()
 
         this.createLegend()
@@ -2409,7 +2409,7 @@ initDragAndDrop() {
         if (document.getElementById('setPath')) {
           document.getElementById('setPath').remove();
         }
-        let graphTool = new GraphTool("mynetwork", config);
+        let graphtool = new GraphTool("mynetwork", config);
       } else {
         let nodes = [];
         let edges = [];
@@ -2466,7 +2466,7 @@ initDragAndDrop() {
 
       Object.keys(this.drawer.colorObj).forEach((key) => {
 
-        options.groups[key] = {
+        this.options.groups[key] = {
           hidden: false
         };
       });
@@ -2608,11 +2608,11 @@ initDragAndDrop() {
       });
     }
 
-    var allFalse = Object.keys(options.groups).every((k) => {
+    var allFalse = Object.keys(this.options.groups).every((k) => {
       if (k === 'useDefaultGroups') {
         return true
       }
-      return options.groups[k].hidden === false
+      return this.options.groups[k].hidden === false
     });
 
     if (allFalse === true) {
@@ -3062,7 +3062,7 @@ expandNodesCleanedUp(params) {
         previousNode: node,
       };
 
-      config.drawer.createGraphNodesEdges(args);
+      this.drawer.createGraphNodesEdges(args);
 
       this.clicked[params.nodes[0]] = true;
 
@@ -3272,7 +3272,7 @@ dfs(start, end, currentPath, allPaths, visitedNodes) {
       currentPath.pop();
       return;
   }
-  var neighbours = graphtool.network.getConnectedNodes(start);
+  var neighbours = this.network.getConnectedNodes(start);
   for (var i = 0; i < neighbours.length; i++) {
       var current = neighbours[i];
       this.dfs(current, end, currentPath, allPaths, visitedNodes);
@@ -3343,7 +3343,7 @@ reverseLabel(label) {
 
 //The function getAllEdgesBetween() returns all edges between two nodes
 getAllEdgesBetween(node1, node2) {
-  return graphtool.edges.get().filter(function(edge) {
+  return this.edges.get().filter(function(edge) {
       return (edge.from === node1 && edge.to === node2) || (edge.from === node2 && edge.to === node1);
   });
 }
@@ -3372,7 +3372,7 @@ getStartAndEndNodesForPath(path) {
   let endNodes = [];
 
   // Get all edges that match the first element of the path
-  let allStartEdges = graphtool.edges.get().filter((edge) => {
+  let allStartEdges = this.edges.get().filter((edge) => {
 
     return edge.label == path[0];
 
@@ -3383,12 +3383,12 @@ getStartAndEndNodesForPath(path) {
 
     let fromNodeId = startEdge.from;
 
-    startNodes.push(graphtool.nodes.get(fromNodeId));
+    startNodes.push(this.nodes.get(fromNodeId));
 
   });
 
   // Get all edges that match the last element of the path
-  let allEndEdges = graphtool.edges.get().filter((edge) => {
+  let allEndEdges = this.edges.get().filter((edge) => {
 
     return edge.label == path[path.length - 1];
 
@@ -3399,7 +3399,7 @@ getStartAndEndNodesForPath(path) {
 
     let toNodeId = endEdge.to;
 
-    endNodes.push(graphtool.nodes.get(toNodeId));
+    endNodes.push(this.nodes.get(toNodeId));
 
   });
 

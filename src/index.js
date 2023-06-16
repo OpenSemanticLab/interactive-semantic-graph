@@ -72,11 +72,6 @@ class GraphDrawer {
     }
 
     this.createGraphNodesEdges(this.createArgs);
-
-    Object.filter = (obj, predicate) =>
-      Object.keys(obj)
-      .filter(key => predicate(obj[key]))
-      .reduce((res, key) => (res[key] = obj[key], res), {});
   }
 
   //Adds a callback function to config 

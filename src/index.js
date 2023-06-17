@@ -2083,7 +2083,7 @@ initDragAndDrop() {
           previousNode: node,
         };
 
-        this.createGraphNodesEdges(args);
+        this.drawer.createGraphNodesEdges(args);
         this.recolorByProperty()
 
         this.createLegend()

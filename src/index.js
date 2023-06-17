@@ -1,4 +1,5 @@
 const vis = require("vis-network/standalone/esm/index.js")
+const JSONEditors = require("jsoneditor/dist/jsoneditor") // this is the multi-mode editor https://github.com/josdejong/jsoneditor
 const jsnx = require("jsnetworkx")
 const utils = require("./utils.js")
 //const NodeClasses = require("./NodeClasses.js")    // this causes firefox hanging. 
@@ -914,7 +915,7 @@ class GraphTool {
 
       let editor_div = document.getElementById("editor_div", options)
       // create a JSONEdior in options div
-      let editor = new JSONEditor(editor_div) // TODO: Editor is currently not rendered. find error.
+      let editor = new JSONEditors(editor_div) // TODO: Editor is currently not rendered. find error.
 
       editor.set({
         edges: this.edges.get(),
@@ -1399,7 +1400,7 @@ initDragAndDrop() {
       mode: 'tree',
       modes: ['code', 'tree'] // ['code', 'form', 'text', 'tree', 'view', 'preview']}
     }
-    let visual_options_editor = new JSONEditor(visual_options_editor_div, options)
+    let visual_options_editor = new JSONEditors(visual_options_editor_div, options)
     // make object of own properties
 
     visual_options_editor.set(node)
@@ -1411,7 +1412,7 @@ initDragAndDrop() {
       node = visual_options_editor.get()
       this.nodes.update(node)
     })
-    let data_editor = new JSONEditor(data_editor_div, options)
+    let data_editor = new JSONEditors(data_editor_div, options)
 
     data_editor.set(this.drawer.getValueFromPathArray(node.path))
   }

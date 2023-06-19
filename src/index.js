@@ -163,6 +163,10 @@ class GraphDrawer {
 
     fullContext = fullContext;
 
+    // extract schema name from schema url, e. g. /wiki/Category:Entity?action=raw&slot=jsonschema
+    // Todo: replace with callback
+    schema = schema.split("/")[schema.split("/").length-1].split("?")[0];
+
     let startContext = this.file.jsonschema[schema]["@context"];
 
     if (Array.isArray(startContext)) {

@@ -3048,7 +3048,7 @@ collapseSearch(){
 
         }
 
-
+      }
     });
 
     //reset the deep search expands and clicked nodes arrays

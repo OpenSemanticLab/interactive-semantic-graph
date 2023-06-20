@@ -694,6 +694,8 @@ class GraphTool {
     this.initGraphContainers(div_id);
     this.drawer = config.drawer
 
+    this.configFile = config.configFile
+
     this.clicked = {} // object to store expanded nodes TODO: rename to expandedNodes
 
     this.keyObject = { // to be removed, was inteded for callback implementation
@@ -738,6 +740,17 @@ class GraphTool {
     //   this.classRegistry.register(cls)
     // }
 
+      //args to generate full graph
+    this.fullGraphArgs = {
+      file: this.drawer.file,
+      depth: this.drawer.depth,
+      mode: this.drawer.mode,
+      rootItem: this.drawer.rootItem,
+      recursionDepth: 100000000000,
+    }
+  
+    this.fullGraph = new isg.GraphDrawer(drawer_config={lang:this.drawer.lang,contractArrayPaths: true}, this.fullGraphArgs);
+
     // Initialize GUI for various functions acting on the graph.
     this.colorPicker(this);
     this.loadSaveFunctionality();
@@ -749,8 +762,10 @@ class GraphTool {
     this.dataFile = this.drawer.file;
     this.idsToColor = [];
     this.deepSearchExpands = [];
+    this.deepSearchExpandsFull = [];
+    this.searchExpands = [];
     this.fullGraph;
-    this.saveColorsOfPreviousExpandedNodes = [];
+    this.colorsBeforeVisualSearch = {};
     this.initDeepSearch();
 
     // set visjs network callbacks
@@ -1433,14 +1448,36 @@ initDragAndDrop() {
     // add the event listener to the input element
     let debounceTimer;
 
+    let firstInput = true;
     inputField.addEventListener('input', () => {
 
       // Clear previous debounce timer
       clearTimeout(debounceTimer);
-      document.getElementById('input-field').value = "";
+      //document.getElementById('input-field').value = "";
 
       // Set a new debounce timer
       debounceTimer = setTimeout(() => {
+
+        if(firstInput && inputField.value.length > 0){
+
+
+          this.saveGraphColorsVisualSearch();
+
+          firstInput = false;
+  
+        }
+  
+        if(inputField.value.length === 0 && !firstInput){
+  
+            //this.recolorByProperty();
+
+            this.loadGraphColorsVisualSearch();
+            
+            firstInput = true;
+  
+            return;
+        }
+
         // Execute the search after the debounce timeout
         this.searchNodes(inputField.value)
       }, 300); // Adjust the debounce timeout as needed (e.g., 300ms)
@@ -1456,7 +1493,9 @@ initDragAndDrop() {
     selectElement.addEventListener('change', (event) => {
       // get the selected value
       document.getElementById('search_input').value = "";
-      this.searchNodes("");
+      document.getElementById('input-field').value = "";
+      this.collapseSearch();
+      //this.searchNodes("");
     });
 
     // create the first option element
@@ -1478,6 +1517,91 @@ initDragAndDrop() {
 
   }
 
+  //saves colors of nodes and edges before visual search
+  saveGraphColorsVisualSearch() {
+
+    for(let i = 0; i < this.nodes.get().length; i++){
+
+      let node = this.nodes.get()[i];
+
+      if(node.color){
+
+        this.colorsBeforeVisualSearch[node.id] = node.color;
+
+
+
+      }
+
+    }
+
+    for(let i = 0; i < this.edges.get().length; i++){
+        
+        let edge = this.edges.get()[i];
+  
+        if(edge.color){
+  
+          this.colorsBeforeVisualSearch[edge.id] = edge.color;
+  
+        }
+    }
+
+  }
+
+  //loads colors of nodes and edges after visual search
+  loadGraphColorsVisualSearch() {
+
+    for(let i = 0; i < this.nodes.get().length; i++){
+
+      let node = this.nodes.get()[i];
+
+      if(node.color){
+
+        node.color = this.colorsBeforeVisualSearch[node.id];
+
+        this.nodes.update(node);
+
+      }
+
+    }
+
+    for(let i = 0; i < this.edges.get().length; i++){
+        
+        let edge = this.edges.get()[i];
+  
+        if(edge.color){
+  
+          edge.color = this.colorsBeforeVisualSearch[edge.id];
+
+          this.edges.update(edge);
+  
+        }
+    }
+    
+  }
+
+  //resets deep search if user accepts the search results to open further nodes
+  searchAlert() {
+
+    if(this.deepSearchExpands.length > 0 || this.deepSearchExpandsFull.length > 0){
+
+      var result = confirm("Apply search results?");
+      
+      if (result) {
+        //alert("You clicked 'Yes'!");
+        document.getElementById('input-field').value = "";
+        this.deepSearchExpands = [];
+        this.deepSearchExpandsFull = [];
+        return true;
+      } else {
+        //alert("You clicked 'No'!");
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  //visual search for nodes and edges
   searchNodes = (searchString) => {
 
     //this.updatePositions()
@@ -1485,6 +1609,7 @@ initDragAndDrop() {
     if (this.handleCallbacks({id: 'onBeforeSearchNodes', params: {graph: this, searchString: searchString}})) {
 
       this.recolorByProperty();
+      this.searchExpands = [];
       this.deepSearchExpands = [];
 
       //searches for edges with the given search string
@@ -1495,13 +1620,15 @@ initDragAndDrop() {
 
           if(edge.label.toLowerCase().includes(searchString.toLowerCase())){
 
+            //gets all paths from root to the node that the edge points to
             let paths = this.findAllPaths(this.drawer.rootId, edge.to);
 
             for(let i = 0; i < paths.length; i++){
 
               for(let j = 0; j < paths[i].length; j++){
 
-                this.deepSearchExpands.push(paths[i][j]);
+                //pushes all nodes that get colored
+                this.searchExpands.push(paths[i][j]);
 
               }
 
@@ -1524,7 +1651,7 @@ initDragAndDrop() {
   
                 for(let j = 0; j < paths[i].length; j++){
   
-                  this.deepSearchExpands.push(paths[i][j]);
+                  this.searchExpands.push(paths[i][j]);
   
                 }
   
@@ -1536,7 +1663,7 @@ initDragAndDrop() {
         });
 
       }
-
+      //colors all nodes and edges that get found
       this.deepSearchColorPath([]);
 
     }
@@ -1600,146 +1727,6 @@ initDragAndDrop() {
 
   }
 
-
-
-  //Adds copied nodes to the given JSON
-  addToJSON_old(node, edge) {
-
-    let receivingItem = this.nodes.get(this.network.getSelectedNodes()[0]).item;
-    let receivingNode = this.nodes.get(this.network.getSelectedNodes()[0])
-
-    if (!node.item) {
-
-      if (config.file["jsondata"][receivingItem][edge.objectKey]) {
-        if (Array.isArray(config.file["jsondata"][receivingItem][edge.objectKey])) {
-          config.file["jsondata"][receivingItem][edge.objectKey].push(node.label);
-        } else {
-          let tempArray = [];
-          tempArray.push(config.file["jsondata"][receivingItem][edge.objectKey]);
-          tempArray.push(node.label);
-
-          config.file["jsondata"][receivingItem][edge.objectKey] = tempArray;
-        }
-      } else {
-
-        config.file["jsondata"][receivingItem][edge.objectKey] = node.label;
-
-      }
-      //add literal to object
-    } else {
-
-      if (!receivingNode.hasOwnProperty('mainObjectId') && !node.hasOwnProperty('mainObjectId')) {
-        if (config.file["jsondata"][receivingItem][edge.objectKey]) {
-          if (Array.isArray(config.file["jsondata"][receivingItem][edge.objectKey])) {
-
-            config.file["jsondata"][receivingItem][edge.objectKey].push(node.item);
-          } else {
-            let tempArray = [];
-            tempArray.push(config.file["jsondata"][receivingItem][edge.objectKey]);
-            tempArray.push(node.item);
-
-            config.file["jsondata"][receivingItem][edge.objectKey] = tempArray;
-          }
-        } else {
-
-          config.file["jsondata"][receivingItem][edge.objectKey] = node.object;
-
-        }
-      } else if (!receivingNode.hasOwnProperty('mainObjectId') && node.hasOwnProperty('mainObjectId')) {
-
-        if (config.file["jsondata"][receivingItem][edge.objectKey]) {
-          if (Array.isArray(config.file["jsondata"][receivingItem][edge.objectKey])) {
-
-            config.file["jsondata"][receivingItem][edge.objectKey].push(config.file["jsondata"][node.item]);
-          } else {
-            let tempArray = [];
-            tempArray.push(config.file["jsondata"][receivingItem][edge.objectKey]);
-            tempArray.push(config.file["jsondata"][node.item]);
-
-
-            config.file["jsondata"][receivingItem][edge.objectKey] = tempArray;
-          }
-        } else {
-
-
-          config.file["jsondata"][receivingItem][edge.objectKey] = config.file["jsondata"][node.item];
-
-
-        }
-
-      } else if (receivingNode.hasOwnProperty('mainObjectId') && !node.hasOwnProperty('mainObjectId')) {
-
-        let mainObject = this.nodes.get(receivingNode.mainObjectId)
-
-        let objKey = this.edges.get({
-          filter: function (edge) {
-            return edge.to === receivingNode.id;
-          }
-        })[0].objectKey
-
-
-        config.file["jsondata"][mainObject.object][objKey].forEach((object, index) => {
-
-          if (Object.is(config.file["jsondata"][receivingNode.object], object)) {
-
-            if (Array.isArray(object[edge.objectKey])) {
-
-              object[edge.objectKey].push(node.item);
-
-            } else {
-              let tempArray = [];
-
-              if (object[edge.objectKey]) {
-                tempArray.push(object[edge.objectKey]);
-              }
-
-              tempArray.push(node.item);
-              object[edge.objectKey] = tempArray;
-
-            }
-
-          }
-
-        })
-
-      } else {
-
-        let mainObject = this.nodes.get(receivingNode.mainObjectId)
-
-
-        config.file["jsondata"][mainObject.item][edge.objectKey].forEach((object, index) => {
-
-          if (Object.is(config.file["jsondata"][receivingNode.item], object)) {
-
-            if (Array.isArray(object[edge.objectKey])) {
-
-              object[edge.objectKey].push(config.file["jsondata"][node.item]);
-
-
-            } else {
-              let tempArray = [];
-
-              if (object[edge.objectKey]) {
-                tempArray.push(object[edge.objectKey]);
-              }
-
-
-              tempArray.push(config.file["jsondata"][node.item]);
-
-              object[edge.objectKey] = tempArray;
-
-            }
-
-            //object[edge.objectKey] = new_json["jsondata"][node.item];
-
-          }
-        })
-
-      }
-
-    }
-
-  }
   //creates a copy of a given node
   duplicateNode(node) {
 
@@ -2057,6 +2044,12 @@ initDragAndDrop() {
   }
   // expands the object that is saved inside a node and on second doubleclick deletes nodes and edges that go out of the clicked node
   expandNodes(params) {
+
+    this.createGraphByConfig(this.drawer.file, this.configFile)
+
+    if(!this.searchAlert()){
+      return;
+    }
     
     this.searchNodes("");
     document.getElementById("search_input").value = "";
@@ -2122,14 +2115,14 @@ initDragAndDrop() {
       }
 
     }
-    /*
+    
     
     this.repeatInvisibility(this.options);
 
     if (this.legendInvisibleGroups(this.options).length == 0) {
       this.resetNodesAndEdgesVisibility()
     }
-    */
+    
 
     //this.createLegend()
 
@@ -2467,20 +2460,31 @@ initDragAndDrop() {
     var invisibleGroups = [];
 
 
-    if (!document.getElementById("legendContainer")) {
+    //if (!document.getElementById("legendContainer")) {
+
+      console.log(this.drawer.colorObj)
 
       Object.keys(this.drawer.colorObj).forEach((key) => {
 
-        options.groups[key] = {
-          hidden: false
-        };
+        if(!options.groups[key]){
+
+          options.groups[key] = {
+            hidden: false
+          };
+
+        }
+        // options.groups[key] = {
+        //   hidden: false
+        // };
       });
 
-    }
+    //}
 
     if (document.getElementById("legendContainer")) {
 
       invisibleGroups = this.legendInvisibleGroups(this.options);
+
+      console.log(invisibleGroups)
 
       document.getElementById("legendContainer").remove();
     }
@@ -2896,11 +2900,11 @@ isNodeOpen(node_id) {
   return false;
 }
 
-searchItem(node_id, search) {
+searchItem(node_id, fullGraph) {
   //if node id is not in the current graph
   if (!this.itemExists(node_id)) {
     //get node from this.fullGraph
-    const searchValue = search.nodes.get(node_id);
+    const searchValue = fullGraph.nodes.get(node_id);
     //get parent item from this.fullGraph of the given node id
     const parentItem = this.searchJSON(this.drawer.file, `${searchValue.path[1]}`);
     //get parent item id
@@ -2908,7 +2912,7 @@ searchItem(node_id, search) {
 
     //if the parent item node is not in the current graph, go recursively back in the graph until you find a node that is in the current graph
     if (!this.itemExists(parentItemId)) {
-      this.searchItem(parentItemId, search);
+      this.searchItem(parentItemId, fullGraph);
       this.expandNodesCleanedUp({ nodes: [parentItemId] });
 
       return;
@@ -2924,7 +2928,7 @@ searchItem(node_id, search) {
 
 }
 
-deepSearchExpandNodes(foundNode, search) {
+deepSearchExpandNodes(foundNode, fullGraph) {
 
   
   const path = foundNode.path;
@@ -2944,7 +2948,7 @@ deepSearchExpandNodes(foundNode, search) {
 
   //if the path starting node is not open, open it
   if (!firstPathExists) {
-    this.searchItem(firstPath, search);
+    this.searchItem(firstPath, fullGraph);
     this.expandNodesCleanedUp({ nodes: [firstPath] });
 
 
@@ -2972,25 +2976,35 @@ deepSearchExpandNodes(foundNode, search) {
 //collapses all nodes that were expanded during deep search
 collapseSearch(){
 
+  //if the checkbox is not checked, collapse all nodes that were expanded during deep search
   if(!document.getElementById("myCheckbox").checked ){
+
+    //remove duplicates from the deep search expands array
+    this.deepSearchExpandsFull = [...new Set(this.deepSearchExpandsFull)];
     
-  
-    this.deepSearchExpands.forEach(node => {
+    this.deepSearchExpandsFull.forEach(node => {
 
-      if(this.itemExists(node)){
+      //if the node exists and is not the root node, collapse it
+      if(this.itemExists(node) && node != this.drawer.rootId){
 
-        this.expandNodesCleanedUp({nodes:[node]});
+        if(this.isNodeOpen(node)){
+
+          this.expandNodesCleanedUp({nodes:[node]});
+          this.nodes.update(this.nodes.get(node));
+
+        }
 
       }
 
     });
 
+    //reset the deep search expands and clicked nodes arrays
     this.deepSearchExpands = [];
+    this.deepSearchExpandsFull = [];
     this.clicked = {};
 
   }
   
-
 }
 
 //colors the nodes and edges that were found during deep search
@@ -2998,8 +3012,7 @@ deepSearchColorPath(foundNodes){
 
   this.nodes.get().forEach(node => {
     //if the node is not expanded by deep search and is not in the found nodes, color it white
-    if(!this.deepSearchExpands.includes(node.id) && !foundNodes.some(obj => obj.id === node.id) && !this.saveColorsOfPreviousExpandedNodes.includes(node.id)){
-
+    if(!this.deepSearchExpands.includes(node.id) && !foundNodes.some(obj => obj.id === node.id) && !this.searchExpands.includes(node.id) ){
 
       if(node.group != "root"){
 
@@ -3011,10 +3024,6 @@ deepSearchColorPath(foundNodes){
 
       }
 
-    }else{
-
-      // this.saveColorsOfPreviousExpandedNodes.push(node.id);
-
     }
 
   });
@@ -3022,22 +3031,15 @@ deepSearchColorPath(foundNodes){
   this.edges.get().forEach(edge => {
 
     //if the edge is connected to colored nodes but not white nodes, color it black
-    if(!(this.nodes.get(edge.from).color != "#ffffff" && this.nodes.get(edge.to).color != "#ffffff") && !this.saveColorsOfPreviousExpandedNodes.includes(edge.id)){
+    if(!(this.nodes.get(edge.from).color != "#ffffff" && this.nodes.get(edge.to).color != "#ffffff")){
 
       edge.color = "#000000"
 
       this.edges.update(edge);
 
-    }else{
-
-      // this.saveColorsOfPreviousExpandedNodes.push(edge.id);
-
     }
 
   });
-
-  //console.log(this.saveColorsOfPreviousExpandedNodes)
-
 
 }
 
@@ -3085,34 +3087,14 @@ expandNodesCleanedUp(params) {
 
 deepSearch(searchValue){
 
-  //console.log(this.saveColorsOfPreviousExpandedNodes)
-
-  //args to generate full graph
-  let args = {
-    file: this.drawer.file,
-    depth: this.drawer.depth,
-    mode: this.drawer.mode,
-    rootItem: this.drawer.rootItem,
-    recursionDepth: 100000000000,
-  }
-
-  //if full graph is not generated, generate it else use it
-  if(this.fullGraph == undefined){
-      
-      this.fullGraph = new isg.GraphDrawer(drawer_config={lang:this.drawer.lang,contractArrayPaths: true}, args);
-
-      var search = this.fullGraph;
-  }else{
-      
-      var search = this.fullGraph;
-  }
+  var fullGraph = this.fullGraph;
 
   //if search value is empty, collapse all expanded nodes and return
   if(searchValue == ""){
 
     this.collapseSearch();
     this.recolorByProperty();
-    // this.saveColorsOfPreviousExpandedNodes = [];
+
     return;
 
   }
@@ -3123,10 +3105,32 @@ deepSearch(searchValue){
   //search for nodes with label containing search value
   let foundNodes = [];
 
-  const lowercaseSearchValue = searchValue.toLowerCase();
-  foundNodes = search.nodes.get().filter(node =>
-    node.label.toLowerCase().includes(lowercaseSearchValue)
-  );
+  if (document.getElementById('search_select').value === 'search_node') {
+
+    const lowercaseSearchValue = searchValue.toLowerCase();
+    foundNodes = fullGraph.nodes.get().filter(node =>
+      node.label.toLowerCase().includes(lowercaseSearchValue)
+    );
+  }
+
+  if (document.getElementById('search_select').value === 'search_edge') {
+      
+      //search for edges with label containing search value
+      let foundEdges = [];
+  
+      const lowercaseSearchValue = searchValue.toLowerCase();
+      foundEdges = fullGraph.edges.get().filter(edge =>
+        edge.label.toLowerCase().includes(lowercaseSearchValue)
+      );
+
+      for(let i = 0; i<foundEdges.length; i++){
+
+        foundNodes.push(this.fullGraph.nodes.get(foundEdges[i].to));
+
+      }
+
+  }
+
 
   if(foundNodes.length == 0){
 
@@ -3141,12 +3145,15 @@ deepSearch(searchValue){
 
   }
 
+  
   this.deepSearchExpands = [];
   
+
+
   foundNodes.forEach(node => {
 
     //expand the paths to the found nodes
-    this.deepSearchExpandNodes(node, search);
+    this.deepSearchExpandNodes(node, fullGraph);
 
     let pathsToColor = this.findAllPaths(this.drawer.rootId, node.id);
 
@@ -3156,8 +3163,10 @@ deepSearch(searchValue){
 
         if(!this.deepSearchExpands.includes(pathsToColor[i][j])){
 
-          this.deepSearchExpands.push(pathsToColor[i][j]);
+          if(pathsToColor[i][j] != this.drawer.rootId){
 
+            this.deepSearchExpands.push(pathsToColor[i][j]);
+          }
         }
 
       }
@@ -3167,14 +3176,15 @@ deepSearch(searchValue){
 
   this.recolorByProperty();
   this.deepSearchColorPath(foundNodes);
+  this.deepSearchExpandsFull = this.deepSearchExpandsFull.concat(this.deepSearchExpands);
+      
+  this.createLegend()
+  this.repeatInvisibility(this.options);
 
-
-  //let search1 = this.searchJSON(this.drawer.file, searchValue)
-
-  //this.expandNodes({nodes:["jsondata/Item:SomePerson"]})
-
-  //console.log(this.itemExists("jsondata/Item:SomePersons"))
-
+  if (this.legendInvisibleGroups(this.options).length == 0) {
+    this.resetNodesAndEdgesVisibility()
+  }
+    
 }
 
 
@@ -3232,6 +3242,8 @@ deepSearch(searchValue){
     container.appendChild(checkbox);
  
     submitButton.addEventListener('click', () => {
+      this.searchExpands = [];
+
       const inputValue = inputField.value;
   
       let inputString = inputValue;
@@ -3665,12 +3677,106 @@ colorByValue(path, nodes, edges, startColor, endColor){
   
 }
 
+createGraphByConfig(file, configFile) {
+
+
+  //"root_node_objects" / where to start expanding
+
+
+  //"expanded_paths" / maybe given and/or will be saved in the config
+
+
+  //"expanded_nodes" / maybe given and/or will be saved in the config
+
+
+  //"coloring_function_object" / maybe given and/or will be saved in the config
+
+
+  //"positioning_function_object" / maybe given and/or will be saved in the config
+
+
+  //"visual_search_function_object" / only for load save / saved in config
+
+
+  //"dataset_search_function_object" / deepsearch load save / saved in config
+
+
+  //"visual_nodes_edges_object" / only for load save / saved in config
+
+
+  //"initial_dataset" / old json only saved in config
+
+  let options = {
+    interaction: {
+      hover: true,
+      multiselect: true,
+    },
+    manipulation: {
+      enabled: true,
+    },
+    physics: {
+      stabilization: {
+        enabled: true,
+      },
+      barnesHut: {
+        gravitationalConstant: -40000,
+        centralGravity: 0,
+        springLength: 0,
+        springConstant: 0.5,
+        damping: 1,
+        avoidOverlap: 0
+      },
+      maxVelocity: 5
+    },
+    edges: {
+      arrows: "to",
+      
+    },
+    groups: {
+      useDefaultGroups: false
+    }
+  }
+ 
+  let args = {
+    file: file,
+    depth: 1,
+    mode: true,
+   // nodes: nodes,
+   // edges: edges,
+    rootItem: configFile.root_node_objects[0].node_id,
+    recursionDepth: 2,
+  }
+
+  let drawer = new isg.GraphDrawer(drawer_config={lang:"en",contractArrayPaths: true}, args);
+  let config = {
+   // nodes: nodes,
+   // edges: edges,
+    options: options,
+    file: new_json,
+    drawer: drawer,
+   // clone: clone,
+  };
+
+  document.getElementById("mynetwork").innerHTML = "";
+
+  let graphtool = new isg.GraphTool("mynetwork", config);
+
+  document.getElementById("legendContainer").remove()
+
+  console.log(configFile.visual_nodes_edges_object)
+
+  //this.createLegend();
+
+}
+
 
 }
 
 
 //let clicked = {};
 $(document).ready(function () {
+
+
 
 //console.log(graphtool.getAllStringsForAllPaths(graphtool.findAllPaths("jsondata/Item:MyProject/budget/1/value","jsondata/Item:MyProject")))
 

@@ -49,6 +49,10 @@ npm i
 ```bash
 npm run build
 ```
+or
+```bash
+npx webpack
+```
 
 ### Build
 ```bash

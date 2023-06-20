@@ -1,4 +1,5 @@
 const vis = require("vis-network/standalone/esm/index.js")
+const JSONEditors = require("jsoneditor/dist/jsoneditor") // this is the multi-mode editor https://github.com/josdejong/jsoneditor
 const jsnx = require("jsnetworkx")
 const utils = require("./utils.js")
 //const NodeClasses = require("./NodeClasses.js")    // this causes firefox hanging. 
@@ -72,11 +73,6 @@ class GraphDrawer {
     }
 
     this.createGraphNodesEdges(this.createArgs);
-
-    Object.filter = (obj, predicate) =>
-      Object.keys(obj)
-      .filter(key => predicate(obj[key]))
-      .reduce((res, key) => (res[key] = obj[key], res), {});
   }
 
   //Adds a callback function to config 
@@ -166,6 +162,10 @@ class GraphDrawer {
 
 
     fullContext = fullContext;
+    
+    // extract schema name from schema url, e. g. /wiki/Category:Entity?action=raw&slot=jsonschema
+    // Todo: replace with callback
+    schema = schema.split("/")[schema.split("/").length-1].split("?")[0];
 
     let startContext = this.file.jsonschema[schema]["@context"];
 
@@ -752,10 +752,7 @@ class GraphTool {
     this.fullGraph = new isg.GraphDrawer(drawer_config={lang:this.drawer.lang,contractArrayPaths: true}, this.fullGraphArgs);
 
     // Initialize GUI for various functions acting on the graph.
-    this.colorPicker(this);
-    this.loadSaveFunctionality();
     this.createLegend();
-    this.createSearchUI();
     this.oldNodeColors = {};
     this.oldEdgeColors = {};
     this.addKeyEventListeners();
@@ -765,8 +762,10 @@ class GraphTool {
     this.deepSearchExpandsFull = [];
     this.searchExpands = [];
     this.fullGraph;
+
     this.colorsBeforeVisualSearch = {};
     this.initDeepSearch();
+
 
     // set visjs network callbacks
 
@@ -824,6 +823,48 @@ class GraphTool {
     this.options_container.setAttribute("style", "overflow-y:scroll");
     //this.options_container.width = "30%"
     this.options_container.style = "margin-left: 68%; width: 30%; height: 800px; border: 1px solid lightgray;";
+
+    this.tool_container = document.createElement("div");
+    this.tool_container.style = "display:flex";
+    this.container.append(this.tool_container);
+
+    // Todo: the following should go to vue.js templates
+    let io_container = document.createElement("fieldset");
+    io_container.style = "margin: 8px; border: 1px solid silver; padding: 8px; border-radius: 4px;";
+    let io_legend = document.createElement("legend");
+    io_legend.textContent = "Load / Safe";
+    io_legend.style = "padding: 2px; font-size: 1.0rem;";
+    io_container.append( io_legend );
+    this.tool_container.append( io_container );
+    this.loadSaveFunctionality(io_container);
+
+    let search_container = document.createElement("fieldset");
+    search_container.style = "margin: 8px; border: 1px solid silver; padding: 8px; border-radius: 4px;";
+    let search_legend = document.createElement("legend");
+    search_legend.textContent = "Search";
+    search_legend.style = "padding: 2px; font-size: 1.0rem;";
+    search_container.append( search_legend );
+    this.tool_container.append( search_container );
+    this.createSearchUI(search_container);
+
+    let deepsearch_container = document.createElement("fieldset");
+    deepsearch_container.style = "margin: 8px; border: 1px solid silver; padding: 8px; border-radius: 4px;";
+    let deepsearch_legend = document.createElement("legend");
+    deepsearch_legend.textContent = "Deep Search";
+    deepsearch_legend.style = "padding: 2px; font-size: 1.0rem;";
+    deepsearch_container.append( deepsearch_legend );
+    this.tool_container.append( deepsearch_container );
+    this.initDeepSearch(deepsearch_container);
+
+    let coloring_container = document.createElement("fieldset");
+    coloring_container.style = "margin: 8px; border: 1px solid silver; padding: 8px; border-radius: 4px;";
+    let coloring_legend = document.createElement("legend");
+    coloring_legend.textContent = "Coloring";
+    coloring_legend.style = "padding: 2px; font-size: 1.0rem;";
+    coloring_container.append( coloring_legend );
+    this.tool_container.append( coloring_container );
+    this.colorPicker(this, coloring_container);
+
     this.container.append(this.vis_container);
     this.container.append(this.options_container);
 
@@ -934,7 +975,7 @@ class GraphTool {
 
       let editor_div = document.getElementById("editor_div", options)
       // create a JSONEdior in options div
-      let editor = new JSONEditor(editor_div) // TODO: Editor is currently not rendered. find error.
+      let editor = new JSONEditors(editor_div) // TODO: Editor is currently not rendered. find error.
 
       editor.set({
         edges: this.edges.get(),
@@ -1419,7 +1460,7 @@ initDragAndDrop() {
       mode: 'tree',
       modes: ['code', 'tree'] // ['code', 'form', 'text', 'tree', 'view', 'preview']}
     }
-    let visual_options_editor = new JSONEditor(visual_options_editor_div, options)
+    let visual_options_editor = new JSONEditors(visual_options_editor_div, options)
     // make object of own properties
 
     visual_options_editor.set(node)
@@ -1431,14 +1472,17 @@ initDragAndDrop() {
       node = visual_options_editor.get()
       this.nodes.update(node)
     })
-    let data_editor = new JSONEditor(data_editor_div, options)
+    let data_editor = new JSONEditors(data_editor_div, options)
 
     data_editor.set(this.drawer.getValueFromPathArray(node.path))
   }
 
 
 
-  createSearchUI() {
+  createSearchUI(container) {
+
+    // create the container if not defined
+    if (!container) container = document.createElement('div');
 
     // create the input element
     let inputField = document.createElement('input');
@@ -1485,7 +1529,7 @@ initDragAndDrop() {
     });
 
     // add the input field to the DOM
-    document.getElementById("title").appendChild(inputField);
+    container.appendChild(inputField);
 
     // create the select element
     const selectElement = document.createElement('select');
@@ -1513,8 +1557,9 @@ initDragAndDrop() {
     selectElement.add(optionElement2);
 
     // add the select element to the DOM
-    document.getElementById("title").appendChild(selectElement);
+    container.appendChild(selectElement);
 
+    return container;
   }
 
   //saves colors of nodes and edges before visual search
@@ -2080,7 +2125,7 @@ initDragAndDrop() {
           previousNode: node,
         };
 
-        config.drawer.createGraphNodesEdges(args);
+        this.drawer.createGraphNodesEdges(args);
         this.recolorByProperty()
 
         this.createLegend()
@@ -2128,8 +2173,12 @@ initDragAndDrop() {
 
   }
   //creates the color by value ui
-  colorPicker(graph) {
+  colorPicker(graph, container) {
     // Create the dropdown menu
+    // Todo: replace global ids with prefixed ids or class members to allow multiple instances on one page
+
+    // create container if not specified
+    if (!container) container = document.createElement("div");
 
     var graph = graph;
     var dropdownDiv = document.createElement("div");
@@ -2156,9 +2205,8 @@ initDragAndDrop() {
 
     dropdownDiv.appendChild(dropdown);
 
-    // Add the dropdown menu to the page
-    var body = document.getElementById("title")
-    body.appendChild(dropdownDiv);
+    // Add the dropdown menu to the container
+    container.appendChild(dropdownDiv);
 
     // Get the selected value
     function getPath() {
@@ -2249,10 +2297,10 @@ initDragAndDrop() {
 
   }
   // loads or saves the graph to a .txt file
-  loadSaveFunctionality() {
+  loadSaveFunctionality(container) {
 
     function saveState() {
-
+      // Todo: replace global ids with prefixed ids or class members to allow multiple instances on one page
       if (document.getElementById("setColorByValueInput")) {
         config.file.state = {
           nodes: nodes,
@@ -2292,13 +2340,16 @@ initDragAndDrop() {
 
     }
 
+    // create container element if not defined
+    if (!container) container = document.createElement("div");
+
     let element = document.createElement("BUTTON");
     element.innerHTML = "Save state";
     element.id = "save";
     element.addEventListener("click", () => {
       this.createSaveStateFunctionality()
     });
-    document.getElementById("title").append(element)
+    container.append(element)
 
     let element2 = document.createElement("BUTTON");
     element2.id = "load"
@@ -2307,8 +2358,8 @@ initDragAndDrop() {
       this.createLoadStateFunctionality()
     });
 
-    document.getElementById("title").append(element2)
-
+    container.append(element2)
+    return container;
   }
 
 
@@ -2407,7 +2458,7 @@ initDragAndDrop() {
         if (document.getElementById('setPath')) {
           document.getElementById('setPath').remove();
         }
-        let graphTool = new GraphTool("mynetwork", config);
+        let graphtool = new GraphTool("mynetwork", config);
       } else {
         let nodes = [];
         let edges = [];
@@ -2466,6 +2517,7 @@ initDragAndDrop() {
 
       Object.keys(this.drawer.colorObj).forEach((key) => {
 
+
         if(!options.groups[key]){
 
           options.groups[key] = {
@@ -2476,6 +2528,7 @@ initDragAndDrop() {
         // options.groups[key] = {
         //   hidden: false
         // };
+
       });
 
     //}
@@ -2617,11 +2670,11 @@ initDragAndDrop() {
       });
     }
 
-    var allFalse = Object.keys(options.groups).every((k) => {
+    var allFalse = Object.keys(this.options.groups).every((k) => {
       if (k === 'useDefaultGroups') {
         return true
       }
-      return options.groups[k].hidden === false
+      return this.options.groups[k].hidden === false
     });
 
     if (allFalse === true) {
@@ -2987,6 +3040,7 @@ collapseSearch(){
       //if the node exists and is not the root node, collapse it
       if(this.itemExists(node) && node != this.drawer.rootId){
 
+
         if(this.isNodeOpen(node)){
 
           this.expandNodesCleanedUp({nodes:[node]});
@@ -2994,7 +3048,6 @@ collapseSearch(){
 
         }
 
-      }
 
     });
 
@@ -3068,7 +3121,7 @@ expandNodesCleanedUp(params) {
         previousNode: node,
       };
 
-      config.drawer.createGraphNodesEdges(args);
+      this.drawer.createGraphNodesEdges(args);
 
       this.clicked[params.nodes[0]] = true;
 
@@ -3216,9 +3269,10 @@ deepSearch(searchValue){
 
   }
 
-  initDeepSearch(){
+  initDeepSearch(container){
 
-    const container = document.getElementById('title');
+    // create container if not defined
+    if (!container) container = document.createElement('div');
 
     const inputField = document.createElement('input');
     inputField.type = 'text';
@@ -3251,6 +3305,8 @@ deepSearch(searchValue){
       this.searchFunctionality(this.dataFile, inputString)
   
     });
+
+    return container;
 
   }
 
@@ -3288,7 +3344,7 @@ dfs(start, end, currentPath, allPaths, visitedNodes) {
       currentPath.pop();
       return;
   }
-  var neighbours = graphtool.network.getConnectedNodes(start);
+  var neighbours = this.network.getConnectedNodes(start);
   for (var i = 0; i < neighbours.length; i++) {
       var current = neighbours[i];
       this.dfs(current, end, currentPath, allPaths, visitedNodes);
@@ -3359,7 +3415,7 @@ reverseLabel(label) {
 
 //The function getAllEdgesBetween() returns all edges between two nodes
 getAllEdgesBetween(node1, node2) {
-  return graphtool.edges.get().filter(function(edge) {
+  return this.edges.get().filter(function(edge) {
       return (edge.from === node1 && edge.to === node2) || (edge.from === node2 && edge.to === node1);
   });
 }
@@ -3388,7 +3444,7 @@ getStartAndEndNodesForPath(path) {
   let endNodes = [];
 
   // Get all edges that match the first element of the path
-  let allStartEdges = graphtool.edges.get().filter((edge) => {
+  let allStartEdges = this.edges.get().filter((edge) => {
 
     return edge.label == path[0];
 
@@ -3399,12 +3455,12 @@ getStartAndEndNodesForPath(path) {
 
     let fromNodeId = startEdge.from;
 
-    startNodes.push(graphtool.nodes.get(fromNodeId));
+    startNodes.push(this.nodes.get(fromNodeId));
 
   });
 
   // Get all edges that match the last element of the path
-  let allEndEdges = graphtool.edges.get().filter((edge) => {
+  let allEndEdges = this.edges.get().filter((edge) => {
 
     return edge.label == path[path.length - 1];
 
@@ -3415,7 +3471,7 @@ getStartAndEndNodesForPath(path) {
 
     let toNodeId = endEdge.to;
 
-    endNodes.push(graphtool.nodes.get(toNodeId));
+    endNodes.push(this.nodes.get(toNodeId));
 
   });
 

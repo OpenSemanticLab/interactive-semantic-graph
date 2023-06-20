@@ -1,6 +1,6 @@
 const Plotly = require("plotly.js-dist")
-const JSONEditor_ = require("@json-editor/json-editor")
-//const JSONEditor = require("jsoneditor/dist/jsoneditor")
+const JSONEditor = require("@json-editor/json-editor") // this is the form-only editor https://github.com/json-editor/json-editor
+const JSONEditors = require("jsoneditor/dist/jsoneditor") // this is the multi-mode editor https://github.com/josdejong/jsoneditor
 const utils = require("./utils.js")
 const defaults = require('./defaults')
 
@@ -146,7 +146,7 @@ class BaseNode{
         modes: ['code', 'tree'] // ['code', 'form', 'text', 'tree', 'view', 'preview']
       }
 
-      let editor = new JSONEditor(EditorDiv,options)
+      let editor = new JSONEditors(EditorDiv,options)
       editor.set(JSON.parse(JSON.stringify(this, this.replacer, 4)))
 
       setButton.addEventListener('click', ()=>{
@@ -694,7 +694,7 @@ class VideoNode extends BaseNode {
             
 
 
-      let editor = new JSONEditor_.JSONEditor(document.getElementById(optionsDivId),{
+      let editor = new JSONEditor.JSONEditor(document.getElementById(optionsDivId),{
         schema: defaultSchema,
         startval: this.obj,
         iconlib: 'fontawesome5',
@@ -769,7 +769,7 @@ class VideoNode extends BaseNode {
     }
 
 
-      let editor = new JSONEditor(editor_div,options)
+      let editor = new JSONEditors(editor_div,options)
       // make object of own properties
       editor.set(this.jsondata)
       console.log(editor)
@@ -1071,7 +1071,7 @@ class VideoNode extends BaseNode {
         }))
       }
 
-      let schemaEditor = new JSONEditor(schemaEditorDiv,options)
+      let schemaEditor = new JSONEditors(schemaEditorDiv,options)
       if (this.schema!==undefined){
         console.log(this.schema)
 

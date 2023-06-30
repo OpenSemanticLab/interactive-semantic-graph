@@ -43,7 +43,12 @@ class GraphDrawer {
     this.id = 0;
     this.lang = this.config.lang;
     this.first = true;
-    this.colorObj = {};
+    if(args.colorObj){
+      this.colorObj = args.colorObj;
+    }else{
+      this.colorObj = {};
+    }
+    //this.colorObj = {};
     this.h = Math.random();
     this.golden = 0.618033988749895;
     this.createArgsDefault = {
@@ -60,17 +65,26 @@ class GraphDrawer {
 
     //   this.context = this.config.callbacks.createContext(this.file);
 
-    if (args.nodes) {
-      this.nodes = new vis.DataSet(args.nodes);
-    } else {
-      this.nodes = new vis.DataSet(args.edges)
-    }
+    // if (args.nodes) {
+    //   this.nodes = new vis.DataSet(args.nodes);
+    // } else {
+    //   this.nodes = new vis.DataSet(args.edges)
+    // }
 
-    if (args.edges) {
-      this.edges = new vis.DataSet(args.edges);
-    } else {
-      this.edges = new vis.DataSet(args.edges)
-    }
+    // if (args.edges) {
+    //   this.edges = new vis.DataSet(args.edges);
+    // } else {
+    //   this.edges = new vis.DataSet(args.edges)
+    // }
+
+    this.nodes = new vis.DataSet(args.nodes);
+
+    this.edges = new vis.DataSet(args.edges);
+
+    
+    // console.log(this.nodes.get())
+    // console.log(this.edges.get())
+    console.log(args.nodes)
 
     this.createGraphNodesEdges(this.createArgs);
   }
@@ -694,8 +708,6 @@ class GraphTool {
     this.initGraphContainers(div_id);
     this.drawer = config.drawer
 
-    this.configFile = config.configFile
-
     this.clicked = {} // object to store expanded nodes TODO: rename to expandedNodes
 
     this.keyObject = { // to be removed, was inteded for callback implementation
@@ -747,9 +759,13 @@ class GraphTool {
       mode: this.drawer.mode,
       rootItem: this.drawer.rootItem,
       recursionDepth: 100000000000,
+      nodes: this.drawer.nodes.get(),
+      edges: this.drawer.edges.get(),
     }
+
+    this.drawer_config  = {lang:"en",contractArrayPaths: true}
   
-    this.fullGraph = new isg.GraphDrawer(drawer_config={lang:this.drawer.lang,contractArrayPaths: true}, this.fullGraphArgs);
+    this.fullGraph = new isg.GraphDrawer(this.drawer_config, this.fullGraphArgs);
 
     // Initialize GUI for various functions acting on the graph.
     this.createLegend();
@@ -762,6 +778,7 @@ class GraphTool {
     this.deepSearchExpandsFull = [];
     this.searchExpands = [];
     this.fullGraph;
+    this.configFile = config.configFile;
 
     this.colorsBeforeVisualSearch = {};
     this.initDeepSearch();
@@ -1183,7 +1200,6 @@ class GraphTool {
           this.edges.update(newEdge);
 
           this.addToJSON(newNode, newEdge, receivingNode);
-          console.log(config.file.jsondata)
 
         }
       }
@@ -1889,6 +1905,7 @@ initDragAndDrop() {
 
   //gets all nodes that are reachable from the given node ID
   getAllReachableNodesTo(nodeId, excludeIds, reachableNodes) {
+
     if (reachableNodes.includes(nodeId) || excludeIds.includes(nodeId)) {
       return [];
     }
@@ -1907,6 +1924,8 @@ initDragAndDrop() {
   //deletes the reachable nodes from the given node ID
   deleteNodesChildren(nodeId, deleteEdge, clickedNode) {
 
+    console.log(this.configFile)
+
     let excludedIds = [];
     if (deleteEdge === true) {
     } else {
@@ -1914,8 +1933,15 @@ initDragAndDrop() {
     }
 
     let reachableNodesTo = [];
-    reachableNodesTo = this.getAllReachableNodesTo(this.drawer.rootId, excludedIds, reachableNodesTo);
 
+    for(let i = 0; i < this.configFile.root_node_objects.length; i++){
+
+      let tempReachableNodesTo = this.getAllReachableNodesTo('jsondata/' + this.configFile.root_node_objects[i].node_id, excludedIds, reachableNodesTo);
+
+      reachableNodesTo = [...reachableNodesTo, ...tempReachableNodesTo];
+
+    }
+    
     let nodesToDelete = [];
     let allIds = this.nodes.getIds();
 
@@ -2089,8 +2115,6 @@ initDragAndDrop() {
   }
   // expands the object that is saved inside a node and on second doubleclick deletes nodes and edges that go out of the clicked node
   expandNodes(params) {
-
-    this.createGraphByConfig(this.drawer.file, this.configFile)
 
     if(!this.searchAlert()){
       return;
@@ -2296,49 +2320,28 @@ initDragAndDrop() {
     });
 
   }
+
+  isNodeLastInPath(node){
+      
+    let edges = this.edges.get();
+
+    for(let i = 0; i < edges.length; i++) {
+
+      if(edges[i].from == node) {
+        return false;
+      }
+
+    }
+
+    return true;
+
+  } 
   // loads or saves the graph to a .txt file
   loadSaveFunctionality(container) {
 
-    function saveState() {
-      // Todo: replace global ids with prefixed ids or class members to allow multiple instances on one page
-      if (document.getElementById("setColorByValueInput")) {
-        config.file.state = {
-          nodes: nodes,
-          edges: edges,
-          colorFunction: document.querySelector('#myDropdown select').value,
-          colorByValue: {
-            startColor: document.querySelector('#startColor').value,
-            endColor: document.querySelector('#endColor').value,
-            path: document.querySelector('#setColorByValueInput').value
-          }
-        };
 
+    // Todo: replace global ids with prefixed ids or class members to allow multiple instances on one page
 
-      } else {
-        config.file.state = {
-          nodes: nodes,
-          edges: edges,
-          colorFunction: document.querySelector('#myDropdown select').value,
-          colorByValue: {}
-        };
-      }
-
-
-      const json = config.file
-      const filename = "data.txt";
-      const text = JSON.stringify(json);
-
-      const element = document.createElement("a");
-      element.setAttribute("href", "data:text/plain;charset=utf-8," + encodeURIComponent(text));
-      element.setAttribute("download", filename);
-      element.style.display = "none";
-      document.body.appendChild(element);
-
-      element.click();
-
-      document.body.removeChild(element);
-
-    }
 
     // create container element if not defined
     if (!container) container = document.createElement("div");
@@ -2365,31 +2368,90 @@ initDragAndDrop() {
 
   createSaveStateFunctionality() {
 
-    if (document.getElementById("setColorByValueInput")) {
+    let coloringDiv = document.getElementById("myDropdown");
 
-      config.file.state = {
-        nodes: this.nodes.get(),
-        edges: this.edges.get(),
-        colorFunction: document.querySelector('#myDropdown select').value,
-        colorByValue: {
-          startColor: document.querySelector('#startColor').value,
-          endColor: document.querySelector('#endColor').value,
-          path: document.querySelector('#setColorByValueInput').value
-        }
-      };
+    let dropdown = coloringDiv.querySelector("select");
 
+    if(dropdown.value == "setColorByValue"){
 
-    } else {
-      config.file.state = {
-        nodes: this.nodes.get(),
-        edges: this.edges.get(),
-        colorFunction: document.querySelector('#myDropdown select').value,
-        colorByValue: {}
-      };
+      this.configFile.coloring_function_object.function_name = "colorByValue";
+
+      let inputField = document.getElementById("setColorByValueInput");
+      this.configFile.coloring_function_object.path = inputField.value;
+
+      let startColor = document.getElementById("startColor");
+      this.configFile.coloring_function_object.start_color = startColor.value;
+
+      let endColor = document.getElementById("endColor");
+      this.configFile.coloring_function_object.end_color = endColor.value;
+
+    }else if(dropdown.value == "setColorByProperty"){
+
+      this.configFile.coloring_function_object.function_name = "colorByProperty";
+
+      this.configFile.coloring_function_object.path = "";
+
+      this.configFile.coloring_function_object.start_color = "";
+
+      this.configFile.coloring_function_object.end_color = "";
+
     }
 
 
-    const json = config.file
+    let deepSearchDropdown = document.getElementById("search_select");
+
+    if(deepSearchDropdown.value == "search_node"){
+
+      this.configFile.dataset_search_function_object.search_on = "nodes";
+      this.configFile.visual_search_function_object.search_on = "nodes";
+
+    }else if(deepSearchDropdown.value == "search_edge"){
+
+      this.configFile.dataset_search_function_object.search_on = "edges";
+      this.configFile.visual_search_function_object.search_on = "edges";
+        
+    }
+
+    let inputField = document.getElementById("input-field");
+
+    this.configFile.dataset_search_function_object.search_string = inputField.value;
+
+    let inputFieldVisual = document.getElementById("search_input");
+    this.configFile.visual_search_function_object.search_string = inputFieldVisual.value;
+
+    let checkBox = document.getElementById("myCheckbox");
+
+    this.configFile.dataset_search_function_object.keep_expanded = checkBox.checked;
+
+    let openPaths = [];
+    for(let i = 0; i < this.nodes.get().length; i++){
+
+      if(this.isNodeLastInPath(this.nodes.get()[i].id)){
+  
+        let paths = this.findAllPaths('jsondata/' + this.configFile.root_node_objects[0].node_id, this.nodes.get()[i].id)
+  
+        for(let j = 0; j < paths.length; j++){
+  
+          openPaths.push(paths[j]);
+  
+        }
+  
+      }
+  
+    }
+  
+    this.configFile.expanded_paths = openPaths;
+
+    this.configFile.visual_nodes_edges_object.nodes = this.nodes.get();
+    this.configFile.visual_nodes_edges_object.edges = this.edges.get();
+  
+    this.configFile.initial_dataset = this.drawer.file;
+
+    console.log(this.configFile)
+
+    let files = {file: this.drawer.file, config: this.configFile};
+
+    const json = files;
     const filename = "data.txt";
     const text = JSON.stringify(json);
 
@@ -2402,7 +2464,6 @@ initDragAndDrop() {
     element.click();
 
     document.body.removeChild(element);
-
   }
 
 
@@ -2420,86 +2481,31 @@ initDragAndDrop() {
 
   loadStateDefault(input) {
 
+    document.getElementById("mynetwork").innerHTML = "";
+
     const reader = new FileReader();
     reader.onload = () => {
       const jsonData = JSON.parse(reader.result);
-      if (jsonData.state) {
-        config.nodes = jsonData.state.nodes;
-        config.edges = jsonData.state.edges;
 
-        this.nodes = new vis.DataSet(jsonData.state.nodes);
-        this.edges = new vis.DataSet(jsonData.state.edges);
+      console.log(jsonData.file)
+      console.log(jsonData.config)
 
-        //this.drawer = new GraphDrawer(callback_config, jsonData, 5, true, nodes, edges);
-
-        this.drawer.nodes = this.nodes;
-        this.drawer.edges = this.edges;
-
-        config = {
-          nodes: jsonData.state.nodes,
-          edges: jsonData.state.edges,
-          options: options,
-          drawer: drawer,
-          file: config.file
-        };
-
-        delete jsonData.state;
-        config.file = jsonData;
-
-        document.getElementById("mynetwork").innerHTML = "";
+      let graph = new isg.Graph(jsonData.file, jsonData.config);
 
 
-        document.getElementById('myDropdown').remove();
-        document.getElementById('save').remove();
-        document.getElementById('load').remove();
-        document.getElementById('search_input').remove();
-        document.getElementById('search_select').remove();
+        // document.getElementById("mynetwork").innerHTML = "";
 
-        if (document.getElementById('setPath')) {
-          document.getElementById('setPath').remove();
-        }
-        let graphtool = new GraphTool("mynetwork", config);
-      } else {
-        let nodes = [];
-        let edges = [];
-        this.drawer = new GraphDrawer(callback_config, jsonData, 5, true, nodes, edges);
-        let options = {
-          interaction: {
-            hover: true,
-            multiselect: true,
-          },
-          manipulation: {
-            enabled: true,
-          },
-          edges: {
-            arrows: "to"
-          },
-          groups: {
-            useDefaultGroups: false
-          }
-        }
-        let config = {
-          nodes: nodes,
-          edges: edges,
-          options: options,
-          graph: this.drawer,
-          file: config.file
-        };
-        let graphtool = new GraphTool("mynetwork", config, callback_config, );
-      }
+        // document.getElementById('myDropdown').remove();
+        // document.getElementById('save').remove();
+        // document.getElementById('load').remove();
+        // document.getElementById('search_input').remove();
+        // document.getElementById('search_select').remove();
 
-      // if (jsonData.state.colorFunction == "setColorByValue") {
-      //   graphtool.changeColorDropdown("myDropdown", "setColorByValue")
-      //   document.querySelector('#myDropdown select').dispatchEvent(new Event("change"));
-      //   graphtool.changeStartEndColorDropdown("startColor", jsonData.state.colorByValue.startColor);
-      //   graphtool.changeStartEndColorDropdown("endColor", jsonData.state.colorByValue.endColor);
-      //   document.getElementById("setColorByValueInput").value = jsonData.state.colorByValue.path;
-      //   graphtool.nodes.update(nodes);
-      //   graphtool.edges.update(edges);
-      // }
+        // if (document.getElementById('setPath')) {
+        //   document.getElementById('setPath').remove();
+        // }
 
-      delete jsonData.state;
-      config.file = jsonData;
+      
 
     };
     reader.readAsText(input.target.files[0]);
@@ -2513,14 +2519,12 @@ initDragAndDrop() {
 
     //if (!document.getElementById("legendContainer")) {
 
-      console.log(this.drawer.colorObj)
-
       Object.keys(this.drawer.colorObj).forEach((key) => {
 
 
-        if(!options.groups[key]){
+        if(!this.options.groups[key]){
 
-          options.groups[key] = {
+          this.options.groups[key] = {
             hidden: false
           };
 
@@ -2536,8 +2540,6 @@ initDragAndDrop() {
     if (document.getElementById("legendContainer")) {
 
       invisibleGroups = this.legendInvisibleGroups(this.options);
-
-      console.log(invisibleGroups)
 
       document.getElementById("legendContainer").remove();
     }
@@ -2603,7 +2605,15 @@ initDragAndDrop() {
   //function to set nodes and edges hidden when legend is clicked
   setNodeVisibilityByVisiblePath = (nodeId, rootNodeId) => {
 
-    if (nodeId == this.drawer.rootId) return true; //root is always visible
+    for(let i = 0; i < this.configFile.root_node_objects.length; i++) {
+      if(nodeId == 'jsondata/' + this.configFile.root_node_objects[i].node_id) {
+        
+        return true;
+
+      }
+    }
+    //if (nodeId == this.drawer.rootId) return true; //root is always visible
+
     let node = this.nodes.get(nodeId);
     if (node.visited) return !node.hidden //prevent circles. ToDo: Reuse results between runs
     node.visited = true;
@@ -2627,6 +2637,8 @@ initDragAndDrop() {
 
   //turns clicked properties of the legend invisible or back to visible
   legendFunctionality = (e) => {
+
+    console.log(this.options.groups)
 
     let legendGroup;
     let group;
@@ -3733,105 +3745,273 @@ colorByValue(path, nodes, edges, startColor, endColor){
   
 }
 
-createGraphByConfig(file, configFile) {
+}
 
+class Graph{
 
-  //"root_node_objects" / where to start expanding
+  constructor(file, configFile) {
 
+    this.file = file;
+    this.configFile = configFile;
+    this.graphtool;
+    this.openPaths = [];
 
-  //"expanded_paths" / maybe given and/or will be saved in the config
+    this.createGraphByConfig(file, configFile);
 
+  }
 
-  //"expanded_nodes" / maybe given and/or will be saved in the config
+  isNodeLastInPath(node){
+      
+      let edges = this.graphtool.edges.get();
+  
+      for(let i = 0; i < edges.length; i++) {
+  
+        if(edges[i].from == node) {
+          return false;
+        }
+  
+      }
+  
+      return true;
+  
+  }
 
+  createGraphByConfig(file, configFile) {
 
-  //"coloring_function_object" / maybe given and/or will be saved in the config
-
-
-  //"positioning_function_object" / maybe given and/or will be saved in the config
-
-
-  //"visual_search_function_object" / only for load save / saved in config
-
-
-  //"dataset_search_function_object" / deepsearch load save / saved in config
-
-
-  //"visual_nodes_edges_object" / only for load save / saved in config
-
-
-  //"initial_dataset" / old json only saved in config
-
-  let options = {
-    interaction: {
-      hover: true,
-      multiselect: true,
-    },
-    manipulation: {
-      enabled: true,
-    },
-    physics: {
-      stabilization: {
+ 
+  
+    //"positioning_function_object" / maybe given and/or will be saved in the config
+    
+    //"root_node_objects" / where to start expanding
+    let options = {
+      interaction: {
+        hover: true,
+        multiselect: true,
+      },
+      manipulation: {
         enabled: true,
       },
-      barnesHut: {
-        gravitationalConstant: -40000,
-        centralGravity: 0,
-        springLength: 0,
-        springConstant: 0.5,
-        damping: 1,
-        avoidOverlap: 0
+      physics: {
+        stabilization: {
+          enabled: true,
+        },
+        barnesHut: {
+          gravitationalConstant: -40000,
+          centralGravity: 0,
+          springLength: 0,
+          springConstant: 0.5,
+          damping: 1,
+          avoidOverlap: 0
+        },
+        maxVelocity: 5
       },
-      maxVelocity: 5
-    },
-    edges: {
-      arrows: "to",
-      
-    },
-    groups: {
-      useDefaultGroups: false
+      edges: {
+        arrows: "to",
+        
+      },
+      groups: {
+        useDefaultGroups: false
+      }
     }
+
+    let drawer;
+    let tempNodes;
+    let tempEdges;
+    let tempColorObj;
+    let args;
+
+    let drawer_config  = {lang:"en",contractArrayPaths: true}
+
+    for(let i = 0; i < configFile.root_node_objects.length; i++) {
+
+      if(drawer === undefined) {
+        tempNodes = [];
+        tempEdges = [];
+        tempColorObj = {};
+      }else{
+        tempNodes = drawer.nodes.get();
+        tempEdges = drawer.edges.get();
+        tempColorObj = drawer.colorObj;
+      }
+
+      args = {
+        file: file,
+        depth: 1,
+        mode: true,
+        nodes: tempNodes,
+        edges: tempEdges,
+        rootItem: configFile.root_node_objects[i].node_id,
+        recursionDepth: configFile.root_node_objects[i].expansion_depth,
+        colorObj: tempColorObj,
+      }
+
+      drawer = new isg.GraphDrawer(drawer_config, args);
+
+    }
+   
+    // let args = {
+    //   file: file,
+    //   depth: 1,
+    //   mode: true,
+    //  // nodes: nodes,
+    //  // edges: edges,
+    //   rootItem: configFile.root_node_objects[0].node_id,
+    //   recursionDepth: configFile.root_node_objects[0].expansion_depth,
+    // }
+    
+    // drawer = new isg.GraphDrawer(drawer_config, args);
+
+    // args = {
+    //   file: file,
+    //   depth: 1,
+    //   mode: true,
+    //   nodes: drawer.nodes.get(),
+    //   edges: drawer.edges.get(),
+    //   rootItem: "Item:MyOtherItem",//configFile.root_node_objects[0].node_id,
+    //   recursionDepth: configFile.root_node_objects[0].expansion_depth,
+    //   colorObj: drawer.colorObj,
+    // }
+    
+    // drawer = new isg.GraphDrawer(drawer_config, args);
+
+    // console.log(drawer)
+    let config = {
+     // nodes: nodes,
+     // edges: edges,
+      options: options,
+      file: new_json,
+      drawer: drawer,
+      configFile: configFile
+    };
+  
+    this.graphtool = new isg.GraphTool("mynetwork", config);
+
+    // //"coloring_function_object" / maybe given and/or will be saved in the config
+    // if(configFile.coloring_function_object.function_name == "colorByValue"){
+      
+    //   let coloringDiv = document.getElementById("myDropdown");
+
+    //   let dropdown = coloringDiv.querySelector("select");
+
+    //   dropdown.value = "setColorByValue";
+
+    //   let changeEvent = new Event('change');
+    //   dropdown.dispatchEvent(changeEvent);
+
+    //   let inputField = document.getElementById("setColorByValueInput");
+    //   inputField.value = configFile.coloring_function_object.path;
+
+    //   let startColor = document.getElementById("startColor");
+    //   startColor.value = configFile.coloring_function_object.start_color;
+
+    //   let endColor = document.getElementById("endColor");
+    //   endColor.value = configFile.coloring_function_object.end_color;
+
+    //   let submitButton = document.getElementById("setPath");
+    //   submitButton.click();
+
+    // }else if(configFile.coloring_function_object.function_name == "colorByProperty"){
+        
+    //     let coloringDiv = document.getElementById("myDropdown");
+  
+    //     let dropdown = coloringDiv.querySelector("select");
+  
+    //     dropdown.value = "setColorByProperty";
+  
+    //     let changeEvent = new Event('change');
+    //     dropdown.dispatchEvent(changeEvent);
+    
+    // }
+
+    // //"dataset_search_function_object" / deepsearch load save / saved in config
+    // if(configFile.dataset_search_function_object.search_string != ""){
+
+    //   let dropdown = document.getElementById("search_select");
+
+    //   if(configFile.dataset_search_function_object.search_on == "nodes"){
+
+    //     dropdown.value = "search_node";
+
+    //   }else if (configFile.dataset_search_function_object.search_on == "edges"){
+          
+    //     dropdown.value = "search_edge";
+
+    //   }
+
+    //   let inputField = document.getElementById("input-field");
+    //   inputField.value = configFile.dataset_search_function_object.search_string;
+
+    //   var submitButton = document.getElementById("submit-button");
+    //   submitButton.click();
+
+    //   let checkBox = document.getElementById("myCheckbox");
+
+    //   checkBox.checked = configFile.dataset_search_function_object.keep_expanded;
+
+    // }
+
+    // //"visual_search_function_object" / only for load save / saved in config  
+    // if(configFile.visual_search_function_object.search_string != ""){
+
+    //   let dropdown = document.getElementById("search_select");
+
+    //   if(configFile.visual_search_function_object.search_on == "nodes"){
+
+    //     dropdown.value = "search_node";
+
+    //   }else{
+          
+    //       dropdown.value = "search_edge";
+
+    //   }
+
+    //   let inputField = document.getElementById("search_input");
+    //   inputField.value = configFile.visual_search_function_object.search_string;
+
+    //   var inputEvent = new Event('input');
+    //   inputField.dispatchEvent(inputEvent);
+
+    // }
+
+    //"expanded_paths" / maybe given and/or will be saved in the config
+  
+    //"expanded_nodes" / maybe given and/or will be saved in the config
+    // if(configFile.expanded_nodes.length > 0){
+
+    //   for(let i = 0; i < configFile.expanded_paths.length; i++){
+
+    //       configFile.expanded_paths[i].shift();
+    //       configFile.expanded_paths[i].pop();
+
+
+    //   }
+
+    //   const nodesToExpand = Array.from(new Set(configFile.expanded_paths.map(JSON.stringify)), JSON.parse);
+
+
+    //   for(let i = 0; i < nodesToExpand.length; i++){
+    //     for(let j = 0; j < nodesToExpand[i].length; j++){
+
+    //       if(this.isNodeLastInPath(nodesToExpand[i][j])){
+
+    //         this.graphtool.expandNodes({ nodes: [nodesToExpand[i][j]] });
+
+    //       }
+  
+    //     }
+    //   }
+    // }
+
+
   }
- 
-  let args = {
-    file: file,
-    depth: 1,
-    mode: true,
-   // nodes: nodes,
-   // edges: edges,
-    rootItem: configFile.root_node_objects[0].node_id,
-    recursionDepth: 2,
-  }
-
-  let drawer = new isg.GraphDrawer(drawer_config={lang:"en",contractArrayPaths: true}, args);
-  let config = {
-   // nodes: nodes,
-   // edges: edges,
-    options: options,
-    file: new_json,
-    drawer: drawer,
-   // clone: clone,
-  };
-
-  document.getElementById("mynetwork").innerHTML = "";
-
-  let graphtool = new isg.GraphTool("mynetwork", config);
-
-  document.getElementById("legendContainer").remove()
-
-  console.log(configFile.visual_nodes_edges_object)
-
-  //this.createLegend();
 
 }
 
 
-}
 
 
 //let clicked = {};
 $(document).ready(function () {
-
 
 
 //console.log(graphtool.getAllStringsForAllPaths(graphtool.findAllPaths("jsondata/Item:MyProject/budget/1/value","jsondata/Item:MyProject")))
@@ -3889,5 +4069,6 @@ $(document).ready(function () {
 export {
   GraphTool,
   GraphDrawer,
+  Graph,
   vis
 }

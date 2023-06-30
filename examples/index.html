@@ -168,6 +168,14 @@ let configFile =
           "property1"
         ],
         "expansion_path": "path.path.path"
+      },
+      {
+        "node_id": "Item:MyOtherItem",
+        "expansion_depth": 1,
+        "properties": [
+          "property2"
+        ],
+        "expansion_path": "path.path.path.path"
       }
     ],
     "uuid": "c70c0a9a-dc29-4d92-92d6-043c5ec760ea",
@@ -177,7 +185,139 @@ let configFile =
         "lang": "en"
       }
     ],
-    "expanded_paths": [],
+    "expanded_paths": [
+    [
+        "jsondata/Item:MyProject",
+        "jsondata/Item:MyProject/some_literal/0"
+    ],
+    [
+        "jsondata/Item:MyProject",
+        "jsondata/Item:MyProject/some_literal/1"
+    ],
+    [
+        "jsondata/Item:MyProject",
+        "jsondata/Item:MyProject/some_literal/2"
+    ],
+    [
+        "jsondata/Item:MyProject",
+        "jsondata/Item:MyProject/not_in_context"
+    ],
+    [
+        "jsondata/Item:MyProject",
+        "jsondata/Item:SomePerson",
+        "jsondata/Item:MyOtherItem",
+        "jsondata/Item:MyNewItem"
+    ],
+    [
+        "jsondata/Item:MyProject",
+        "jsondata/Item:SomePerson",
+        "jsondata/Item:MyOtherItem",
+        "jsondata/Item:MyOtherItem/some_literal"
+    ],
+    [
+        "jsondata/Item:MyProject",
+        "jsondata/Item:SomePerson",
+        "jsondata/Item:MyOtherItem",
+        "jsondata/Item:MyOtherItem/not_in_context"
+    ],
+    [
+        "jsondata/Item:MyProject",
+        "jsondata/Item:SomePerson",
+        "jsondata/Item:MyOtherItem",
+        "jsondata/Item:MyOtherItem/budget/0",
+        "jsondata/Item:MyOtherItem/budget/0/year"
+    ],
+    [
+        "jsondata/Item:MyProject",
+        "jsondata/Item:SomePerson",
+        "jsondata/Item:MyOtherItem",
+        "jsondata/Item:MyOtherItem/budget/0",
+        "jsondata/Item:MyOtherItem/budget/0/value"
+    ],
+    [
+        "jsondata/Item:MyProject",
+        "jsondata/Item:SomePerson",
+        "jsondata/Item:MyOtherItem",
+        "jsondata/Item:MyOtherItem/budget/1",
+        "jsondata/Item:MyOtherItem/budget/1/year"
+    ],
+    [
+        "jsondata/Item:MyProject",
+        "jsondata/Item:SomePerson",
+        "jsondata/Item:MyOtherItem",
+        "jsondata/Item:MyOtherItem/budget/1",
+        "jsondata/Item:MyOtherItem/budget/1/value"
+    ],
+    [
+        "jsondata/Item:MyProject",
+        "jsondata/Item:MyProject/budget/0",
+        "jsondata/Item:MyProject/budget/0/year"
+    ],
+    [
+        "jsondata/Item:MyProject",
+        "jsondata/Item:MyProject/budget/0",
+        "jsondata/Item:MyProject/budget/0/value"
+    ],
+    [
+        "jsondata/Item:MyProject",
+        "jsondata/Item:MyProject/budget/0",
+        "jsondata/Item:MyProject/budget/0/budget/0",
+        "jsondata/Item:MyProject/budget/0/budget/0/year"
+    ],
+    [
+        "jsondata/Item:MyProject",
+        "jsondata/Item:MyProject/budget/0",
+        "jsondata/Item:MyProject/budget/0/budget/0",
+        "jsondata/Item:MyProject/budget/0/budget/0/value"
+    ],
+    [
+        "jsondata/Item:MyProject",
+        "jsondata/Item:MyProject/budget/0",
+        "jsondata/Item:MyProject/budget/0/budget/1",
+        "jsondata/Item:MyProject/budget/0/budget/1/year"
+    ],
+    [
+        "jsondata/Item:MyProject",
+        "jsondata/Item:MyProject/budget/0",
+        "jsondata/Item:MyProject/budget/0/budget/1",
+        "jsondata/Item:MyProject/budget/0/budget/1/value"
+    ],
+    [
+        "jsondata/Item:MyProject",
+        "jsondata/Item:MyProject/budget/1",
+        "jsondata/Item:MyProject/budget/1/year"
+    ],
+    [
+        "jsondata/Item:MyProject",
+        "jsondata/Item:MyProject/budget/1",
+        "jsondata/Item:MyProject/budget/1/value"
+    ],
+    [
+        "jsondata/Item:MyProject",
+        "jsondata/Item:MyProject/budget/2",
+        "jsondata/Item:MyProject/budget/2/year"
+    ],
+    [
+        "jsondata/Item:MyProject",
+        "jsondata/Item:MyProject/budget/2",
+        "jsondata/Item:MyProject/budget/2/value"
+    ],
+    [
+        "jsondata/Item:MyProject",
+        "jsondata/Item:MyProject/budget/3",
+        "jsondata/Item:MyProject/budget/3/year"
+    ],
+    [
+        "jsondata/Item:MyProject",
+        "jsondata/Item:MyProject/budget/3",
+        "jsondata/Item:MyProject/budget/3/value/0"
+    ],
+    [
+        "jsondata/Item:MyProject",
+        "jsondata/Item:MyProject/budget/3",
+        "jsondata/Item:MyProject/budget/3/value/1"
+    ]
+],
     "expanded_nodes": [
       {
         "node_id": "item:test",
@@ -190,6 +330,7 @@ let configFile =
     ],
     "coloring_function_object": {
       "function_name": "colorByValue",
+      "path": "value",
       "start_color": "orangered",
       "end_color": "limegreen"
     },
@@ -197,11 +338,12 @@ let configFile =
       "test": null
     },
     "visual_search_function_object": {
-      "search_string": "visual search",
+      "search_string": "budget",
       "search_on": "nodes"
     },
     "dataset_search_function_object": {
-      "search_string": "deep_search",
+      "search_string": "20",
+      "search_on": "nodes",
       "keep_expanded": true
     },
     "visual_nodes_edges_object": {
@@ -237,58 +379,60 @@ let configFile =
 
     //const clone = structuredClone(new_json);
 
-    var options = {
-      interaction: {
-        hover: true,
-        multiselect: true,
-      },
-      manipulation: {
-        enabled: true,
-      },
-      physics: {
-        stabilization: {
-          enabled: true,
-        },
-        barnesHut: {
-          gravitationalConstant: -40000,
-          centralGravity: 0,
-          springLength: 0,
-          springConstant: 0.5,
-          damping: 1,
-          avoidOverlap: 0
-        },
-        maxVelocity: 5
-      },
-      edges: {
-        arrows: "to",
+    // var options = {
+    //   interaction: {
+    //     hover: true,
+    //     multiselect: true,
+    //   },
+    //   manipulation: {
+    //     enabled: true,
+    //   },
+    //   physics: {
+    //     stabilization: {
+    //       enabled: true,
+    //     },
+    //     barnesHut: {
+    //       gravitationalConstant: -40000,
+    //       centralGravity: 0,
+    //       springLength: 0,
+    //       springConstant: 0.5,
+    //       damping: 1,
+    //       avoidOverlap: 0
+    //     },
+    //     maxVelocity: 5
+    //   },
+    //   edges: {
+    //     arrows: "to",
         
-      },
-      groups: {
-        useDefaultGroups: false
-      }
-    }
+    //   },
+    //   groups: {
+    //     useDefaultGroups: false
+    //   }
+    // }
    
-    let args = {
-      file: new_json,
-      depth: 1,
-      mode: true,
-     // nodes: nodes,
-     // edges: edges,
-      rootItem: "Item:MyProject",
-      recursionDepth: 1,
-    }
+    // let args = {
+    //   file: new_json,
+    //   depth: 1,
+    //   mode: true,
+    //  // nodes: nodes,
+    //  // edges: edges,
+    //   rootItem: "Item:MyProject",
+    //   recursionDepth: 1,
+    // }
 
-    let drawer = new isg.GraphDrawer(drawer_config={lang:"en",contractArrayPaths: true}, args);
-    let config = {
-     // nodes: nodes,
-     // edges: edges,
-      options: options,
-      file: new_json,
-      drawer: drawer,
-      configFile: configFile,
-     // clone: clone,
-    };
-    let graphtool = new isg.GraphTool("mynetwork", config);
+    // let drawer = new isg.GraphDrawer(drawer_config={lang:"en",contractArrayPaths: true}, args);
+    // let config = {
+    //  // nodes: nodes,
+    //  // edges: edges,
+    //   options: options,
+    //   file: new_json,
+    //   drawer: drawer,
+    //   configFile: configFile,
+    //  // clone: clone,
+    // };
+    // let graphtool = new isg.GraphTool("mynetwork", config);
+
+    let graph = new isg.Graph(new_json, configFile);
 
   </script>
 </body>

@@ -84,7 +84,7 @@ class GraphDrawer {
     
     // console.log(this.nodes.get())
     // console.log(this.edges.get())
-    console.log(args.nodes)
+    // console.log(args.nodes)
 
     this.createGraphNodesEdges(this.createArgs);
   }
@@ -526,6 +526,8 @@ class GraphDrawer {
     // loop through keys / indices of current item 
 
     let currentValue = this.getValueFromPathArray(currentPath)
+    let reverseCurrentValue = currentValue;
+
     // resolve references if possible
     if (Object.keys(this.file.jsondata).includes(currentValue)) {
       currentPath = this.getItemPathArray(currentValue)
@@ -560,6 +562,7 @@ class GraphDrawer {
         //let newEdgeId = String(args.previousPath) + "==" + String(edgeLabel) + "=>" + String(currentPath)
         let newEdgeId = this.getIdFromPathArray(args.previousPath) + "==" + String(edgeLabel) + "=>" + this.getIdFromPathArray(currentPath)
 
+        
 
         let newEdge = {
           id: newEdgeId,
@@ -569,6 +572,20 @@ class GraphDrawer {
           group: edgeLabel,
           //color: this.colorObj[edgeLabel],
           objectKey: args.key
+        }
+
+        if(args.key.startsWith("^") && Object.keys(this.file.jsondata).includes(reverseCurrentValue)){
+
+          if(Object.keys(this.file.jsondata[reverseCurrentValue]).includes(args.key.slice(1))){
+
+            delete this.file.jsondata[reverseCurrentValue][args.key.slice(1)];
+
+          }
+
+          newEdge.id = this.getIdFromPathArray(currentPath) + "==" + String(edgeLabel) + "=>" + this.getIdFromPathArray(args.previousPath);
+          newEdge.from = currentNodeId;
+          newEdge.to = args.previousNode.id;
+
         }
 
         if (!this.edges.get(newEdge.id)) {
@@ -694,7 +711,15 @@ class GraphDrawer {
 
 
 class GraphTool {
+
+  static instanceCount = 0;
+
   constructor(div_id, config, callback_config) {
+
+    this.graphContainerId = div_id; 
+
+    this.prefix = 'Graph' + GraphTool.instanceCount + '_';
+    GraphTool.instanceCount += 1;
 
     const defaultConfig = {
       callbacks: {
@@ -727,6 +752,22 @@ class GraphTool {
     this.options = config.options;
     this.network = new vis.Network(this.vis_container, this.data, this.options);
 
+    this.rootNodesArray = [];
+
+    let copiedConfig = JSON.parse(JSON.stringify(config.configFile));
+
+    copiedConfig.root_node_objects.forEach((node) => {
+
+      node.expansion_depth = 100000;
+
+      this.rootNodesArray.push('jsondata/' + node.node_id);
+
+    });
+
+    let newInstanceOfGraphClass = new Graph();
+
+    this.fullGraph = newInstanceOfGraphClass.createGraphByConfig(config.file, copiedConfig, true);
+
     this.recolorByProperty()
 
 
@@ -753,19 +794,20 @@ class GraphTool {
     // }
 
       //args to generate full graph
-    this.fullGraphArgs = {
-      file: this.drawer.file,
-      depth: this.drawer.depth,
-      mode: this.drawer.mode,
-      rootItem: this.drawer.rootItem,
-      recursionDepth: 100000000000,
-      nodes: this.drawer.nodes.get(),
-      edges: this.drawer.edges.get(),
-    }
 
-    this.drawer_config  = {lang:"en",contractArrayPaths: true}
+    // this.fullGraphArgs = {
+    //   file: this.drawer.file,
+    //   depth: this.drawer.depth,
+    //   mode: this.drawer.mode,
+    //   rootItem: this.drawer.rootItem,
+    //   recursionDepth: 100000000000,
+    //   nodes: this.drawer.nodes.get(),
+    //   edges: this.drawer.edges.get(),
+    // }
+
+    // this.drawer_config  = {lang:"en",contractArrayPaths: true}
   
-    this.fullGraph = new isg.GraphDrawer(this.drawer_config, this.fullGraphArgs);
+    // this.fullGraph = new isg.GraphDrawer(this.drawer_config, this.fullGraphArgs);
 
     // Initialize GUI for various functions acting on the graph.
     this.createLegend();
@@ -832,11 +874,11 @@ class GraphTool {
     // create all necessary elements/divs and set them up
     this.container = document.getElementById(div_id);
     this.vis_container = document.createElement("div");
-    this.vis_container.setAttribute("id", "vis_container");
+    this.vis_container.setAttribute("id", this.prefix + "vis_container");
     //this.vis_container.width = "70%"
     this.vis_container.style = "width: 65%; height: 800px; border: 1px solid lightgray;  float:left;";
     this.options_container = document.createElement("div");
-    this.options_container.setAttribute("id", "options_container");
+    this.options_container.setAttribute("id", this.prefix + "options_container");
     this.options_container.setAttribute("style", "overflow-y:scroll");
     //this.options_container.width = "30%"
     this.options_container.style = "margin-left: 68%; width: 30%; height: 800px; border: 1px solid lightgray;";
@@ -980,8 +1022,8 @@ class GraphTool {
 
       let optionsDivId = this.options_container.id
 
-      document.getElementById(optionsDivId).innerHTML = "<button id='setButton'>set!</button><br><div id='editor_div'></div>"
-      let setButton = document.getElementById("setButton") // todo: implement changes
+      document.getElementById(optionsDivId).innerHTML = "<button id='" + this.prefix + "setButton'>set!</button><br><div id='" + this.prefix + "editor_div'></div>"
+      let setButton = document.getElementById(this.prefix + "setButton") // todo: implement changes
 
 
       let options = {
@@ -990,7 +1032,7 @@ class GraphTool {
       }
 
 
-      let editor_div = document.getElementById("editor_div", options)
+      let editor_div = document.getElementById(this.prefix + "editor_div", options)
       // create a JSONEdior in options div
       let editor = new JSONEditors(editor_div) // TODO: Editor is currently not rendered. find error.
 
@@ -1421,8 +1463,8 @@ initDragAndDrop() {
 }
 
   showOptions_default(node, optionsDivId = 'optionsDiv') {
-    document.getElementById(optionsDivId).innerHTML = "<button id='setButton'>set!</button><br><div id='visual_options_editor_div'></div><div id='data_editor_div'></div>"
-    let setButton = document.getElementById("setButton")
+    document.getElementById(optionsDivId).innerHTML = "<button id='" + this.prefix + "setButton'>set!</button><br><div id='" + this.prefix + "visual_options_editor_div'></div><div id='" + this.prefix + "data_editor_div'></div>"
+    let setButton = document.getElementById(this.prefix + "setButton")
     let schema = {
       /*
             "title": "Node Options",
@@ -1476,6 +1518,7 @@ initDragAndDrop() {
       mode: 'tree',
       modes: ['code', 'tree'] // ['code', 'form', 'text', 'tree', 'view', 'preview']}
     }
+    let visual_options_editor_div = document.getElementById(this.prefix + "visual_options_editor_div")
     let visual_options_editor = new JSONEditors(visual_options_editor_div, options)
     // make object of own properties
 
@@ -1488,6 +1531,7 @@ initDragAndDrop() {
       node = visual_options_editor.get()
       this.nodes.update(node)
     })
+    let data_editor_div = document.getElementById(this.prefix + "data_editor_div")
     let data_editor = new JSONEditors(data_editor_div, options)
 
     data_editor.set(this.drawer.getValueFromPathArray(node.path))
@@ -1503,7 +1547,7 @@ initDragAndDrop() {
     // create the input element
     let inputField = document.createElement('input');
     inputField.type = 'text';
-    inputField.id = 'search_input';
+    inputField.id = this.prefix + 'search_input';
 
     // add the event listener to the input element
     let debounceTimer;
@@ -1549,12 +1593,13 @@ initDragAndDrop() {
 
     // create the select element
     const selectElement = document.createElement('select');
-    selectElement.id = 'search_select';
+    selectElement.id = this.prefix + 'search_select';
     selectElement.addEventListener('change', (event) => {
       // get the selected value
-      document.getElementById('search_input').value = "";
-      document.getElementById('input-field').value = "";
+      document.getElementById(this.prefix + 'search_input').value = "";
+      document.getElementById(this.prefix + 'input-field').value = "";
       this.collapseSearch();
+      this.recolorByProperty();
       //this.searchNodes("");
     });
 
@@ -1649,7 +1694,7 @@ initDragAndDrop() {
       
       if (result) {
         //alert("You clicked 'Yes'!");
-        document.getElementById('input-field').value = "";
+        document.getElementById(this.prefix + 'input-field').value = "";
         this.deepSearchExpands = [];
         this.deepSearchExpandsFull = [];
         return true;
@@ -1674,7 +1719,7 @@ initDragAndDrop() {
       this.deepSearchExpands = [];
 
       //searches for edges with the given search string
-      if (document.getElementById('search_select').value === 'search_edge') {
+      if (document.getElementById(this.prefix + 'search_select').value === 'search_edge') {
 
 
         this.edges.forEach((edge) => {
@@ -1682,7 +1727,21 @@ initDragAndDrop() {
           if(edge.label.toLowerCase().includes(searchString.toLowerCase())){
 
             //gets all paths from root to the node that the edge points to
-            let paths = this.findAllPaths(this.drawer.rootId, edge.to);
+            let paths = [];
+
+            for(let i = 0; i < this.rootNodesArray.length; i++){
+        
+              let tempPaths = this.findAllPaths(this.rootNodesArray[i], edge.to);
+        
+              for(let j = 0; j < tempPaths.length; j++){
+        
+                paths.push(tempPaths[j]);
+        
+              }
+              
+            }
+
+            //let paths = this.findAllPaths(this.drawer.rootId, edge.to);
 
             for(let i = 0; i < paths.length; i++){
 
@@ -1700,13 +1759,27 @@ initDragAndDrop() {
         });
       }
       //searches for nodes with the given search string
-      if (document.getElementById('search_select').value === 'search_node') {
+      if (document.getElementById(this.prefix + 'search_select').value === 'search_node') {
         this.nodes.forEach((node) => {
           if (node.label) {
 
             if(node.label.toLowerCase().includes(searchString.toLowerCase()) || node.group == "root"){
 
-              let paths = this.findAllPaths(this.drawer.rootId, node.id);
+              let paths = [];
+
+              for(let i = 0; i < this.rootNodesArray.length; i++){
+          
+                let tempPaths = this.findAllPaths(this.rootNodesArray[i], node.id);
+          
+                for(let j = 0; j < tempPaths.length; j++){
+          
+                  paths.push(tempPaths[j]);
+          
+                }
+                
+              }
+              
+              //let paths = this.findAllPaths(this.drawer.rootId, node.id);
   
               for(let i = 0; i < paths.length; i++){
   
@@ -1858,7 +1931,8 @@ initDragAndDrop() {
   //         .reduce( (res, key) => (res[key] = obj[key], res), {} );
 
   //recolos all nodes and edges
-  recolorByProperty() {
+
+  recolorByProperty = () => {
 
     //this.updatePositions()
     let nodes = this.nodes.get();
@@ -1875,11 +1949,17 @@ initDragAndDrop() {
         }
       }
     }
-    // root Node
-    let rootNode = this.nodes.get(this.drawer.rootId);
-    rootNode.color = this.drawer.config.rootColor;
-    this.nodes.update(rootNode)
+    // root Nodes
 
+    for(let i = 0; i < this.rootNodesArray.length; i++){
+
+      let rootNode = this.nodes.get(this.rootNodesArray[i]); //this.drawer.rootId;
+      rootNode.color = this.drawer.config.rootColor;
+      this.nodes.update(rootNode)
+
+    }
+
+    
   }
 
   //Removes object with a given ID from the given array
@@ -1924,7 +2004,6 @@ initDragAndDrop() {
   //deletes the reachable nodes from the given node ID
   deleteNodesChildren(nodeId, deleteEdge, clickedNode) {
 
-    console.log(this.configFile)
 
     let excludedIds = [];
     if (deleteEdge === true) {
@@ -2080,7 +2159,7 @@ initDragAndDrop() {
   //sets the color of the legend white if the group is set to hidden = true
   setInvisibleLegendGroupsWhite(invisibleGroups) {
 
-    let legend = document.getElementById("legendContainer");
+    let legend = document.getElementById(this.prefix + "legendContainer");
     let children = Array.from(legend.children);
 
 
@@ -2121,7 +2200,7 @@ initDragAndDrop() {
     }
     
     this.searchNodes("");
-    document.getElementById("search_input").value = "";
+    document.getElementById(this.prefix + "search_input").value = "";
 
     if (params.nodes.length > 0) {
 
@@ -2154,9 +2233,9 @@ initDragAndDrop() {
 
         this.createLegend()
 
-        if (document.querySelector('#myDropdown select').value == "setColorByValue") {
+        if (document.querySelector('#'+ this.prefix + 'myDropdown select').value == "setColorByValue") {
 
-          this.colorByValue([document.querySelector('#setColorByValueInput').value], this.nodes, this.edges, document.querySelector('#startColor').value, document.querySelector('#endColor').value)
+          this.colorByValue([document.querySelector('#' + this.prefix + 'setColorByValueInput').value], this.nodes, this.edges, document.querySelector('#' + this.prefix + 'startColor').value, document.querySelector('#' + this.prefix + 'endColor').value)
         }
         this.clicked[params.nodes[0]] = true;
 
@@ -2206,8 +2285,8 @@ initDragAndDrop() {
 
     var graph = graph;
     var dropdownDiv = document.createElement("div");
-    dropdownDiv.id = "dropdown";
-    dropdownDiv.setAttribute("id", "myDropdown");
+    dropdownDiv.id = this.prefix + "dropdown";
+    dropdownDiv.setAttribute("id", this.prefix + "myDropdown");
 
     var dropdown = document.createElement("select");
 
@@ -2234,12 +2313,12 @@ initDragAndDrop() {
 
     // Get the selected value
     function getPath() {
-      let path = "" + document.querySelector('#setColorByValueInput').value;
+      let path = "" + document.querySelector('#' + this.prefix + 'setColorByValueInput').value;
 
       let tempArray = path.split(".")
 
-      let startColor = document.querySelector('#startColor').value;
-      let endColor = document.querySelector('#endColor').value;
+      let startColor = document.querySelector('#' + this.prefix + 'startColor').value;
+      let endColor = document.querySelector('#'+ this.prefix +'endColor').value;
 
       graph.colorByValue(tempArray, graph.nodes.get(), graph.edges.get(), startColor, endColor);
 
@@ -2253,14 +2332,14 @@ initDragAndDrop() {
 
 
     // Add an event listener to get the selected value
-    document.querySelector('#myDropdown select').addEventListener('change', function () {
+    document.querySelector('#' + this.prefix + 'myDropdown select').addEventListener('change', function () {
       var selectedValue = this.value;
 
       if (selectedValue == "setColorByValue") {
 
         var input = document.createElement("input");
         input.type = "text";
-        input.id = "setColorByValueInput";
+        input.id = this.prefix + "setColorByValueInput";
 
 
 
@@ -2277,7 +2356,7 @@ initDragAndDrop() {
           option.text = usefulColors[i];
           select.appendChild(option);
         }
-        select.id = "startColor";
+        select.id = this.prefix + "startColor";
 
 
         const select2 = document.createElement("select");
@@ -2289,28 +2368,28 @@ initDragAndDrop() {
           option.text = usefulColors2[i];
           select2.appendChild(option);
         }
-        select2.id = "endColor";
+        select2.id = this.prefix + "endColor";
 
         // Add a button to get the selected value
         var button = document.createElement("button");
-        button.id = "setPath";
+        button.id = this.prefix + "setPath";
         button.innerHTML = "Set path";
         button.addEventListener("click", getPath);
 
-        if (!document.getElementById("setColorByValueInput")) {
-          document.getElementById("myDropdown").appendChild(input);
-          document.getElementById("myDropdown").appendChild(select);
-          document.getElementById("myDropdown").appendChild(select2);
-          document.getElementById("myDropdown").appendChild(button);
+        if (!document.getElementById(this.prefix + "setColorByValueInput")) {
+          document.getElementById(this.prefix + "myDropdown").appendChild(input);
+          document.getElementById(this.prefix + "myDropdown").appendChild(select);
+          document.getElementById(this.prefix + "myDropdown").appendChild(select2);
+          document.getElementById(this.prefix + "myDropdown").appendChild(button);
         }
       }
 
       if (selectedValue == "setColorByProperty") {
-        if (document.getElementById("setColorByValueInput")) {
-          document.getElementById("setColorByValueInput").remove();
-          document.getElementById("startColor").remove();
-          document.getElementById("endColor").remove();
-          document.getElementById("setPath").remove();
+        if (document.getElementById(this.prefix + "setColorByValueInput")) {
+          document.getElementById(this.prefix + "setColorByValueInput").remove();
+          document.getElementById(this.prefix + "startColor").remove();
+          document.getElementById(this.prefix + "endColor").remove();
+          document.getElementById(this.prefix + "setPath").remove();
         }
         graph.recolorByProperty();
         graph.nodes.update(graph.nodes.get())
@@ -2348,14 +2427,14 @@ initDragAndDrop() {
 
     let element = document.createElement("BUTTON");
     element.innerHTML = "Save state";
-    element.id = "save";
+    element.id = this.prefix + "save";
     element.addEventListener("click", () => {
       this.createSaveStateFunctionality()
     });
     container.append(element)
 
     let element2 = document.createElement("BUTTON");
-    element2.id = "load"
+    element2.id = this.prefix + "load"
     element2.innerHTML = "Load state";
     element2.addEventListener("click", () => {
       this.createLoadStateFunctionality()
@@ -2368,7 +2447,7 @@ initDragAndDrop() {
 
   createSaveStateFunctionality() {
 
-    let coloringDiv = document.getElementById("myDropdown");
+    let coloringDiv = document.getElementById(this.prefix + "myDropdown");
 
     let dropdown = coloringDiv.querySelector("select");
 
@@ -2376,13 +2455,13 @@ initDragAndDrop() {
 
       this.configFile.coloring_function_object.function_name = "colorByValue";
 
-      let inputField = document.getElementById("setColorByValueInput");
+      let inputField = document.getElementById(this.prefix + "setColorByValueInput");
       this.configFile.coloring_function_object.path = inputField.value;
 
-      let startColor = document.getElementById("startColor");
+      let startColor = document.getElementById(this.prefix + "startColor");
       this.configFile.coloring_function_object.start_color = startColor.value;
 
-      let endColor = document.getElementById("endColor");
+      let endColor = document.getElementById(this.prefix + "endColor");
       this.configFile.coloring_function_object.end_color = endColor.value;
 
     }else if(dropdown.value == "setColorByProperty"){
@@ -2398,7 +2477,7 @@ initDragAndDrop() {
     }
 
 
-    let deepSearchDropdown = document.getElementById("search_select");
+    let deepSearchDropdown = document.getElementById(this.prefix + "search_select");
 
     if(deepSearchDropdown.value == "search_node"){
 
@@ -2412,14 +2491,14 @@ initDragAndDrop() {
         
     }
 
-    let inputField = document.getElementById("input-field");
+    let inputField = document.getElementById(this.prefix + "input-field");
 
     this.configFile.dataset_search_function_object.search_string = inputField.value;
 
-    let inputFieldVisual = document.getElementById("search_input");
+    let inputFieldVisual = document.getElementById(this.prefix + "search_input");
     this.configFile.visual_search_function_object.search_string = inputFieldVisual.value;
 
-    let checkBox = document.getElementById("myCheckbox");
+    let checkBox = document.getElementById(this.prefix + "myCheckbox");
 
     this.configFile.dataset_search_function_object.keep_expanded = checkBox.checked;
 
@@ -2481,7 +2560,7 @@ initDragAndDrop() {
 
   loadStateDefault(input) {
 
-    document.getElementById("mynetwork").innerHTML = "";
+    document.getElementById(this.graphContainerId).innerHTML = "";
 
     const reader = new FileReader();
     reader.onload = () => {
@@ -2537,19 +2616,19 @@ initDragAndDrop() {
 
     //}
 
-    if (document.getElementById("legendContainer")) {
+    if (document.getElementById(this.prefix + "legendContainer")) {
 
       invisibleGroups = this.legendInvisibleGroups(this.options);
 
-      document.getElementById("legendContainer").remove();
+      document.getElementById(this.prefix + "legendContainer").remove();
     }
     var legendDiv = document.createElement("div");
-    let vis_cont = document.getElementById("vis_container")
+    let vis_cont = document.getElementById(this.prefix + "vis_container")
     vis_cont.append(legendDiv);
     legendDiv.style.width = '100%';
     legendDiv.style.position = 'relative';
     legendDiv.style.display = 'inline-block';
-    legendDiv.id = "legendContainer";
+    legendDiv.id = this.prefix + "legendContainer";
     var legendColors = this.drawer.colorObj
     var legendSet = {}
 
@@ -2562,7 +2641,7 @@ initDragAndDrop() {
         var propertyColor = document.createElement("div");
         var propertyName = document.createElement("div");
         propertyContainer.className = "legend-element-container";
-        propertyContainer.id = edge.label;
+        propertyContainer.id = this.prefix + edge.label;
         propertyColor.className = "color-container";
         propertyName.className = "name-container";
         propertyColor.style.float = "left";
@@ -2726,12 +2805,12 @@ initDragAndDrop() {
 
         this.options_container.innerHTML = "<h3>comparison between nodes</h3>"
         let comparison_container = document.createElement("div")
-        comparison_container.setAttribute("id", "comparison_container")
+        comparison_container.setAttribute("id", this.prefix + "comparison_container")
         this.options_container.append(comparison_container)
         this.options_container.append(document.createElement("H2").appendChild(document.createTextNode("common types")))
 
         let setForAllContainer = document.createElement("div")
-        setForAllContainer.setAttribute("id", "setForAllContainer")
+        setForAllContainer.setAttribute("id", this.prefix + "setForAllContainer")
         this.options_container.append(setForAllContainer)
 
 
@@ -3042,7 +3121,7 @@ deepSearchExpandNodes(foundNode, fullGraph) {
 collapseSearch(){
 
   //if the checkbox is not checked, collapse all nodes that were expanded during deep search
-  if(!document.getElementById("myCheckbox").checked ){
+  if(!document.getElementById(this.prefix + "myCheckbox").checked ){
 
     //remove duplicates from the deep search expands array
     this.deepSearchExpandsFull = [...new Set(this.deepSearchExpandsFull)];
@@ -3050,7 +3129,7 @@ collapseSearch(){
     this.deepSearchExpandsFull.forEach(node => {
 
       //if the node exists and is not the root node, collapse it
-      if(this.itemExists(node) && node != this.drawer.rootId){
+      if(this.itemExists(node) && /*node != this.drawer.rootId*/ (!this.rootNodesArray.includes(node))){
 
 
         if(this.isNodeOpen(node)){
@@ -3170,7 +3249,7 @@ deepSearch(searchValue){
   //search for nodes with label containing search value
   let foundNodes = [];
 
-  if (document.getElementById('search_select').value === 'search_node') {
+  if (document.getElementById(this.prefix + 'search_select').value === 'search_node') {
 
     const lowercaseSearchValue = searchValue.toLowerCase();
     foundNodes = fullGraph.nodes.get().filter(node =>
@@ -3178,7 +3257,7 @@ deepSearch(searchValue){
     );
   }
 
-  if (document.getElementById('search_select').value === 'search_edge') {
+  if (document.getElementById(this.prefix + 'search_select').value === 'search_edge') {
       
       //search for edges with label containing search value
       let foundEdges = [];
@@ -3196,18 +3275,17 @@ deepSearch(searchValue){
 
   }
 
-
   if(foundNodes.length == 0){
 
     this.collapseSearch();
     this.recolorByProperty();
-    if(document.getElementById("myCheckbox").checked){
+    if(document.getElementById(this.prefix + "myCheckbox").checked){
 
       this.setGraphColorsBlackAndWhite(this.nodes.get(), this.edges.get());
 
     }
     return;
-
+s
   }
 
   
@@ -3220,7 +3298,21 @@ deepSearch(searchValue){
     //expand the paths to the found nodes
     this.deepSearchExpandNodes(node, fullGraph);
 
-    let pathsToColor = this.findAllPaths(this.drawer.rootId, node.id);
+    var pathsToColor = [];
+
+    for(let i = 0; i < this.rootNodesArray.length; i++){
+
+      let tempPaths = this.findAllPaths(this.rootNodesArray[i], node.id);
+
+      for(let j = 0; j < tempPaths.length; j++){
+
+        pathsToColor.push(tempPaths[j]);
+
+      }
+      
+      //pathsToColor = [...pathsToColor, ...tempPaths] //this.findAllPaths(this.drawer.rootId, node.id);
+
+    }
 
     for(let i = 0; i < pathsToColor.length; i++){
         
@@ -3228,8 +3320,8 @@ deepSearch(searchValue){
 
         if(!this.deepSearchExpands.includes(pathsToColor[i][j])){
 
-          if(pathsToColor[i][j] != this.drawer.rootId){
-
+          if(/*pathsToColor[i][j] != this.drawer.rootId*/!this.rootNodesArray.includes(pathsToColor[i][j])){
+            
             this.deepSearchExpands.push(pathsToColor[i][j]);
           }
         }
@@ -3275,7 +3367,7 @@ deepSearch(searchValue){
 
   searchFunctionality(data, searchValue) {
 
-    document.getElementById('search_input').value = "";
+    document.getElementById(this.prefix + 'search_input').value = "";
 
     this.deepSearch(searchValue);
 
@@ -3288,10 +3380,10 @@ deepSearch(searchValue){
 
     const inputField = document.createElement('input');
     inputField.type = 'text';
-    inputField.id = 'input-field';
+    inputField.id = this.prefix + 'input-field';
   
     const submitButton = document.createElement('button');
-    submitButton.id = 'submit-button';
+    submitButton.id = this.prefix + 'submit-button';
     submitButton.textContent = 'Submit';
   
     container.appendChild(inputField);
@@ -3304,7 +3396,7 @@ deepSearch(searchValue){
     checkbox.type = 'checkbox';
     
     // Optionally set additional properties for the checkbox
-    checkbox.id = 'myCheckbox';
+    checkbox.id = this.prefix + 'myCheckbox';
     container.appendChild(checkbox);
  
     submitButton.addEventListener('click', () => {
@@ -3562,6 +3654,10 @@ getRightPathsBetweenNodes(path, startNodes, endNodes) {
       //gets edge paths between start and end nodes
       let currentEdgePaths = this.getAllStringsForAllPaths(currentNodePaths);
 
+      if(currentEdgePaths.length == 0) {
+        continue;
+      }
+
       //compares the given path with the current paths and outputs the path nodes if they are equal
       let foundPath = this.comparePaths(path, currentEdgePaths[0], currentNodePaths);
 
@@ -3749,14 +3845,20 @@ colorByValue(path, nodes, edges, startColor, endColor){
 
 class Graph{
 
-  constructor(file, configFile) {
+  constructor(file, configFile, onlyData) {
+
+    if((file || configFile) === undefined) {
+
+      return;
+
+    }
 
     this.file = file;
     this.configFile = configFile;
     this.graphtool;
     this.openPaths = [];
 
-    this.createGraphByConfig(file, configFile);
+    this.createGraphByConfig(file, configFile, onlyData);
 
   }
 
@@ -3776,7 +3878,7 @@ class Graph{
   
   }
 
-  createGraphByConfig(file, configFile) {
+  createGraphByConfig(file, configFile, onlyData) {
 
  
   
@@ -3814,11 +3916,12 @@ class Graph{
       }
     }
 
-    let drawer;
+    var drawer;
     let tempNodes;
     let tempEdges;
     let tempColorObj;
     let args;
+    let connections = [];
 
     let drawer_config  = {lang:"en",contractArrayPaths: true}
 
@@ -3829,10 +3932,29 @@ class Graph{
         tempEdges = [];
         tempColorObj = {};
       }else{
+
         tempNodes = drawer.nodes.get();
         tempEdges = drawer.edges.get();
         tempColorObj = drawer.colorObj;
+
+        drawer.edges.get().forEach((edge) => {
+
+          if(edge.from == 'jsondata/' + configFile.root_node_objects[i].node_id || edge.to == 'jsondata/' + configFile.root_node_objects[i].node_id) {
+
+            connections.push(edge);
+
+            tempEdges = tempEdges.filter(obj => obj.id !== edge.id);
+            
+
+          }
+
+        });
+
+        tempNodes = tempNodes.filter(obj => obj.id !== 'jsondata/' + configFile.root_node_objects[i].node_id);
+                                                                                                                                                           
       }
+
+      console.log(connections);
 
       args = {
         file: file,
@@ -3847,6 +3969,18 @@ class Graph{
 
       drawer = new isg.GraphDrawer(drawer_config, args);
 
+    }
+
+    connections.forEach((edge) => {
+
+      drawer.edges.update(edge);
+
+    });
+
+    console.log(drawer)
+
+    if(onlyData) {
+      return drawer;
     }
    
     // let args = {
@@ -3884,7 +4018,8 @@ class Graph{
       configFile: configFile
     };
   
-    this.graphtool = new isg.GraphTool("mynetwork", config);
+    this.graphtool = new isg.GraphTool(config.configFile.graph_container_id, config);
+    this.graphtool = new isg.GraphTool("mynetwork2", config);
 
     // //"coloring_function_object" / maybe given and/or will be saved in the config
     // if(configFile.coloring_function_object.function_name == "colorByValue"){

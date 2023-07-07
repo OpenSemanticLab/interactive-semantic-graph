@@ -41,6 +41,7 @@
   <h1 id="title">GraphTool Test Page</h1>
 
   <div id="mynetwork"></div>
+  <div id="mynetwork2"></div>
   <script>
     let new_json = {"jsonschema": {
   "Category:Entity": {
@@ -96,7 +97,7 @@
   "Item:MyProject": {
       "type": ["Category:Item"],
       "label": [{"text": "My Project", "lang": "en"}, {"text": "Projekt", "lang": "de"}],
-      "member": ["Item:SomePerson", "Item:SomePerson"], //"Item:MyOtherItem"
+      "^member": ["Item:SomePerson", "Item:SomePerson"], //"Item:MyOtherItem"
       "other": ["Item:SomePerson"],
       "some_literal": ["Some string","Some","string",],
       "not_in_context": "Not in Context",
@@ -122,7 +123,7 @@
   "Item:SomePerson": {
       "type": ["Category:Item"],
       "label": [{"text": "Max Mustermann", "lang": "en"}],
-      "some_property": "Item:MyOtherItem",
+      "some_property": "Item:MyOtherItem"
   },
   "Property:HasMember": {
       "type": ["Category:Property"],
@@ -160,6 +161,7 @@ let configFile =
     "type": [
       "Category:OSWaf511685f7c044e49bcdc5e32e58b19a"
     ],
+    "graph_container_id": "mynetwork",
     "root_node_objects": [
       {
         "node_id": "Item:MyProject",

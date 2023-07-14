@@ -97,7 +97,7 @@
   "Item:MyProject": {
       "type": ["Category:Item"],
       "label": [{"text": "My Project", "lang": "en"}, {"text": "Projekt", "lang": "de"}],
-      "^member": ["Item:SomePerson", "Item:SomePerson"], //"Item:MyOtherItem"
+      "member": ["Item:SomePerson", "Item:SomePerson"], //"Item:MyOtherItem"
       "other": ["Item:SomePerson"],
       "some_literal": ["Some string","Some","string",],
       "not_in_context": "Not in Context",
@@ -106,7 +106,8 @@
           "value": "10000",
           "budget":[{
             "year": "2023",
-            "value": "10"}, {
+            "value": "10",
+            "other":["Item:MySecondItem"]}, {
               "year": "2022",
               "value": "20"}]
       },{
@@ -434,7 +435,17 @@ let configFile =
     // };
     // let graphtool = new isg.GraphTool("mynetwork", config);
 
-    let graph = new isg.Graph(new_json, configFile);
+    // let graph = new isg.Graph(new_json, configFile);
+
+    // configFile.graph_container_id = "mynetwork2";
+
+    // let graph2 = new isg.Graph(new_json, configFile);
+
+    let graph = new isg.G.Graph(new_json, configFile);
+
+    configFile.graph_container_id = "mynetwork2";
+
+    let graph2 = new isg.G.Graph(new_json, configFile);
 
   </script>
 </body>

@@ -8,11 +8,11 @@ const GT = require("../GraphTool/GraphTool.js");
 
 
 
-class Graph{
+class Graph {
 
   constructor(file, configFile, onlyData) {
 
-    if((file || configFile) === undefined) {
+    if ((file || configFile) === undefined) {
 
       return;
 
@@ -27,28 +27,28 @@ class Graph{
 
   }
 
-  isNodeLastInPath(node){
-      
-      let edges = this.graphtool.edges.get();
-  
-      for(let i = 0; i < edges.length; i++) {
-  
-        if(edges[i].from == node) {
-          return false;
-        }
-  
+  isNodeLastInPath(node) {
+
+    let edges = this.graphtool.edges.get();
+
+    for (let i = 0; i < edges.length; i++) {
+
+      if (edges[i].from == node) {
+        return false;
       }
-  
-      return true;
-  
+
+    }
+
+    return true;
+
   }
 
   createGraphByConfig(file, configFile, onlyData) {
 
- 
-  
+
+
     //"positioning_function_object" / maybe given and/or will be saved in the config
-    
+
     //"root_node_objects" / where to start expanding
     let options = {
       interaction: {
@@ -74,7 +74,7 @@ class Graph{
       },
       edges: {
         arrows: "to",
-        
+
       },
       groups: {
         useDefaultGroups: false
@@ -88,15 +88,15 @@ class Graph{
     let args;
     let connections = [];
 
-    let drawer_config  = {lang:"en",contractArrayPaths: true}
+    let drawer_config = { lang: "en", contractArrayPaths: true }
 
-    for(let i = 0; i < configFile.root_node_objects.length; i++) {
+    for (let i = 0; i < configFile.root_node_objects.length; i++) {
 
-      if(drawer === undefined) {
+      if (drawer === undefined) {
         tempNodes = [];
         tempEdges = [];
         tempColorObj = {};
-      }else{
+      } else {
 
         tempNodes = drawer.nodes.get();
         tempEdges = drawer.edges.get();
@@ -104,19 +104,19 @@ class Graph{
 
         drawer.edges.get().forEach((edge) => {
 
-          if(edge.from == 'jsondata/' + configFile.root_node_objects[i].node_id || edge.to == 'jsondata/' + configFile.root_node_objects[i].node_id) {
+          if (edge.from == 'jsondata/' + configFile.root_node_objects[i].node_id || edge.to == 'jsondata/' + configFile.root_node_objects[i].node_id) {
 
             connections.push(edge);
 
             tempEdges = tempEdges.filter(obj => obj.id !== edge.id);
-            
+
 
           }
 
         });
 
         tempNodes = tempNodes.filter(obj => obj.id !== 'jsondata/' + configFile.root_node_objects[i].node_id);
-                                                                                                                                                           
+
       }
 
       args = {
@@ -142,10 +142,10 @@ class Graph{
 
 
 
-    if(onlyData) {
+    if (onlyData) {
       return drawer;
     }
-   
+
     // let args = {
     //   file: file,
     //   depth: 1,
@@ -155,7 +155,7 @@ class Graph{
     //   rootItem: configFile.root_node_objects[0].node_id,
     //   recursionDepth: configFile.root_node_objects[0].expansion_depth,
     // }
-    
+
     // drawer = new isg.GraphDrawer(drawer_config, args);
 
     // args = {
@@ -168,25 +168,25 @@ class Graph{
     //   recursionDepth: configFile.root_node_objects[0].expansion_depth,
     //   colorObj: drawer.colorObj,
     // }
-    
+
     // drawer = new isg.GraphDrawer(drawer_config, args);
 
     // console.log(drawer)
     let config = {
-     // nodes: nodes,
-     // edges: edges,
+      // nodes: nodes,
+      // edges: edges,
       options: options,
       file: new_json,
       drawer: drawer,
       configFile: configFile
     };
-  
+
     this.graphtool = new GT.GraphTool(config.configFile.graph_container_id, config);
     //this.graphtool = new isg.GraphTool("mynetwork2", config);
 
     // //"coloring_function_object" / maybe given and/or will be saved in the config
     // if(configFile.coloring_function_object.function_name == "colorByValue"){
-      
+
     //   let coloringDiv = document.getElementById("myDropdown");
 
     //   let dropdown = coloringDiv.querySelector("select");
@@ -209,16 +209,16 @@ class Graph{
     //   submitButton.click();
 
     // }else if(configFile.coloring_function_object.function_name == "colorByProperty"){
-        
+
     //     let coloringDiv = document.getElementById("myDropdown");
-  
+
     //     let dropdown = coloringDiv.querySelector("select");
-  
+
     //     dropdown.value = "setColorByProperty";
-  
+
     //     let changeEvent = new Event('change');
     //     dropdown.dispatchEvent(changeEvent);
-    
+
     // }
 
     // //"dataset_search_function_object" / deepsearch load save / saved in config
@@ -231,7 +231,7 @@ class Graph{
     //     dropdown.value = "search_node";
 
     //   }else if (configFile.dataset_search_function_object.search_on == "edges"){
-          
+
     //     dropdown.value = "search_edge";
 
     //   }
@@ -258,7 +258,7 @@ class Graph{
     //     dropdown.value = "search_node";
 
     //   }else{
-          
+
     //       dropdown.value = "search_edge";
 
     //   }
@@ -272,7 +272,7 @@ class Graph{
     // }
 
     //"expanded_paths" / maybe given and/or will be saved in the config
-  
+
     //"expanded_nodes" / maybe given and/or will be saved in the config
     // if(configFile.expanded_nodes.length > 0){
 
@@ -295,7 +295,7 @@ class Graph{
     //         this.graphtool.expandNodes({ nodes: [nodesToExpand[i][j]] });
 
     //       }
-  
+
     //     }
     //   }
     // }
@@ -307,7 +307,7 @@ class Graph{
 
 export {
 
-    Graph,
-    vis
+  Graph,
+  vis
 
 }

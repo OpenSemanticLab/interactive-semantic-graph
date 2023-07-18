@@ -23,291 +23,291 @@ const GTLoadSave = require("./GraphToolLoadSave.js");
 
 class GraphTool {
 
-    static instanceCount = 0;
-  
-    constructor(div_id, config, callback_config) {
+  static instanceCount = 0;
 
-      this.BindToClass(GTHelper, this)
-      this.BindToClass(GTContainers, this)
-      this.BindToClass(GTEventListeners, this)
-      this.BindToClass(GTDragAndDrop, this)
-      this.BindToClass(GTNodeOptions, this)
-      this.BindToClass(GTDeepSearch, this)
-      this.BindToClass(GTVisualSearch, this)
-      this.BindToClass(GTAlgorithms, this)
-      this.BindToClass(GTLegend, this)
-      this.BindToClass(GTLoadSave, this)
+  constructor(div_id, config, callback_config) {
 
-  
-      this.graphContainerId = div_id; 
-  
-      this.prefix = 'Graph' + GraphTool.instanceCount + '_';
+    this.BindToClass(GTHelper, this)
+    this.BindToClass(GTContainers, this)
+    this.BindToClass(GTEventListeners, this)
+    this.BindToClass(GTDragAndDrop, this)
+    this.BindToClass(GTNodeOptions, this)
+    this.BindToClass(GTDeepSearch, this)
+    this.BindToClass(GTVisualSearch, this)
+    this.BindToClass(GTAlgorithms, this)
+    this.BindToClass(GTLegend, this)
+    this.BindToClass(GTLoadSave, this)
 
-      GraphTool.instanceCount += 1;
-  
-      const defaultConfig = {
-        callbacks: {
-          loadState: (e) => this.loadStateDefault(e),
-          onBeforeSearchNodes: [(graph, searchString) => true],
-        }
-      };
-  
-      this.config = utils.mergeDeep(defaultConfig, callback_config); // overwrite default config with user callback_config
-  
-      this.initGraphContainers(div_id);
-      this.drawer = config.drawer
-  
-      this.clicked = {} // object to store expanded nodes TODO: rename to expandedNodes
-  
-      this.keyObject = { // to be removed, was inteded for callback implementation
-        doubleclick: (params) => {
-          this.expandNodes(params)
-        },
+
+    this.graphContainerId = div_id;
+
+    this.prefix = 'Graph' + GraphTool.instanceCount + '_';
+
+    GraphTool.instanceCount += 1;
+
+    const defaultConfig = {
+      callbacks: {
+        loadState: (e) => this.loadStateDefault(e),
+        onBeforeSearchNodes: [(graph, searchString) => true],
       }
-      // create a visjs network and attatch it to div
-  
-      this.nodes = this.drawer.nodes //new vis.DataSet(config.nodes)
-  
-      this.edges = this.drawer.edges //new vis.DataSet(config.edges)
-      this.data = {
-        nodes: this.nodes,
-        edges: this.edges,
-      };
-      this.options = config.options;
-      this.network = new vis.Network(this.vis_container, this.data, this.options);
+    };
 
-      this.BindToClass(GTVisjsEvents, this)
-      this.BindToClass(GTCopyPaste, this)
-  
-      this.rootNodesArray = [];
-  
-      let copiedConfig = JSON.parse(JSON.stringify(config.configFile));
-  
-      copiedConfig.root_node_objects.forEach((node) => {
-  
-        node.expansion_depth = 100000;
-  
-        this.rootNodesArray.push('jsondata/' + node.node_id);
-  
-      });
-  
-      let newInstanceOfGraphClass = new G.Graph();
-  
-      this.fullGraph = newInstanceOfGraphClass.createGraphByConfig(config.file, copiedConfig, true);
+    this.config = utils.mergeDeep(defaultConfig, callback_config); // overwrite default config with user callback_config
 
-      this.BindToClass(GTColoring, this)
-  
-      this.recolorByProperty()
-  
-  
-      // variables containing keyboard and mouse state
-      this.pressed_keys = []
-      this.mouseX = 0
-      this.mouseY = 0
-  
-      // for copying function
-      this.copiedNodes = []
-      this.copiedEdges = []
-  
-      // for having different node classes. 
-      this.classRegistry = new Map // maps from typeString to class
-      this.classRegistry.register = (cls) => {
-        this.classRegistry.set((new cls).typeString, cls)
-      }
-      // for (let cls of [NodeClasses.RocketBase, NodeClasses.RocketBase, NodeClasses.Fountain, NodeClasses.DelayNode, NodeClasses.TextSpeechNode, NodeClasses.VideoNode,
-      //     NodeClasses.DrawNode,
-      //     NodeClasses.CameraNode, NodeClasses.ImageNode, NodeClasses.CsvNode,
-      //     NodeClasses.JSONNode, NodeClasses.JSONNode1, NodeClasses.JSONSchemaNode
-      //   ]) {
-      //   this.classRegistry.register(cls)
-      // }
-  
-        //args to generate full graph
-  
-      // this.fullGraphArgs = {
-      //   file: this.drawer.file,
-      //   depth: this.drawer.depth,
-      //   mode: this.drawer.mode,
-      //   rootItem: this.drawer.rootItem,
-      //   recursionDepth: 100000000000,
-      //   nodes: this.drawer.nodes.get(),
-      //   edges: this.drawer.edges.get(),
-      // }
-  
-      // this.drawer_config  = {lang:"en",contractArrayPaths: true}
-    
-      // this.fullGraph = new isg.GraphDrawer(this.drawer_config, this.fullGraphArgs);
-  
-      // Initialize GUI for various functions acting on the graph.
-      this.createLegend();
-      this.oldNodeColors = {};
-      this.oldEdgeColors = {};
-      this.addKeyEventListeners();
-      this.addContainerEventListeners(this.vis_container);
-      this.dataFile = this.drawer.file;
-      this.idsToColor = [];
-      this.deepSearchExpands = [];
-      this.deepSearchExpandsFull = [];
-      this.searchExpands = [];
-      this.fullGraph;
-      this.configFile = config.configFile;
-  
-      this.colorsBeforeVisualSearch = {};
-      this.initDeepSearch();
-  
-      this.initVisjsCallbacks();
-  
-      // Rectangular selection:
-      this.vis_container.onmousemove = (event) => {
-        this.mouseX = event.clientX
-        this.mouseY = event.clientY - 30
-      }
-  
-      //this.initRectangleSelection()
-      this.initDragAndDrop()
+    this.initGraphContainers(div_id);
+    this.drawer = config.drawer
+
+    this.clicked = {} // object to store expanded nodes TODO: rename to expandedNodes
+
+    this.keyObject = { // to be removed, was inteded for callback implementation
+      doubleclick: (params) => {
+        this.expandNodes(params)
+      },
+    }
+    // create a visjs network and attatch it to div
+
+    this.nodes = this.drawer.nodes //new vis.DataSet(config.nodes)
+
+    this.edges = this.drawer.edges //new vis.DataSet(config.edges)
+    this.data = {
+      nodes: this.nodes,
+      edges: this.edges,
+    };
+    this.options = config.options;
+    this.network = new vis.Network(this.vis_container, this.data, this.options);
+
+    this.BindToClass(GTVisjsEvents, this)
+    this.BindToClass(GTCopyPaste, this)
+
+    this.rootNodesArray = [];
+
+    let copiedConfig = JSON.parse(JSON.stringify(config.configFile));
+
+    copiedConfig.root_node_objects.forEach((node) => {
+
+      node.expansion_depth = 100000;
+
+      this.rootNodesArray.push('jsondata/' + node.node_id);
+
+    });
+
+    let newInstanceOfGraphClass = new G.Graph();
+
+    this.fullGraph = newInstanceOfGraphClass.createGraphByConfig(config.file, copiedConfig, true);
+
+    this.BindToClass(GTColoring, this)
+
+    this.recolorByProperty()
+
+
+    // variables containing keyboard and mouse state
+    this.pressed_keys = []
+    this.mouseX = 0
+    this.mouseY = 0
+
+    // for copying function
+    this.copiedNodes = []
+    this.copiedEdges = []
+
+    // for having different node classes. 
+    this.classRegistry = new Map // maps from typeString to class
+    this.classRegistry.register = (cls) => {
+      this.classRegistry.set((new cls).typeString, cls)
+    }
+    // for (let cls of [NodeClasses.RocketBase, NodeClasses.RocketBase, NodeClasses.Fountain, NodeClasses.DelayNode, NodeClasses.TextSpeechNode, NodeClasses.VideoNode,
+    //     NodeClasses.DrawNode,
+    //     NodeClasses.CameraNode, NodeClasses.ImageNode, NodeClasses.CsvNode,
+    //     NodeClasses.JSONNode, NodeClasses.JSONNode1, NodeClasses.JSONSchemaNode
+    //   ]) {
+    //   this.classRegistry.register(cls)
+    // }
+
+    //args to generate full graph
+
+    // this.fullGraphArgs = {
+    //   file: this.drawer.file,
+    //   depth: this.drawer.depth,
+    //   mode: this.drawer.mode,
+    //   rootItem: this.drawer.rootItem,
+    //   recursionDepth: 100000000000,
+    //   nodes: this.drawer.nodes.get(),
+    //   edges: this.drawer.edges.get(),
+    // }
+
+    // this.drawer_config  = {lang:"en",contractArrayPaths: true}
+
+    // this.fullGraph = new isg.GraphDrawer(this.drawer_config, this.fullGraphArgs);
+
+    // Initialize GUI for various functions acting on the graph.
+    this.createLegend();
+    this.oldNodeColors = {};
+    this.oldEdgeColors = {};
+    this.addKeyEventListeners();
+    this.addContainerEventListeners(this.vis_container);
+    this.dataFile = this.drawer.file;
+    this.idsToColor = [];
+    this.deepSearchExpands = [];
+    this.deepSearchExpandsFull = [];
+    this.searchExpands = [];
+    this.fullGraph;
+    this.configFile = config.configFile;
+
+    this.colorsBeforeVisualSearch = {};
+    this.initDeepSearch();
+
+    this.initVisjsCallbacks();
+
+    // Rectangular selection:
+    this.vis_container.onmousemove = (event) => {
+      this.mouseX = event.clientX
+      this.mouseY = event.clientY - 30
     }
 
-    BindToClass(functionsObject, thisClass) {
-
-      for (let [ functionKey, functionValue ] of Object.entries(functionsObject)) {
-
-        thisClass[functionKey] = functionValue.bind(thisClass);
-
-      }
-
-    }
-    
-    handleCallbacks(params) {
-      let result = true;
-      if (!this.config.callbacks[params.id]) return true;
-      for (const callback of this.config.callbacks[params.id]) {
-        if (!callback(params.params)) {
-          result = false
-          break;
-        }
-      }
-      return result;
-    }
-        
-    //not used
-    run_recursive(node_id) {
-      let node = this.nodes.get(node_id)
-      if ("run" in node) {
-        node.run()
-      } else {
-        let conn_edges = this.network.getConnectedEdges(node.id)
-  
-        conn_edges.forEach(function (edge_id) {
-          let edge = this.edges.get(edge_id)
-          if (edge.from == node_id) {
-            let neighbor_node = this.nodes.get(edge.to)
-  
-            if (neighbor_node.run) {
-              neighbor_node.run()
-            } else {
-              window.setTimeout(function () {
-  
-                run_recursive(edge.to)
-              }, 200)
-            }
-          }
-        })
-  
-      }
-    }
-
-    // Object.filter = (obj, predicate) => 
-    //   Object.keys(obj)
-    //         .filter( key => predicate(obj[key]) )
-    //         .reduce( (res, key) => (res[key] = obj[key], res), {} );
-    
-
-    // expands the object that is saved inside a node and on second doubleclick deletes nodes and edges that go out of the clicked node
-    expandNodes(params) {
-  
-      if(!this.searchAlert()){
-        return;
-      }
-      
-      this.searchNodes("");
-      document.getElementById(this.prefix + "search_input").value = "";
-  
-      if (params.nodes.length > 0) {
-  
-        let node = this.nodes.get(params.nodes[0]);
-  
-        if ("item" in node && (this.clicked[params.nodes[0]] == false || !("" + params.nodes[0] in this.clicked)) && (this.network.getConnectedNodes(params.nodes[0], "to").length === 0)) {
-  
-          // expand node
-  
-          let args = {
-            //file: config.file, not needed since drawer has own file
-            lastId: node.id,
-            recursionDepth: 1,
-            recursionRootId: node.id,
-            recurse: true,
-            item: node.item,
-            path: node.path,
-            oldContext: "",
-            lastDepth: node.depth,
-            givenDepth: 1,
-            mode: true,
-            previousNode: node,
-          };
-  
-          this.drawer.createGraphNodesEdges(args);
-          this.recolorByProperty()
-  
-          this.createLegend()
-  
-          if (document.querySelector('#'+ this.prefix + 'myDropdown select').value == "setColorByValue") {
-  
-            this.colorByValue([document.querySelector('#' + this.prefix + 'setColorByValueInput').value], this.nodes, this.edges, document.querySelector('#' + this.prefix + 'startColor').value, document.querySelector('#' + this.prefix + 'endColor').value)
-          }
-          this.clicked[params.nodes[0]] = true;
-  
-  
-          // this.network.body.data.nodes.update(nodes);
-          // this.network.body.data.edges.update(edges);
-  
-  
-          //  this.nodes.update(nodes);
-          //  this.edges.update(edges);
-  
-        } else {
-  
-          // collapse Nodes
-          this.clicked[params.nodes[0]] = false;
-          //let conEdges = this.network.getConnectedEdges(params.nodes[0], "from")
-          this.deleteNodesChildren(params.nodes[0]);
-          this.createLegend()
-  
-          if (this.legendInvisibleGroups(this.options).length == 0) {
-            //this.nodes.update(nodes);
-            //this.edges.update(edges);
-          }
-  
-        }
-  
-      }
-      
-      
-      this.repeatInvisibility(this.options);
-  
-      if (this.legendInvisibleGroups(this.options).length == 0) {
-        this.resetNodesAndEdgesVisibility()
-      }
-      
-  
-      //this.createLegend()
-  
-    }
-  
-  
+    //this.initRectangleSelection()
+    this.initDragAndDrop()
   }
+
+  BindToClass(functionsObject, thisClass) {
+
+    for (let [functionKey, functionValue] of Object.entries(functionsObject)) {
+
+      thisClass[functionKey] = functionValue.bind(thisClass);
+
+    }
+
+  }
+
+  handleCallbacks(params) {
+    let result = true;
+    if (!this.config.callbacks[params.id]) return true;
+    for (const callback of this.config.callbacks[params.id]) {
+      if (!callback(params.params)) {
+        result = false
+        break;
+      }
+    }
+    return result;
+  }
+
+  //not used
+  run_recursive(node_id) {
+    let node = this.nodes.get(node_id)
+    if ("run" in node) {
+      node.run()
+    } else {
+      let conn_edges = this.network.getConnectedEdges(node.id)
+
+      conn_edges.forEach(function (edge_id) {
+        let edge = this.edges.get(edge_id)
+        if (edge.from == node_id) {
+          let neighbor_node = this.nodes.get(edge.to)
+
+          if (neighbor_node.run) {
+            neighbor_node.run()
+          } else {
+            window.setTimeout(function () {
+
+              run_recursive(edge.to)
+            }, 200)
+          }
+        }
+      })
+
+    }
+  }
+
+  // Object.filter = (obj, predicate) => 
+  //   Object.keys(obj)
+  //         .filter( key => predicate(obj[key]) )
+  //         .reduce( (res, key) => (res[key] = obj[key], res), {} );
+
+
+  // expands the object that is saved inside a node and on second doubleclick deletes nodes and edges that go out of the clicked node
+  expandNodes(params) {
+
+    if (!this.searchAlert()) {
+      return;
+    }
+
+    this.searchNodes("");
+    document.getElementById(this.prefix + "search_input").value = "";
+
+    if (params.nodes.length > 0) {
+
+      let node = this.nodes.get(params.nodes[0]);
+
+      if ("item" in node && (this.clicked[params.nodes[0]] == false || !("" + params.nodes[0] in this.clicked)) && (this.network.getConnectedNodes(params.nodes[0], "to").length === 0)) {
+
+        // expand node
+
+        let args = {
+          //file: config.file, not needed since drawer has own file
+          lastId: node.id,
+          recursionDepth: 1,
+          recursionRootId: node.id,
+          recurse: true,
+          item: node.item,
+          path: node.path,
+          oldContext: "",
+          lastDepth: node.depth,
+          givenDepth: 1,
+          mode: true,
+          previousNode: node,
+        };
+
+        this.drawer.createGraphNodesEdges(args);
+        this.recolorByProperty()
+
+        this.createLegend()
+
+        if (document.querySelector('#' + this.prefix + 'myDropdown select').value == "setColorByValue") {
+
+          this.colorByValue([document.querySelector('#' + this.prefix + 'setColorByValueInput').value], this.nodes, this.edges, document.querySelector('#' + this.prefix + 'startColor').value, document.querySelector('#' + this.prefix + 'endColor').value)
+        }
+        this.clicked[params.nodes[0]] = true;
+
+
+        // this.network.body.data.nodes.update(nodes);
+        // this.network.body.data.edges.update(edges);
+
+
+        //  this.nodes.update(nodes);
+        //  this.edges.update(edges);
+
+      } else {
+
+        // collapse Nodes
+        this.clicked[params.nodes[0]] = false;
+        //let conEdges = this.network.getConnectedEdges(params.nodes[0], "from")
+        this.deleteNodesChildren(params.nodes[0]);
+        this.createLegend()
+
+        if (this.legendInvisibleGroups(this.options).length == 0) {
+          //this.nodes.update(nodes);
+          //this.edges.update(edges);
+        }
+
+      }
+
+    }
+
+
+    this.repeatInvisibility(this.options);
+
+    if (this.legendInvisibleGroups(this.options).length == 0) {
+      this.resetNodesAndEdgesVisibility()
+    }
+
+
+    //this.createLegend()
+
+  }
+
+
+}
 
 export {
 
-    GraphTool,
+  GraphTool,
 
 }

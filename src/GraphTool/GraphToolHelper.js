@@ -16,74 +16,6 @@ function searchJSON(data, searchValue) {
 
 }
 
-function imageToNode(file, currentGraphObject, dropEvent) {
-  
-    // add image node to network
-
-    let xy = this.network.DOMtoCanvas({
-      x: dropEvent.clientX,
-      y: dropEvent.clientY
-    })
-
-    // read file 
-
-    let reader = new FileReader(currentGraphObject);
-
-    reader.onload = (event) => {
-
-      // let newNode = new NodeClasses.ImageNode(currentGraphObject, utils.uuidv4(), xy.x, xy.y, event.target.result)
-
-      // this.nodes.update(newNode)
-
-    };
-
-    reader.readAsDataURL(file)
-
-}
-
-function csvToNode(file, currentGraphObject, dropEvent) {
-  
-    // add csv node
-    let xy = this.network.DOMtoCanvas({
-      x: dropEvent.clientX,
-      y: dropEvent.clientY
-    })
-
-    // read file 
-
-    let reader = new FileReader(currentGraphObject);
-    reader.onload = (event) => {
-
-      // let newNode = new NodeClasses.CsvNode(currentGraphObject, utils.uuidv4(), xy.x, xy.y, event.target.result)
-
-      // this.nodes.update(newNode)
-    };
-    reader.readAsText(file)
-
-}
-
-function videoToNode(file, currentGraphObject, dropEvent) {
-  
-    // add cameraNode node
-    let xy = this.network.DOMtoCanvas({
-      x: dropEvent.clientX,
-      y: dropEvent.clientY
-    })
-
-    // read file 
-    let reader = new FileReader(currentGraphObject);
-
-    reader.onload = (event) => {
-
-      // let newNode = new NodeClasses.VideoNode(currentGraphObject, utils.uuidv4(), xy.x, xy.y, reader.readAsDataURL(event.target.result))
-
-      // this.nodes.update(newNode)
-    };
-
-    reader.readAsText(file)
-
-}
-
 //Outputs all edges with given label
 function getAllEdgesWithLabel(edges, label) {
 
@@ -213,12 +145,70 @@ function createValuesArray(paths) {
         return true;
       }
 
+      function updatePositions() {
+        this.nodes.forEach((node) => {
+          //setting the current position is necessary to prevent snap-back to initial position
+    
+          let position = this.network.getPosition(node.id)
+    
+          node.x = position.x
+          node.y = position.y
+          this.nodes.update(node)
+        })
+      }
+
+      function isNodeLastInPath(node){
+        
+        let edges = this.edges.get();
+    
+        for(let i = 0; i < edges.length; i++) {
+    
+          if(edges[i].from == node) {
+            return false;
+          }
+    
+        }
+    
+        return true;
+    
+      } 
+
+      //checks if the given node id exists in the current graph
+      function itemExists(node_id){
+      
+        if(this.nodes.get(node_id)){
+      
+          return true;
+      
+        }
+      
+        return false;
+      
+      }
+      //checks if the given node is open/expanded
+      function isNodeOpen(node_id) {
+        const edges = this.edges.get();
+        
+        for (const edge of edges) {
+          if (edge.from === node_id.trim()) {
+            return true;
+          }
+        }
+      
+        return false;
+      }
+
+      //Removes the given value from the given array
+      function removeItem(arr, value) {
+        var index = arr.indexOf(value);
+        if (index > -1) {
+            arr.splice(index, 1);
+        }
+        return arr;
+      }
 
       
 export {
-    imageToNode,
-    csvToNode,
-    videoToNode,
     getAllEdgesWithLabel,
     removeObjectWithId,
     legendInvisibleGroups,
@@ -228,5 +218,10 @@ export {
     containsOnlyNumbers,
     createValuesArray,
     createOverlapArray,
+    updatePositions,
+    isNodeLastInPath,
+    itemExists,
+    isNodeOpen,
+    removeItem
 
 }

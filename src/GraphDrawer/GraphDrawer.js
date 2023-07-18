@@ -1,4 +1,4 @@
-const utils = require("./utils.js");
+const utils = require("../utils.js");
 const vis = require("vis-network/standalone/esm/index.js");
 const GDHelper = require("./GraphDrawerHelper.js")
 const GDCallback = require("./GraphDrawerCallback.js")

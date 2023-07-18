@@ -2,8 +2,8 @@ const vis = require("vis-network/standalone/esm/index.js")
 
 const $ = require("jquery")
 
-const GD = require("./GraphDrawer.js");
-const GT = require("./GraphTool.js");
+const GD = require("../GraphDrawer/GraphDrawer.js");
+const GT = require("../GraphTool/GraphTool.js");
 
 
 
@@ -140,7 +140,7 @@ class Graph{
 
     });
 
-    console.log(drawer)
+
 
     if(onlyData) {
       return drawer;

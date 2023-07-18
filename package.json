@@ -46,7 +46,7 @@
     "@json-editor/json-editor": "^2.9.1",
     "chroma-js": "^2.4.2",
     "jquery": "^3.7.0",
-    "jsoneditor": "^9.10.0",
+    "jsoneditor": "^9.10.2",
     "jsonpath": "^1.1.1",
     "plotly.js-dist": "^2.24.3",
     "vis-data": "^7.1.6",

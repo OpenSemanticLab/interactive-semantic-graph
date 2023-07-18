@@ -3,7 +3,7 @@ function isObject(item) {
 }
 
 //from https://stackoverflow.com/questions/27936772/how-to-deep-merge-instead-of-shallow-merge
-function mergeDeep(target, source) {
+function mergeDeep (target, source) {
     let output = Object.assign({}, target);
     if (isObject(target) && isObject(source)) {
         Object.keys(source).forEach(key => {
@@ -21,48 +21,48 @@ function mergeDeep(target, source) {
 }
 
 function uuidv4() {
-    return ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, c => (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
+    return ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, c =>    (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
     );
-}
+  }
 
-function valueFromObjectPath(obj, path) {
-    if (path = "") {
+function valueFromObjectPath(obj, path){
+    if (path = ""){
         return obj;
     }
-    for (var i = 0, path = path.split('.'), len = path.length; i < len; i++) {
+    for (var i=0, path=path.split('.'), len=path.length; i<len; i++){
         obj = obj[path[i]];
     };
     return obj;
 };
 
-function callbackObjectRecursion(obj, callback, args) {
-
-    if (args.recursionDepth === undefined) {
+function callbackObjectRecursion(obj,callback, args){
+   
+    if (args.recursionDepth === undefined){
         args.recursionDepth = 0;
     }
-    if (args.baseObj === undefined) {
+    if (args.baseObj === undefined){
         args.baseObj = obj;
     }
-    if (!args.currentPath) {
+    if (!args.currentPath){
         args.currentPath = [];
     }
     callback(obj, args)
 
-    if (typeof (obj) === "object" && obj !== null) {
-
-        for (let key in obj) {
-
+    if (typeof(obj)==="object" && obj !== null){
+    
+        for (let key in obj){
+            
             let nextPath = JSON.parse(JSON.stringify(args.currentPath))
             nextPath.push(key)
-
+            
             let nextArgs = JSON.parse(JSON.stringify(args))
-            nextArgs.currentPath = nextPath
+            nextArgs.currentPath = nextPath 
             nextArgs.previousPath = args.currentPath
             nextArgs.previousObj = obj
             nextArgs.key = key
             nextArgs.recursionDepth = args.recursionDepth + 1
-            callbackObjectRecursion(obj[key], callback, nextArgs);
-
+            callbackObjectRecursion(obj[key],callback, nextArgs);
+        
         }
     }
 }

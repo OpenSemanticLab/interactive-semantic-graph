@@ -1,116 +1,116 @@
 function initDragAndDrop() {
-  // drag & drop functionality
-
-  var container = this.vis_container
-  const handleDrop = (e) => {
-
-    e.stopPropagation(); // Stops some browsers from redirecting
-    e.preventDefault();
-
-    var files = e.dataTransfer.files;
-
-    for (let file of files) {
-
-      // images 
-      if (file.type === 'image/png' || file.type === 'image/jpeg') {
-
-        this.imageToNode(file, this, e);
-
+    // drag & drop functionality
+  
+    var container = this.vis_container
+    const handleDrop = (e) => {
+  
+      e.stopPropagation(); // Stops some browsers from redirecting
+      e.preventDefault();
+  
+      var files = e.dataTransfer.files;
+  
+      for (let file of files) {
+  
+        // images 
+        if (file.type === 'image/png' || file.type === 'image/jpeg') {
+  
+          this.imageToNode(file,this, e);
+  
+        }
+  
+        // csv files
+        else if (file.type === 'application/vnd.ms-excel' && file.name.endsWith('.csv')) {
+  
+          this.csvToNode(file,this, e);
+  
+        }
+  
+        // mp4 files  (not working so far)
+        else if (file.type === 'video/mp4') {
+  
+          this.videoToNode(file,this, e);
+  
+        } else {
+          window.alert('File type ' + file.type + ' not supported');
+        }
+  
       }
-
-      // csv files
-      else if (file.type === 'application/vnd.ms-excel' && file.name.endsWith('.csv')) {
-
-        this.csvToNode(file, this, e);
-
-      }
-
-      // mp4 files  (not working so far)
-      else if (file.type === 'video/mp4') {
-
-        this.videoToNode(file, this, e);
-
-      } else {
-        window.alert('File type ' + file.type + ' not supported');
-      }
-
+  
     }
-
+  
   }
 
-}
+  function imageToNode(file, currentGraphObject, dropEvent) {
+  
+    // add image node to network
 
-function imageToNode(file, currentGraphObject, dropEvent) {
+    let xy = this.network.DOMtoCanvas({
+      x: dropEvent.clientX,
+      y: dropEvent.clientY
+    })
 
-  // add image node to network
+    // read file 
 
-  let xy = this.network.DOMtoCanvas({
-    x: dropEvent.clientX,
-    y: dropEvent.clientY
-  })
+    let reader = new FileReader(currentGraphObject);
 
-  // read file 
+    reader.onload = (event) => {
 
-  let reader = new FileReader(currentGraphObject);
+      // let newNode = new NodeClasses.ImageNode(currentGraphObject, utils.uuidv4(), xy.x, xy.y, event.target.result)
 
-  reader.onload = (event) => {
+      // this.nodes.update(newNode)
 
-    // let newNode = new NodeClasses.ImageNode(currentGraphObject, utils.uuidv4(), xy.x, xy.y, event.target.result)
+    };
 
-    // this.nodes.update(newNode)
-
-  };
-
-  reader.readAsDataURL(file)
+    reader.readAsDataURL(file)
 
 }
 
 function csvToNode(file, currentGraphObject, dropEvent) {
+  
+    // add csv node
+    let xy = this.network.DOMtoCanvas({
+      x: dropEvent.clientX,
+      y: dropEvent.clientY
+    })
 
-  // add csv node
-  let xy = this.network.DOMtoCanvas({
-    x: dropEvent.clientX,
-    y: dropEvent.clientY
-  })
+    // read file 
 
-  // read file 
+    let reader = new FileReader(currentGraphObject);
+    reader.onload = (event) => {
 
-  let reader = new FileReader(currentGraphObject);
-  reader.onload = (event) => {
+      // let newNode = new NodeClasses.CsvNode(currentGraphObject, utils.uuidv4(), xy.x, xy.y, event.target.result)
 
-    // let newNode = new NodeClasses.CsvNode(currentGraphObject, utils.uuidv4(), xy.x, xy.y, event.target.result)
-
-    // this.nodes.update(newNode)
-  };
-  reader.readAsText(file)
+      // this.nodes.update(newNode)
+    };
+    reader.readAsText(file)
 
 }
 
 function videoToNode(file, currentGraphObject, dropEvent) {
+  
+    // add cameraNode node
+    let xy = this.network.DOMtoCanvas({
+      x: dropEvent.clientX,
+      y: dropEvent.clientY
+    })
 
-  // add cameraNode node
-  let xy = this.network.DOMtoCanvas({
-    x: dropEvent.clientX,
-    y: dropEvent.clientY
-  })
+    // read file 
+    let reader = new FileReader(currentGraphObject);
 
-  // read file 
-  let reader = new FileReader(currentGraphObject);
+    reader.onload = (event) => {
 
-  reader.onload = (event) => {
+      // let newNode = new NodeClasses.VideoNode(currentGraphObject, utils.uuidv4(), xy.x, xy.y, reader.readAsDataURL(event.target.result))
 
-    // let newNode = new NodeClasses.VideoNode(currentGraphObject, utils.uuidv4(), xy.x, xy.y, reader.readAsDataURL(event.target.result))
+      // this.nodes.update(newNode)
+    };
 
-    // this.nodes.update(newNode)
-  };
-
-  reader.readAsText(file)
+    reader.readAsText(file)
 
 }
 
-export {
-  initDragAndDrop,
-  imageToNode,
-  csvToNode,
-  videoToNode,
-}
+  export{
+    initDragAndDrop,
+    imageToNode,
+    csvToNode,
+    videoToNode,
+  }

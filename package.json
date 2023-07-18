@@ -61,7 +61,7 @@
     "playwright": "^1.32.3",
     "sinon": "^15.0.4",
 
-    "tabulator-tables": "^5.4.3",
+    "tabulator-tables": "^5.5.0",
     "tap": "^16.3.4",
 
     "webpack": "^5.80.0",

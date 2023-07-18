@@ -41,23 +41,23 @@
     "test:report": "opener coverage/lcov-report/index.html"
   },
   "dependencies": {
-    "@json-editor/json-editor": "^2.9.1",
+    "@json-editor/json-editor": "^2.10.1",
     "chroma-js": "^2.4.2",
-    "jquery": "^3.6.3",
+    "jquery": "^3.7.0",
     "jsnetworkx": "^0.3.4",
-    "jsoneditor": "^9.10.0",
+    "jsoneditor": "^9.10.2",
     "jsonpath": "^1.1.1",
-    "plotly.js-dist": "^2.21.0",
-    "vis-data": "^7.1.2",
-    "vis-network": "^9.1.2"
+    "plotly.js-dist": "^2.24.3",
+    "vis-data": "^7.1.6",
+    "vis-network": "^9.1.6"
   },
   "devDependencies": {
     "microbundle": "^0.15.1",
-    "playwright": "^1.29.2",
-    "sinon": "^15.0.1",
-    "tabulator-tables": "^5.4.3",
-    "tap": "^16.3.3",
-    "webpack": "^5.75.0",
-    "webpack-cli": "^5.0.1"
+    "playwright": "^1.36.1",
+    "sinon": "^15.2.0",
+    "tabulator-tables": "^5.5.0",
+    "tap": "^16.3.7",
+    "webpack": "^5.88.2",
+    "webpack-cli": "^5.1.4"
   }
 }

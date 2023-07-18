@@ -64,7 +64,7 @@
     "tabulator-tables": "^5.5.0",
     "tap": "^16.3.4",
 
-    "webpack": "^5.80.0",
+    "webpack": "^5.88.2",
     "webpack-cli": "^5.0.2"
 
 

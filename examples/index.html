@@ -1,61 +1,198 @@
 <!DOCTYPE html>
 <html>
+  <head>  
+    <meta charset="utf-8" />  
+    <title>GraphTool Test Page</title>  
+    <script src="../dist/isg.umd.js"></script>
+    <style type="text/css">    #mynetwork {
+  width: 100%;
+  height: 800px;
+  border: 1px solid lightgray;
+}
+</style>
 
-<head>
-  <meta charset="utf-8" />
-  <title>Test</title>
 
-  <script src="../dist/isg.umd.js"></script>
-  <style type="text/css">
-    #mynetwork {
-      width: 600px;
-      height: 400px;
-      border: 1px solid lightgray;
+<link href="https://unpkg.com/tabulator-tables@4.3.0/dist/css/tabulator.min.css" rel="stylesheet">
+<script type="text/javascript" src="https://unpkg.com/tabulator-tables@4.3.0/dist/js/tabulator.min.js"></script>
+
+<!--for jsoneditor-->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jsoneditor/9.10.0/jsoneditor.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jsoneditor/9.10.0/jsoneditor.css" integrity="sha512-/JghmMAi5bleEgj1BT7h7Jm2+o4I4AbJYRVaY3eGGfdyTzV+yW3n0IedWH4ysbws5zpNK1beCqVJh0MSZxvNaA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.4/lodash.min.js"></script>
+
+<!--for json-editor-->
+<!--
+<link rel='stylesheet' id='theme-link' href = 'https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css'>
+<link rel='stylesheet' id='iconlib-link', href = 'https://use.fontawesome.com/releases/v5.6.1/css/all.css'>
+-->
+</head><body>
+  <h1 id="title">GraphTool Test Page</h1>
+
+<div id="mynetwork"></div>  <script>
+
+let new_json = {"jsonschema": {
+  "Category:Entity": {
+      "@context": {
+          "label": "Property:HasLabel"
+      }
+  },
+  "Category:Item": {
+      "@context": [
+          "Category:Entity",
+          {
+              "member": {"@id": "Property:HasMember", "@type": "@id"},
+              "other": {"@id": "Property:HasOther", "@type": "@id"},
+              "budget": {"@id": "Property:HasBudget", "@type": "@id"},
+              "some_property": {"@id": "Property:HasSomeItem", "@type": "@id"},
+              "some_literal": "Property:HasSomeLiteral"
+          }
+          ],
+      "properties": {
+          "label": [{
+              "type": "array",
+              "title": "Labels",
+              "items": {
+                  "type": "object",
+                  "title": "Label",
+                  "properties": {
+                      "text": {},
+                      "lang": {}
+                  }
+              }
+          }],
+          "member": {
+              "type": "string",
+              "title": "Member"
+          },
+          "budget": {
+              "type": "array",
+              "title": "Budgets",
+              "items": {
+                  "type": "object",
+                  "title": "Budget",
+                  "properties": {
+                      "year": {"title": "Year"},
+                      "value": {"title": "BudgetValue"}
+                  }
+              }
+          }
+      }
+  }
+  
+  }, 
+"jsondata": {
+  "Item:MyProject": {
+      "type": ["Category:Item"],
+      "label": [{"text": "My Project", "lang": "en"}],
+      "member": ["Item:SomePerson", "Item:SomePerson"], //"Item:MyOtherItem"
+      "start": true,
+      "some_literal": ["Some string","Some","string",],
+      "not_in_context": "Not in Context",
+      "budget": [{
+          "year": "2000",
+          "value": "10000",
+          "budget":[{
+            "year": "2023",
+            "value": "10"}, {
+              "year": "2022",
+              "value": "20"}]
+      },{
+        "year": "2001",
+        "value": "20000"
+    },{
+      "year": "2002",
+      "value": "30000"
+  },{
+    "year": "2003",
+    "value": "40000"
+}]
+  },
+  "Item:SomePerson": {
+      "type": ["Category:Item"],
+      "label": [{"text": "Max Mustermann", "lang": "en"}],
+      "some_property": "Item:MyOtherItem"
+  },
+  "Property:HasMember": {
+      "type": ["Category:Property"],
+      "label": [{"text": "Has Member", "lang": "en"}]
+  },
+  "Item:MyOtherItem": {
+    "type": ["Category:Item"],
+    "label": [{"text": "My Other", "lang": "en"}],
+    "member": ["Item:MyNewItem"],
+    "some_literal": "Some string",
+    "not_in_context": "Not in Context",
+    "budget":[{
+            "year": "2022",
+            "value": "10"}, {
+              "year": "2022",
+              "value": "20"}]
+    
+  },
+  "Item:MyNewItem": {
+    "type": ["Category:Item"],
+    "label": [{"text": "My New Other", "lang": "en"}],
+    "other":["Item:MySecondItem"]
+    
+  },
+  "Item:MySecondItem": {
+    "type": ["Category:Item"],
+    "label": [{"text": "My Second Other", "lang": "en"}]
+    
+  },
+
+}};
+
+const clone = structuredClone(new_json);
+
+let nodes = [];
+let edges = [];
+
+
+let _config = {
+  // callbacks: {
+  //   getStartItem: (data) => "Item:MyOtherItem",
+  //   setColor: (data) => "#491230"
+  //   createContext: (data) => ""
+  // }
+};
+
+let args = {file: new_json, depth:1, mode: true, nodes: nodes, edges: edges}
+
+var draw = new isg.GraphDrawer(_config, args);
+
+
+
+
+var options = {interaction: {hover: true,multiselect: true,},
+      manipulation: {enabled: true,},
+      physics: {
+        stabilization: {
+            enabled: true,
+        },
+        barnesHut: {
+            gravitationalConstant: -40000,
+            centralGravity: 0,
+            springLength: 0,
+            springConstant: 0.5,
+            damping: 1,
+            avoidOverlap: 0
+        },
+        maxVelocity: 5
+      },
+      edges: {arrows: "to"},
+      groups: {
+        useDefaultGroups: false
+      }
     }
-  </style>
-</head>
+let config = {nodes:nodes,edges:edges,options:options, graph: draw, file: new_json};
 
-<body>
+  // let _config = {
 
-    Test Body
-    <div id="mynetwork"></div>
+  // }
 
-  <script>
-    console.log("run");
-    console.log(isg.GraphEditor.test());
-
-      // create an array with nodes
-      var nodes = new isg.vis.DataSet([
-        { id: 1, label: "Node 1" },
-        { id: 2, label: "Node 2" },
-        { id: 3, label: "Node 3" },
-        { id: 4, label: "Node 4" },
-        { id: 5, label: "Node 5" },
-      ]);
-
-      // create an array with edges
-      var edges = [
-        { from: 1, to: 3 },
-        { from: 1, to: 2 },
-        { from: 2, to: 4 },
-        { from: 2, to: 5 },
-        { from: 3, to: 3 },
-      ];
-
-      // create a network
-      var container = document.getElementById("mynetwork");
-      var data = {
-        nodes: nodes,
-        edges: edges,
-      };
-      var options = {};
-
-      //var network = new vis.Network(container, data, options);
-      var grapheditor = new isg.GraphEditor();
+var graphtool = new isg.GraphTool("mynetwork", config, _config);
 
 
-  </script> 
 
-</body>
-
-</html>
+</script></body></html>

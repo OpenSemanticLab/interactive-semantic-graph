@@ -1,6 +1,6 @@
-function initGraphContainers (div_id) {
+function initGraphContainers (divId) {
   // create all necessary elements/divs and set them up
-  this.container = document.getElementById(div_id)
+  this.container = document.getElementById(divId)
   this.vis_container = document.createElement('div')
   this.vis_container.setAttribute('id', this.prefix + 'vis_container')
   // this.vis_container.width = "70%"
@@ -16,41 +16,41 @@ function initGraphContainers (div_id) {
   this.container.append(this.tool_container)
 
   // Todo: the following should go to vue.js templates
-  const io_container = document.createElement('fieldset')
-  io_container.style = 'margin: 8px; border: 1px solid silver; padding: 8px; border-radius: 4px;'
-  const io_legend = document.createElement('legend')
-  io_legend.textContent = 'Load / Safe'
-  io_legend.style = 'padding: 2px; font-size: 1.0rem;'
-  io_container.append(io_legend)
-  this.tool_container.append(io_container)
-  this.loadSaveFunctionality(io_container)
+  const ioContainer = document.createElement('fieldset')
+  ioContainer.style = 'margin: 8px; border: 1px solid silver; padding: 8px; border-radius: 4px;'
+  const ioLegend = document.createElement('legend')
+  ioLegend.textContent = 'Load / Safe'
+  ioLegend.style = 'padding: 2px; font-size: 1.0rem;'
+  ioContainer.append(ioLegend)
+  this.tool_container.append(ioContainer)
+  this.loadSaveFunctionality(ioContainer)
 
-  const search_container = document.createElement('fieldset')
-  search_container.style = 'margin: 8px; border: 1px solid silver; padding: 8px; border-radius: 4px;'
-  const search_legend = document.createElement('legend')
-  search_legend.textContent = 'Search'
-  search_legend.style = 'padding: 2px; font-size: 1.0rem;'
-  search_container.append(search_legend)
-  this.tool_container.append(search_container)
-  this.createSearchUI(search_container)
+  const searchContainer = document.createElement('fieldset')
+  searchContainer.style = 'margin: 8px; border: 1px solid silver; padding: 8px; border-radius: 4px;'
+  const searchLegend = document.createElement('legend')
+  searchLegend.textContent = 'Search'
+  searchLegend.style = 'padding: 2px; font-size: 1.0rem;'
+  searchContainer.append(searchLegend)
+  this.tool_container.append(searchContainer)
+  this.createSearchUI(searchContainer)
 
-  const deepsearch_container = document.createElement('fieldset')
-  deepsearch_container.style = 'margin: 8px; border: 1px solid silver; padding: 8px; border-radius: 4px;'
-  const deepsearch_legend = document.createElement('legend')
-  deepsearch_legend.textContent = 'Deep Search'
-  deepsearch_legend.style = 'padding: 2px; font-size: 1.0rem;'
-  deepsearch_container.append(deepsearch_legend)
-  this.tool_container.append(deepsearch_container)
-  this.initDeepSearch(deepsearch_container)
+  const deepsearchContainer = document.createElement('fieldset')
+  deepsearchContainer.style = 'margin: 8px; border: 1px solid silver; padding: 8px; border-radius: 4px;'
+  const deepsearchLegend = document.createElement('legend')
+  deepsearchLegend.textContent = 'Deep Search'
+  deepsearchLegend.style = 'padding: 2px; font-size: 1.0rem;'
+  deepsearchContainer.append(deepsearchLegend)
+  this.tool_container.append(deepsearchContainer)
+  this.initDeepSearch(deepsearchContainer)
 
-  const coloring_container = document.createElement('fieldset')
-  coloring_container.style = 'margin: 8px; border: 1px solid silver; padding: 8px; border-radius: 4px;'
-  const coloring_legend = document.createElement('legend')
-  coloring_legend.textContent = 'Coloring'
-  coloring_legend.style = 'padding: 2px; font-size: 1.0rem;'
-  coloring_container.append(coloring_legend)
-  this.tool_container.append(coloring_container)
-  this.colorPicker(this, coloring_container)
+  const coloringContainer = document.createElement('fieldset')
+  coloringContainer.style = 'margin: 8px; border: 1px solid silver; padding: 8px; border-radius: 4px;'
+  const coloringLegend = document.createElement('legend')
+  coloringLegend.textContent = 'Coloring'
+  coloringLegend.style = 'padding: 2px; font-size: 1.0rem;'
+  coloringContainer.append(coloringLegend)
+  this.tool_container.append(coloringContainer)
+  this.colorPicker(this, coloringContainer)
 
   this.container.append(this.vis_container)
   this.container.append(this.options_container)

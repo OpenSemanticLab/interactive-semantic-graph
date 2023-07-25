@@ -1,3 +1,5 @@
+const utils = require('../utils.js')
+
 function copyNodesEdges () {
   this.copiedNodes = this.network.getSelectedNodes()
   this.copiedEdges = this.network.getSelectedEdges()
@@ -6,14 +8,14 @@ function copyNodesEdges () {
 // creates an ID for a new node that is to be created by copying an existing one
 function createIDForNewNode (node, receivingNode, copiedEdges) {
   // id when pasted into empty space
-  if (receivingNode === false) {
+  if (receivingNode == false) {
     return 'test'
   }
 
   const tempPath = node.id.split('/')
 
   // if nodes path length is 2, that means its an item and it puts out its id so that only an edge is created
-  if (this.drawer.file[tempPath[0]][tempPath[1]] && node.path.length === 2) {
+  if (this.drawer.file[tempPath[0]][tempPath[1]] && node.path.length == 2) {
     return node.id
   }
 
@@ -28,7 +30,7 @@ function createIDForNewNode (node, receivingNode, copiedEdges) {
   connectedEdges.forEach((edge) => {
     const edgeObj = this.edges.get(edge)
 
-    if (edgeObj.from === receivingNode.id && coppiedEdgeObject.label === edgeObj.label) {
+    if (edgeObj.from == receivingNode.id && coppiedEdgeObject.label == edgeObj.label) {
       keyExists = true
     }
   })
@@ -89,7 +91,7 @@ function createNewNodesFromCopiedNodes (copiedNodes, copiedEdges, receivingNode)
   const keys = Object.getOwnPropertyNames(node)
 
   keys.forEach((key) => {
-    if (!(key === 'id') && !((typeof (node[key])) === 'function')) {
+    if (!(key == 'id') && !((typeof (node[key])) == 'function')) {
       newNode[key] = node[key]
     }
   })
@@ -133,7 +135,7 @@ function pasteNodeEdges (copiedNodes, copiedEdges) {
     }
 
     // if literal, then return
-    if (typeof json === 'string' && this.drawer.file[receivingNode.path[receivingNode.path.length - 1]] === undefined) {
+    if (typeof json == 'string' && this.drawer.file[receivingNode.path[receivingNode.path.length - 1]] == undefined) {
       return
     }
 
@@ -158,7 +160,7 @@ function pasteNodeEdges (copiedNodes, copiedEdges) {
     }
   }
 
-  if (copiedNodes.length > 0 && this.network.getSelectedNodes().length === 0) {
+  if (copiedNodes.length > 0 && this.network.getSelectedNodes().length == 0) {
     // paste nodes and edges into empty space
 
     const newNode = this.createNewNodesFromCopiedNodes(copiedNodes, copiedEdges, false)
@@ -243,7 +245,7 @@ function duplicateNode (node) {
   }
   const keys = Object.getOwnPropertyNames(node)
   keys.forEach((key) => {
-    if (!(key === 'id') && !((typeof (node[key])) === 'function')) {
+    if (!(key == 'id') && !((typeof (node[key])) == 'function')) {
       newNode[key] = node[key]
     }
   })

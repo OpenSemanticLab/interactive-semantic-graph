@@ -8,7 +8,7 @@
    * @return {Boolean}
    */
 const isObject = function (item) {
-  return typeof item === 'object' && item !== null && item.toString() === {}.toString()
+  return typeof item == 'object' && item != null && item.toString() == {}.toString()
 }
 
 /**
@@ -90,7 +90,7 @@ const mergeAllOf = function (allOfList, definitions) {
   while (++index < length) {
     let item = allOfList[index]
 
-    item = (typeof item.$ref !== 'undefined') ? getLocalRef(item.$ref, definitions) : item
+    item = (typeof item.$ref != 'undefined') ? getLocalRef(item.$ref, definitions) : item
 
     result = merge(result, item)
   }
@@ -108,9 +108,9 @@ const mergeAllOf = function (allOfList, definitions) {
 const defaults = function (schema, definitions) {
   console.log('anfang:', JSON.stringify(schema))
 
-  if (typeof schema.default !== 'undefined') {
+  if (typeof schema.default != 'undefined') {
     return schema.default
-  } else if (typeof schema.allOf !== 'undefined') {
+  } else if (typeof schema.allOf != 'undefined') {
     console.log('anfang allof:', schema)
     const mergedItem = mergeAllOf(schema.allOf, definitions)
 
@@ -128,10 +128,10 @@ const defaults = function (schema, definitions) {
     console.log('vor merge: ', schema, prop_defaults, all_of_defaults, defaults(schema, all_of_defaults))
     console.log('return', merge(prop_defaults, all_of_defaults))
     return merge(prop_defaults, all_of_defaults)
-  } else if (typeof schema.$ref !== 'undefined') {
+  } else if (typeof schema.$ref != 'undefined') {
     const reference = getLocalRef(schema.$ref, definitions)
     return defaults(reference, definitions)
-  } else if (schema.type === 'object') {
+  } else if (schema.type == 'object') {
     if (!schema.properties) { return {} }
 
     for (const key in schema.properties) {
@@ -139,26 +139,26 @@ const defaults = function (schema, definitions) {
         schema.properties[key] = defaults(schema.properties[key], definitions)
         console.log('have replaced properties with defaults:', schema.properties)
 
-        if (typeof schema.properties[key] === 'undefined') {
+        if (typeof schema.properties[key] == 'undefined') {
           delete schema.properties[key]
         }
       }
     }
     console.log('return properties:', schema.properties)
     return schema.properties
-  } else if (schema.type === 'array') {
+  } else if (schema.type == 'array') {
     if (!schema.items) { return [] }
 
     // minimum item count
     const ct = schema.minItems || 0
     // tuple-typed arrays
-    if (schema.items.constructor === Array) {
+    if (schema.items.constructor == Array) {
       var values = schema.items.map(function (item) {
         return defaults(item, definitions)
       })
       // remove undefined items at the end (unless required by minItems)
       for (var i = values.length - 1; i >= 0; i--) {
-        if (typeof values[i] !== 'undefined') {
+        if (typeof values[i] != 'undefined') {
           break
         }
         if (i + 1 > ct) {
@@ -169,7 +169,7 @@ const defaults = function (schema, definitions) {
     }
 
     const value = defaults(schema.items, definitions)
-    if (typeof value === 'undefined') {
+    if (typeof value == 'undefined') {
       return []
     } else {
       var values = []

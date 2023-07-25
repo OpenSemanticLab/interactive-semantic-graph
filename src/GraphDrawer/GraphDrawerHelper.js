@@ -22,7 +22,7 @@ function getIdFromPathArray (pathArray) {
 
 // Creates Array of arrays Array of all contexts
 function getSchemaContextRecursive (file, schema, fullContext = []) {
-  fullContext = fullContext
+  // fullContext = fullContext
 
   // extract schema name from schema url, e. g. /wiki/Category:Entity?action=raw&slot=jsonschema
   // Todo: replace with callback
@@ -32,7 +32,7 @@ function getSchemaContextRecursive (file, schema, fullContext = []) {
 
   if (Array.isArray(startContext)) {
     for (let i = 0; i < startContext.length; i++) {
-      if (!(typeof startContext[i] === 'object' && startContext[i] !== null)) {
+      if (!(typeof startContext[i] == 'object' && startContext[i] != null)) {
         this.getSchemaContextRecursive(file, startContext[i], fullContext)
       } else {
         fullContext.push(startContext[i])
@@ -59,7 +59,7 @@ function getCurrentJSONKey (pathArray) {
 function getLabelFromContext (context, key) {
   // get property string of shape: Property:PropertyLabel
   let propertyFullName = key
-  if (typeof (context[key]) === 'object') {
+  if (typeof (context[key]) == 'object') {
     propertyFullName = context[key]['@id']
   }
   // replace by name with correct language if available
@@ -143,12 +143,12 @@ function getValueFromPathArray (pathArr) {
 function getNodeLabelFromPathArray (pathArr) {
   const value = this.getValueFromPathArray(pathArr)
 
-  if (!(typeof (value) === 'object') && !(this.file.jsondata[value])) {
+  if (!(typeof (value) == 'object') && !(this.file.jsondata[value])) {
     // literals
     return (value)
   }
 
-  if (!(typeof (value) === 'object') && this.file.jsondata[value]) {
+  if (!(typeof (value) == 'object') && this.file.jsondata[value]) {
     return (this.getLabelFromLabelArray(this.file.jsondata[value].label))
   }
 

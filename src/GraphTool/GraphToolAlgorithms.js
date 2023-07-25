@@ -17,7 +17,7 @@ function getAllReachableNodesTo (nodeId, excludeIds, reachableNodes) {
 // deletes the reachable nodes from the given node ID
 function deleteNodesChildren (nodeId, deleteEdge, clickedNode) {
   const excludedIds = []
-  if (deleteEdge === true) {
+  if (deleteEdge == true) {
   } else {
     excludedIds.push(nodeId)
   }
@@ -177,7 +177,7 @@ function reverseLabel (label) {
 // The function getAllEdgesBetween() returns all edges between two nodes
 function getAllEdgesBetween (node1, node2) {
   return this.edges.get().filter(function (edge) {
-    return (edge.from === node1 && edge.to === node2) || (edge.from === node2 && edge.to === node1)
+    return (edge.from == node1 && edge.to == node2) || (edge.from == node2 && edge.to == node1)
   })
 }
 
@@ -233,7 +233,7 @@ function getStartAndEndNodesForPath (path) {
 // Compares the given path with the current paths and outputs the path nodes if they are equal
 function comparePaths (path, currentPaths, pathNodes) {
   for (let i = 0; i < currentPaths.length; i++) {
-    if (path.join('.') === currentPaths[i]) {
+    if (path.join('.') == currentPaths[i]) {
       return pathNodes[0]
     }
   }

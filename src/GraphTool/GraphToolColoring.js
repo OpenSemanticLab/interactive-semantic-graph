@@ -1,3 +1,5 @@
+const chroma = require('chroma-js')
+
 // recolors all nodes and edges
 
 function recolorByProperty () {
@@ -31,7 +33,7 @@ function getEdgeByIDsAndLabel (fromNodeID, toNodeID, label) {
   const edges = this.edges.get()
 
   const edge = edges.find((edge) => {
-    return edge.from === fromNodeID && edge.to === toNodeID && edge.label === label
+    return edge.from == fromNodeID && edge.to == toNodeID && edge.label == label
   })
 
   return edge
@@ -57,7 +59,7 @@ function buildFullPath (path, currentNodePath) {
 // removes duplicates from multidimensional array
 function arrayExistsInMultidimensionalArray (arr, multidimensionalArr) {
   return multidimensionalArr.some((element) => {
-    return JSON.stringify(element) === JSON.stringify(arr)
+    return JSON.stringify(element) == JSON.stringify(arr)
   })
 }
 

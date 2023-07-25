@@ -1,3 +1,7 @@
+const jsnx = require('jsnetworkx')
+const utils = require('../utils.js')
+const vis = require('vis-network/standalone/esm/index.js')
+
 function createNxGraph () {
   const MDG = new jsnx.MultiDiGraph() // a jsNetworkX MultiDiGraph
 
@@ -15,39 +19,39 @@ function createNxGraph () {
 
   // replace Array nodes
   for (const val of MDG.nodes(true)) {
-    const node_id = val[0]
-    const node_data = val[1]
+    const nodeId = val[0]
+    const nodeData = val[1]
 
-    if (Array.isArray(node_data.obj)) {
+    if (Array.isArray(nodeData.obj)) {
       let inEdge
       let baseNodeId
       let inEdgeData
-      for (inEdge of MDG.inEdges(node_id, true)) {
+      for (inEdge of MDG.inEdges(nodeId, true)) {
         baseNodeId = inEdge[0]
         inEdgeData = inEdge[2]
       }
       // create edges between base of in edge and targets of out edges
-      for (const outEdge of MDG.outEdges(node_id)) {
+      for (const outEdge of MDG.outEdges(nodeId)) {
         MDG.addEdge(baseNodeId, outEdge[1], inEdgeData)
       }
 
-      MDG.removeNode(node_id)
+      MDG.removeNode(nodeId)
     }
   }
 
   // resolve and replace references
   for (const val of MDG.nodes(true)) {
-    const node_id = val[0]
-    const node_data = val[1]
-    if (typeof (node_data.obj) === 'string') {
-      const check_paths = [
-        ['jsondata', node_data.obj],
-        ['jsonschema', node_data.obj]
+    const nodeId = val[0]
+    const nodeData = val[1]
+    if (typeof (nodeData.obj) == 'string') {
+      const checkPaths = [
+        ['jsondata', nodeData.obj],
+        ['jsonschema', nodeData.obj]
       ]
-      for (const check_path of check_paths) {
-        if (MDG.hasNode(String(check_path))) {
-          for (const inEdge of MDG.inEdges(node_id, true)) {
-            MDG.addEdge(inEdge[0], String(check_path), inEdge[2])
+      for (const checkPath of checkPaths) {
+        if (MDG.hasNode(String(checkPath))) {
+          for (const inEdge of MDG.inEdges(nodeId, true)) {
+            MDG.addEdge(inEdge[0], String(checkPath), inEdge[2])
             MDG.removeNode(inEdge[1])
           }
         }
@@ -71,15 +75,15 @@ function createNxGraph () {
   }
 
   for (const i in MDG.edges()) {
-    let edge_arr
+    let edgeArr
     let edge
-    edge_arr = MDG.edges(true)[i]
+    edgeArr = MDG.edges(true)[i]
 
     edge = {
-      from: edge_arr[0],
-      to: edge_arr[1],
-      data: edge_arr[2],
-      label: edge_arr[2].label
+      from: edgeArr[0],
+      to: edgeArr[1],
+      data: edgeArr[2],
+      label: edgeArr[2].label
     }
     visEdges.update(edge)
   }

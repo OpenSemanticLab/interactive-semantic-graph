@@ -1,12 +1,8 @@
 const vis = require('vis-network/standalone/esm/index.js')
-const JSONEditors = require('jsoneditor/dist/jsoneditor') // this is the multi-mode editor https://github.com/josdejong/jsoneditor
-const jsnx = require('jsnetworkx')
 const utils = require('../utils.js')
 const GTHelper = require('./GraphToolHelper.js')
 // const NodeClasses = require("./NodeClasses.js")    // this causes firefox hanging.
-const chroma = require('chroma-js')
 // const RegExp = require('RegExp');
-const jsonpath = require('jsonpath')
 const G = require('../Graph/Graph.js')
 const GTContainers = require('./GraphToolContainers.js')
 const GTVisjsEvents = require('./GraphToolVisjsEvents.js')
@@ -24,7 +20,7 @@ const GTLoadSave = require('./GraphToolLoadSave.js')
 class GraphTool {
   static instanceCount = 0
 
-  constructor (div_id, config, callback_config) {
+  constructor (divId, config, callbackConfig) {
     this.BindToClass(GTHelper, this)
     this.BindToClass(GTContainers, this)
     this.BindToClass(GTEventListeners, this)
@@ -36,7 +32,7 @@ class GraphTool {
     this.BindToClass(GTLegend, this)
     this.BindToClass(GTLoadSave, this)
 
-    this.graphContainerId = div_id
+    this.graphContainerId = divId
 
     this.prefix = 'Graph' + GraphTool.instanceCount + '_'
 
@@ -49,9 +45,9 @@ class GraphTool {
       }
     }
 
-    this.config = utils.mergeDeep(defaultConfig, callback_config) // overwrite default config with user callback_config
+    this.config = utils.mergeDeep(defaultConfig, callbackConfig) // overwrite default config with user callbackConfig
 
-    this.initGraphContainers(div_id)
+    this.initGraphContainers(divId)
     this.drawer = config.drawer
 
     this.clicked = {} // object to store expanded nodes TODO: rename to expandedNodes
@@ -143,7 +139,7 @@ class GraphTool {
     this.deepSearchExpands = []
     this.deepSearchExpandsFull = []
     this.searchExpands = []
-    this.fullGraph
+    // this.fullGraph
     this.configFile = config.configFile
 
     this.colorsBeforeVisualSearch = {}
@@ -180,23 +176,23 @@ class GraphTool {
   }
 
   // not used
-  run_recursive (node_id) {
-    const node = this.nodes.get(node_id)
+  run_recursive (nodeId) {
+    const node = this.nodes.get(nodeId)
     if ('run' in node) {
       node.run()
     } else {
-      const conn_edges = this.network.getConnectedEdges(node.id)
+      const connEdges = this.network.getConnectedEdges(node.id)
 
-      conn_edges.forEach(function (edge_id) {
-        const edge = this.edges.get(edge_id)
-        if (edge.from == node_id) {
-          const neighbor_node = this.nodes.get(edge.to)
+      connEdges.forEach(function (edgeId) {
+        const edge = this.edges.get(edgeId)
+        if (edge.from == nodeId) {
+          const neighborNode = this.nodes.get(edge.to)
 
-          if (neighbor_node.run) {
-            neighbor_node.run()
+          if (neighborNode.run) {
+            neighborNode.run()
           } else {
             window.setTimeout(function () {
-              run_recursive(edge.to)
+              this.run_recursive(edge.to)
             }, 200)
           }
         }
@@ -221,7 +217,7 @@ class GraphTool {
     if (params.nodes.length > 0) {
       const node = this.nodes.get(params.nodes[0])
 
-      if ('item' in node && (this.clicked[params.nodes[0]] == false || !('' + params.nodes[0] in this.clicked)) && (this.network.getConnectedNodes(params.nodes[0], 'to').length === 0)) {
+      if ('item' in node && (this.clicked[params.nodes[0]] == false || !('' + params.nodes[0] in this.clicked)) && (this.network.getConnectedNodes(params.nodes[0], 'to').length == 0)) {
         // expand node
 
         const args = {

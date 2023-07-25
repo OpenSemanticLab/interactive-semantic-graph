@@ -43,7 +43,7 @@
   <div id="mynetwork"></div>
   <div id="mynetwork2"></div>
   <script>
-    let new_json = {"jsonschema": {
+    let newJson = {"jsonschema": {
   "Category:Entity": {
       "@context": {
           "label": "Property:HasLabel"
@@ -380,7 +380,7 @@ let configFile =
     "name": "Config1"
   }
 
-    //const clone = structuredClone(new_json);
+    //const clone = structuredClone(newJson);
 
     // var options = {
     //   interaction: {
@@ -414,7 +414,7 @@ let configFile =
     // }
    
     // let args = {
-    //   file: new_json,
+    //   file: newJson,
     //   depth: 1,
     //   mode: true,
     //  // nodes: nodes,
@@ -428,24 +428,24 @@ let configFile =
     //  // nodes: nodes,
     //  // edges: edges,
     //   options: options,
-    //   file: new_json,
+    //   file: newJson,
     //   drawer: drawer,
     //   configFile: configFile,
     //  // clone: clone,
     // };
     // let graphtool = new isg.GraphTool("mynetwork", config);
 
-    // let graph = new isg.Graph(new_json, configFile);
+    // let graph = new isg.Graph(newJson, configFile);
 
     // configFile.graph_container_id = "mynetwork2";
 
-    // let graph2 = new isg.Graph(new_json, configFile);
+    // let graph2 = new isg.Graph(newJson, configFile);
 
-    let graph = new isg.Graph.Graph(new_json, configFile);
+    let graph = new isg.Graph.Graph(newJson, configFile);
 
     configFile.graph_container_id = "mynetwork2";
 
-    let graph2 = new isg.Graph.Graph(new_json, configFile);
+    let graph2 = new isg.Graph.Graph(newJson, configFile);
 
   </script>
 </body>

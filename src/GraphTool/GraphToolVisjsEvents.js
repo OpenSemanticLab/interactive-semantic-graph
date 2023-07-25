@@ -1,3 +1,5 @@
+const JSONEditors = require('jsoneditor/dist/jsoneditor') // this is the multi-mode editor https://github.com/josdejong/jsoneditor
+
 function initVisjsCallbacks () {
   // set visjs network callbacks
 
@@ -23,9 +25,9 @@ function initVisjsCallbacks () {
 }
 
 function visOnDragEnd (params) {
-  params.nodes.forEach((node_id) => {
-    const node = this.nodes.get(node_id)
-    const position = this.network.getPosition(node_id)
+  params.nodes.forEach((nodeId) => {
+    const node = this.nodes.get(nodeId)
+    const position = this.network.getPosition(nodeId)
     // setting the current position is necessary to prevent snap-back to initial position
     node.x = position.x
     node.y = position.y
@@ -41,9 +43,9 @@ function visOnDragEnd (params) {
 function visOnDragStart (params) {
   if (params.nodes.length > 0) {
     const newNodeIds = []
-    params.nodes.forEach((node_id, index) => {
-      const node = this.nodes.get(node_id)
-      const position = this.network.getPosition(node_id) // setting the current position is necessary to prevent snap-back to initial position
+    params.nodes.forEach((nodeId, index) => {
+      const node = this.nodes.get(nodeId)
+      const position = this.network.getPosition(nodeId) // setting the current position is necessary to prevent snap-back to initial position
 
       node.x = position.x
       node.y = position.y
@@ -113,9 +115,9 @@ function visOnClick (params) {
       modes: ['code', 'tree'] // ['code', 'form', 'text', 'tree', 'view', 'preview']}
     }
 
-    const editor_div = document.getElementById(this.prefix + 'editor_div', options)
+    const editorDiv = document.getElementById(this.prefix + 'editor_div', options)
     // create a JSONEdior in options div
-    const editor = new JSONEditors(editor_div) // TODO: Editor is currently not rendered. find error.
+    const editor = new JSONEditors(editorDiv) // TODO: Editor is currently not rendered. find error.
 
     editor.set({
       edges: this.edges.get(),

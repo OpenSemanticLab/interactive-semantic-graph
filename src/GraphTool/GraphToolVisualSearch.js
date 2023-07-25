@@ -24,7 +24,7 @@ function createSearchUI (container) {
         firstInput = false
       }
 
-      if (inputField.value.length === 0 && !firstInput) {
+      if (inputField.value.length == 0 && !firstInput) {
         // this.recolorByProperty();
 
         this.loadGraphColorsVisualSearch()
@@ -126,7 +126,7 @@ function searchNodes (searchString) {
     this.deepSearchExpands = []
 
     // searches for edges with the given search string
-    if (document.getElementById(this.prefix + 'search_select').value === 'search_edge') {
+    if (document.getElementById(this.prefix + 'search_select').value == 'search_edge') {
       this.edges.forEach((edge) => {
         if (edge.label.toLowerCase().includes(searchString.toLowerCase())) {
           // gets all paths from root to the node that the edge points to
@@ -152,7 +152,7 @@ function searchNodes (searchString) {
       })
     }
     // searches for nodes with the given search string
-    if (document.getElementById(this.prefix + 'search_select').value === 'search_node') {
+    if (document.getElementById(this.prefix + 'search_select').value == 'search_node') {
       this.nodes.forEach((node) => {
         if (node.label) {
           if (node.label.toLowerCase().includes(searchString.toLowerCase()) || node.group == 'root') {

@@ -10,33 +10,33 @@ class recorder {
     this.recording = false
   }
 
-  drawToDiv = (div_id) => {
-    this.div_id = div_id
-    const record_button = document.createElement('button')
-    record_button.innerText = 'record'
-    document.getElementById(this.div_id).appendChild(record_button)
-    record_button.addEventListener('click', this.startRecording)
-    const stop_button = document.createElement('button')
-    stop_button.innerText = 'stop'
-    document.getElementById(this.div_id).appendChild(stop_button)
-    stop_button.addEventListener('click', this.stopRecording)
-    const play_button = document.createElement('button')
-    play_button.innerText = 'play'
-    document.getElementById(this.div_id).appendChild(play_button)
-    play_button.addEventListener('click', this.play)
+  drawToDiv = (divId) => {
+    this.divId = divId
+    const recordButton = document.createElement('button')
+    recordButton.innerText = 'record'
+    document.getElementById(this.divId).appendChild(recordButton)
+    recordButton.addEventListener('click', this.startRecording)
+    const stopButton = document.createElement('button')
+    stopButton.innerText = 'stop'
+    document.getElementById(this.divId).appendChild(stopButton)
+    stopButton.addEventListener('click', this.stopRecording)
+    const playButton = document.createElement('button')
+    playButton.innerText = 'play'
+    document.getElementById(this.divId).appendChild(playButton)
+    playButton.addEventListener('click', this.play)
   }
 
   startRecording = () => {
     this.arr = []
     this.recording = true
-    script_processor_node.onaudioprocess = this.process_microphone_buffer
+    scriptProcessorNode.onaudioprocess = this.process_microphone_buffer
     // console.log('startRecording')
     // console.log(this, this.arr)
   }
 
   stopRecording = () => {
     this.recording = false
-    script_processor_node.onaudioprocess = () => {}
+    scriptProcessorNode.onaudioprocess = () => {}
     // console.log("stopRecording")
     // console.log(this, this.arr)
   }
@@ -53,15 +53,15 @@ class recorder {
     for (const elem of this.arr) {
       len += elem.length
     }
-    const flat_arr = new Float32Array(len)
+    const flatArr = new Float32Array(len)
     let passed = 0
     for (const elem of this.arr) {
-      flat_arr.set(elem, passed)
+      flatArr.set(elem, passed)
       passed += elem.length
     }
-    // console.log(flat_arr)
-    if (flat_arr.length > 0) {
-      playSound(flat_arr)
+    // console.log(flatArr)
+    if (flatArr.length > 0) {
+      playSound(flatArr)
     }
   }
 }
@@ -96,7 +96,7 @@ class BaseNode {
 
     JsonDiv.appendChild(EditorDiv)
 
-    if (schema === undefined) {
+    if (schema == undefined) {
       const schema = {
         title: 'Node Options',
         description: 'Node Options',
@@ -184,8 +184,8 @@ class VideoNode extends BaseNode {
     const optionsDiv = document.getElementById(optionsDivId)
     optionsDiv.innerHTML = `
   <button id="play-button">play</button><button id="pause-button">pause</button><br>`
-    const play_button = document.querySelector('#play-button')
-    const pause_button = document.querySelector('#pause-button')
+    const playButton = document.querySelector('#play-button')
+    const pauseButton = document.querySelector('#pause-button')
     const video = document.createElement('video')
     video.src = this.video
     video.controls = true
@@ -194,11 +194,11 @@ class VideoNode extends BaseNode {
     video.width = 320 // in px
     optionsDiv.appendChild(video)
 
-    play_button.addEventListener('click', function () {
+    playButton.addEventListener('click', function () {
       console.log(this.video)
       video.play()
     })
-    pause_button.addEventListener('click', function () {
+    pauseButton.addEventListener('click', function () {
       video.pause()
     })
 
@@ -224,29 +224,29 @@ class CameraNode extends BaseNode {
     const optionsDiv = document.getElementById(optionsDivId)
     optionsDiv.innerHTML = `
   <button id="start-camera">Start Camera</button><button id="click-photo">Click Photo</button><button id="use-photo">Use Photo</button><div id="Camera_options_div"><canvas id="canvas" width="320" height="240"></canvas><video id="video" width="320" height="240" autoplay></video></div>`
-    const camera_button = document.querySelector('#start-camera')
+    const cameraButton = document.querySelector('#start-camera')
     const video = document.querySelector('#video')
-    const click_button = document.querySelector('#click-photo')
+    const clickButton = document.querySelector('#click-photo')
     const canvas = document.querySelector('#canvas')
-    const use_button = document.querySelector('#use-photo')
+    const useButton = document.querySelector('#use-photo')
     if ('image' in this) {
       const img = new Image()
       img.src = this.image
       canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height)
     }
-    camera_button.addEventListener('click', async function () {
+    cameraButton.addEventListener('click', async function () {
       const stream = await navigator.mediaDevices.getUserMedia({
         video: true,
         audio: false
       })
       video.srcObject = stream
     })
-    click_button.addEventListener('click', () => {
+    clickButton.addEventListener('click', () => {
       canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height)
-      const image_data_url = canvas.toDataURL('image/jpeg')
+      const imageDataUrl = canvas.toDataURL('image/jpeg')
       // data url of the image
     })
-    use_button.addEventListener('click', () => {
+    useButton.addEventListener('click', () => {
       this.image = canvas.toDataURL('image/jpeg')
       this.shape = 'image'
       this.container.nodes.update(this)
@@ -268,7 +268,7 @@ class DrawNode extends BaseNode {
     this.shape = 'ellipse'
     this.language = 'en'
     this.break = false
-    this.delay_ms = 1000 // ms
+    this.delayMs = 1000 // ms
   }
 
   run = () => {
@@ -276,20 +276,20 @@ class DrawNode extends BaseNode {
     console.log('run in DivID')
     this.showOptions(this.container.options_container.id)
     if (!this.break) {
-      const conn_edges = this.container.network.getConnectedEdges(this.id)
-      console.log(conn_edges)
-      conn_edges.forEach((edge_id) => {
-        const edge = this.container.edges.get(edge_id)
+      const connEdges = this.container.network.getConnectedEdges(this.id)
+      console.log(connEdges)
+      connEdges.forEach((edgeId) => {
+        const edge = this.container.edges.get(edgeId)
         if (edge.from == this.id) {
-          const neighbor_node = this.container.nodes.get(edge.to)
-          if (neighbor_node.run) {
+          const neighborNode = this.container.nodes.get(edge.to)
+          if (neighborNode.run) {
             window.setTimeout(() => {
-              neighbor_node.run()
-            }, this.delay_ms)
+              neighborNode.run()
+            }, this.delayMs)
           } else {
             window.setTimeout(() => {
-              run_recursive(edge.to)
-            }, this.delay_ms)
+              runRecursive(edge.to)
+            }, this.delayMs)
           }
         }
       })
@@ -302,12 +302,12 @@ class DrawNode extends BaseNode {
       <div id="Camera_options_div"><canvas id="canvas" width="320" height="240"></canvas></div>`
     const canvas = document.querySelector('#canvas')
     const context = canvas.getContext('2d')
-    const use_button = document.querySelector('#use-photo')
+    const useButton = document.querySelector('#use-photo')
 
-    break_input = document.getElementById('break_input')
-    break_input.checked = this.break
-    break_input.addEventListener('click', () => {
-      this.break = break_input.checked
+    breakInput = document.getElementById('break_input')
+    breakInput.checked = this.break
+    breakInput.addEventListener('click', () => {
+      this.break = breakInput.checked
     })
 
     if ('image' in this) {
@@ -354,7 +354,7 @@ class DrawNode extends BaseNode {
     canvas.addEventListener('mousemove', putPoint)
     canvas.addEventListener('mouseup', disengage)
 
-    use_button.addEventListener('click', () => {
+    useButton.addEventListener('click', () => {
       this.image = canvas.toDataURL('image/png')
       this.shape = 'image'
       this.container.nodes.update(this)
@@ -397,9 +397,9 @@ class RocketBase extends BaseNode {
 
   shot = (x, y, color) => {
     this.constructor.shot_recorder.play()
-    const new_id = utils.uuidv4()
+    const newId = utils.uuidv4()
     this.container.nodes.update({
-      id: new_id,
+      id: newId,
       label: 'bomb',
       x,
       y,
@@ -410,19 +410,19 @@ class RocketBase extends BaseNode {
       physics: true
     })
     window.setTimeout(() => {
-      const position = this.container.network.getPosition(new_id)
+      const position = this.container.network.getPosition(newId)
       this.explosion(position.x, position.y - 100, color)
-      this.container.nodes.remove(new_id)
+      this.container.nodes.remove(newId)
     }, this.explosion_time_ms)
   }
 
   explosion = (x, y, color) => {
     this.constructor.explosion_recorder.play()
-    const added_nodes_ids = []
+    const addedNodesIds = []
     for (let i = 0; i < 20; i++) {
-      const new_id = utils.uuidv4()
+      const newId = utils.uuidv4()
       this.container.nodes.update({
-        id: new_id,
+        id: newId,
         label: 'pew',
         x,
         y,
@@ -431,9 +431,9 @@ class RocketBase extends BaseNode {
         hidden: false,
         physics: true
       })
-      added_nodes_ids.push(new_id)
+      addedNodesIds.push(newId)
       window.setTimeout(() => {
-        this.container.nodes.remove(new_id)
+        this.container.nodes.remove(newId)
       }, 700 + 300 * Math.random())
     }
   }
@@ -470,12 +470,12 @@ class Fountain extends BaseNode {
 
   spray = (x, y, color) => {
     this.recorder.play()
-    const added_nodes_ids = []
+    const addedNodesIds = []
     for (let i = 0; i < 20; i++) {
       window.setTimeout(() => {
-        const new_id = utils.uuidv4()
+        const newId = utils.uuidv4()
         this.container.nodes.update({
-          id: new_id,
+          id: newId,
           label: 'pew',
           x,
           y,
@@ -484,10 +484,10 @@ class Fountain extends BaseNode {
           hidden: false,
           physics: true
         })
-        added_nodes_ids.push(new_id)
+        addedNodesIds.push(newId)
         window.setTimeout(() => {
           this.container.network.setSelection({
-            nodes: [new_id],
+            nodes: [newId],
             edges: []
           })
           this.container.network.deleteSelected()
@@ -504,7 +504,7 @@ class Fountain extends BaseNode {
   }
 }
 class DelayNode extends BaseNode {
-  constructor (container, id, x, y, delay_ms = 1000) {
+  constructor (container, id, x, y, delayMs = 1000) {
     super(container, id, x, y)
     this.typeString = 'DelayNode'
     this.label = 'Delay'
@@ -512,25 +512,25 @@ class DelayNode extends BaseNode {
     this.fixed = true
     this.color = 'gray'
     this.shape = 'ellipse'
-    this.delay_ms = delay_ms
+    this.delayMs = delayMs
     this.break = false
   }
 
   run = () => {
     if (!this.break) {
-      const conn_edges = this.container.network.getConnectedEdges(this.id)
-      conn_edges.forEach((edge_id) => {
-        const edge = this.container.edges.get(edge_id)
+      const connEdges = this.container.network.getConnectedEdges(this.id)
+      connEdges.forEach((edgeId) => {
+        const edge = this.container.edges.get(edgeId)
         if (edge.from == this.id) {
-          const neighbor_node = this.container.nodes.get(edge.to)
-          if (neighbor_node.run) {
+          const neighborNode = this.container.nodes.get(edge.to)
+          if (neighborNode.run) {
             window.setTimeout(() => {
-              neighbor_node.run()
-            }, this.delay_ms)
+              neighborNode.run()
+            }, this.delayMs)
           } else {
             window.setTimeout(() => {
-              run_recursive(edge.to)
-            }, this.delay_ms)
+              runRecursive(edge.to)
+            }, this.delayMs)
           }
         }
       })
@@ -540,16 +540,16 @@ class DelayNode extends BaseNode {
   showOptions = (optionsDivId = 'optionsDiv') => {
     const optionsDiv = document.getElementById(optionsDivId)
     optionsDiv.innerHTML = '<div id="delay_options_div">delay<input id="delay_input"></input></div> <input id="break_input" type="checkbox"></input><label for=break_input">break</label><br></div><br> </div>'
-    document.getElementById('delay_input').value = this.delay_ms
+    document.getElementById('delay_input').value = this.delayMs
     document.getElementById('delay_input').addEventListener('change', () => {
-      this.delay_ms = document.getElementById('delay_input').value
+      this.delayMs = document.getElementById('delay_input').value
     })
 
-    break_input = document.getElementById('break_input')
-    break_input.checked = this.break
+    breakInput = document.getElementById('break_input')
+    breakInput.checked = this.break
 
-    break_input.addEventListener('click', () => {
-      this.break = break_input.checked
+    breakInput.addEventListener('click', () => {
+      this.break = breakInput.checked
     })
     this.appendJsonToOptions(optionsDivId = optionsDivId)
   }
@@ -574,19 +574,19 @@ class TextSpeechNode extends BaseNode {
     msg.pitch = 1
     window.speechSynthesis.speak(msg)
     msg.addEventListener('end', () => {
-      const conn_edges = this.container.network.getConnectedEdges(this.id)
-      conn_edges.forEach((edge_id) => {
-        const edge = this.container.edges.get(edge_id)
+      const connEdges = this.container.network.getConnectedEdges(this.id)
+      connEdges.forEach((edgeId) => {
+        const edge = this.container.edges.get(edgeId)
         if (edge.from == this.id) {
-          const neighbor_node = this.container.nodes.get(edge.to)
-          if (neighbor_node.run) {
+          const neighborNode = this.container.nodes.get(edge.to)
+          if (neighborNode.run) {
             window.setTimeout(() => {
-              neighbor_node.run()
-            }, this.delay_ms)
+              neighborNode.run()
+            }, this.delayMs)
           } else {
             window.setTimeout(() => {
-              run_recursive(edge.to)
-            }, this.delay_ms)
+              runRecursive(edge.to)
+            }, this.delayMs)
           }
         }
       })
@@ -613,7 +613,7 @@ class ImageNode extends BaseNode {
     this.fixed = true
     this.color = 'black'
     this.shape = 'square'
-    if (image !== undefined) {
+    if (image != undefined) {
       this.image = image
       this.shape = 'image'
     }
@@ -625,7 +625,7 @@ class ImageNode extends BaseNode {
     optionsDiv.innerHTML = `
   <button id="use-photo">Use Photo</button><div id="Camera_options_div"><canvas id="canvas" width="320" height="240"></canvas></div>`
     const canvas = document.querySelector('#canvas')
-    const use_button = document.querySelector('#use-photo')
+    const useButton = document.querySelector('#use-photo')
     this.appendJsonToOptions(optionsDivId = optionsDivId)
 
     if (this.hasOwnProperty('image')) {
@@ -633,7 +633,7 @@ class ImageNode extends BaseNode {
       img.src = this.image
       canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height)
     }
-    use_button.addEventListener('click', () => {
+    useButton.addEventListener('click', () => {
       this.image = canvas.toDataURL('image/jpeg')
       this.shape = 'image'
       this.container.nodes.update(this)
@@ -650,7 +650,7 @@ class JSONNode extends BaseNode {
     this.fixed = true
     this.color = 'green'
     this.shape = 'ellipse'
-    if (obj !== undefined) {
+    if (obj != undefined) {
       this.obj = obj
     }
   }
@@ -720,7 +720,7 @@ class JSONNode1 extends BaseNode {
     this.fixed = true
     this.color = 'green'
     this.shape = 'ellipse'
-    if (jsondata !== undefined) {
+    if (jsondata != undefined) {
       this.jsondata = jsondata
     }
   }
@@ -732,15 +732,15 @@ class JSONNode1 extends BaseNode {
 
     // search for JsonSchema via HasType Arrow
     let schema
-    let schema_cache
+    let schemaCache
     this.container.edges.forEach((edge) => {
       if (this.id == edge.from) {
         if (edge.label == 'HasType') {
-          const schema_node = this.container.nodes.get(edge.to)
-          schema = schema_node.schema
+          const schemaNode = this.container.nodes.get(edge.to)
+          schema = schemaNode.schema
           console.log(schema)
-          schema_cache = schema_node.schema_cache
-          console.log(schema_cache)
+          schemaCache = schemaNode.schemaCache
+          console.log(schemaCache)
         }
       }
     })
@@ -748,7 +748,7 @@ class JSONNode1 extends BaseNode {
     // create editor with schema (if available)
     const options = {
       schema,
-      schemaRefs: schema_cache,
+      schemaRefs: schemaCache,
       mode: 'tree',
       modes: ['code', 'tree'], // ['code', 'form', 'text', 'tree', 'view', 'preview']
       autocomplete: {
@@ -792,12 +792,12 @@ class JSONSchemaNode extends BaseNode {
     this.fixed = true
     this.color = 'lightblue'
     this.shape = 'ellipse'
-    this.schema_cache = {}
-    if (obj !== undefined) {
+    this.schemaCache = {}
+    if (obj != undefined) {
       this.obj = obj
     }
     console.log(schema)
-    if (schema !== undefined) {
+    if (schema != undefined) {
       this.schema = schema
     }
   }
@@ -826,7 +826,7 @@ class JSONSchemaNode extends BaseNode {
     createChildButton.innerHTML = 'CreateChild'
     schemaDiv.appendChild(createChildButton)
 
-    const meta_schema = {
+    const metaSchema = {
       // "$schema": "http://json-schema.org/draft-07/schema#",
       // "$id": "http://json-schema.org/draft-07/schema#",
       title: 'Core schema meta-schema',
@@ -1023,15 +1023,15 @@ class JSONSchemaNode extends BaseNode {
       default: true
     }
     const options = {
-      schema: meta_schema,
+      schema: metaSchema,
       schemaRefs: {
-        meta_schema,
-        '#/definitions/nonNegativeInteger': meta_schema.definitions.nonNegativeInteger,
-        '#/definitions/schemaArray': meta_schema.definitions.schemaArray,
-        '#/definitions/nonNegativeInteger': meta_schema.definitions.nonNegativeInteger,
-        '#/definitions/onNegativeIntegerDefault0': meta_schema.definitions.onNegativeIntegerDefault0,
-        '#/definitions/simpleTypes': meta_schema.definitions.simpleTypes,
-        '#/definitions/stringArray': meta_schema.definitions.stringArray
+        metaSchema,
+        '#/definitions/nonNegativeInteger': metaSchema.definitions.nonNegativeInteger,
+        '#/definitions/schemaArray': metaSchema.definitions.schemaArray,
+        '#/definitions/nonNegativeInteger': metaSchema.definitions.nonNegativeInteger,
+        '#/definitions/onNegativeIntegerDefault0': metaSchema.definitions.onNegativeIntegerDefault0,
+        '#/definitions/simpleTypes': metaSchema.definitions.simpleTypes,
+        '#/definitions/stringArray': metaSchema.definitions.stringArray
       },
       mode: 'tree',
       modes: ['code', 'tree'], // ['code', 'form', 'text', 'tree', 'view', 'preview']
@@ -1067,12 +1067,12 @@ class JSONSchemaNode extends BaseNode {
     }
 
     const schemaEditor = new JSONEditors(schemaEditorDiv, options)
-    if (this.schema !== undefined) {
+    if (this.schema != undefined) {
       console.log(this.schema)
 
-      let editor_content = {}
-      editor_content = utils.mergeDeep(editor_content, this.schema)
-      schemaEditor.set(editor_content)
+      let editorContent = {}
+      editorContent = utils.mergeDeep(editorContent, this.schema)
+      schemaEditor.set(editorContent)
       console.log(this.schema)
     }
     setSchemaButton.addEventListener('click', () => {
@@ -1082,8 +1082,8 @@ class JSONSchemaNode extends BaseNode {
     })
 
     resolveReferencesButton.addEventListener('click', () => {
-      /// resolve all $ref referneces and save into this.schema_cache
-      this.schema_copy = this.resolveRefRecursive(this.schema)
+      /// resolve all $ref referneces and save into this.schemaCache
+      this.schemaCopy = this.resolveRefRecursive(this.schema)
     })
 
     createInstanceButton.addEventListener('click', () => {
@@ -1112,15 +1112,15 @@ class JSONSchemaNode extends BaseNode {
     for (let key in schema) {
       console.log(key)
       {
-        if (typeof schema[key] === 'object' && schema[key] !== null) { this.resolveRefRecursive(schema[key]) } else {
-          if (typeof schema[key] === 'array' && schema[key] !== []) {
+        if (typeof schema[key] == 'object' && schema[key] != null) { this.resolveRefRecursive(schema[key]) } else {
+          if (typeof schema[key] == 'array' && schema[key] != []) {
             console.log('do something wiht arrays')
           }
           if (key = '$ref') {
             const ref = this.container.nodes.get(schema[key])
-            if (ref !== null && schema[key] !== undefined) {
-              console.log('Write reference schema to this.schema_cache', schema[key])
-              this.schema_cache[schema[key]] = ref.schema
+            if (ref != null && schema[key] != undefined) {
+              console.log('Write reference schema to this.schemaCache', schema[key])
+              this.schemaCache[schema[key]] = ref.schema
               this.resolveRefRecursive(ref.schema)
             } else {
               console.log('reference is null cannot replace', schema[key])
@@ -1134,12 +1134,12 @@ class JSONSchemaNode extends BaseNode {
 
   createInstance = () => {
     this.resolveRefRecursive(this.schema)
-    const schema_copy = structuredClone(this.schema)// JSON.parse(JSON.stringify(this.schema))
+    const schemaCopy = structuredClone(this.schema)// JSON.parse(JSON.stringify(this.schema))
     console.log('this.schema', this.schema)
-    console.log('schema_copy', schema_copy)
-    console.log('json.stringify(schema_copy)', JSON.stringify(schema_copy))
-    console.log('schema_copy:', schema_copy)
-    const data = defaults.defaults(schema_copy, this.schema_cache)
+    console.log('schemaCopy', schemaCopy)
+    console.log('json.stringify(schemaCopy)', JSON.stringify(schemaCopy))
+    console.log('schemaCopy:', schemaCopy)
+    const data = defaults.defaults(schemaCopy, this.schemaCache)
     console.log('data of new node:', data)
     const newNode = new JSONNode1(this.container, 'OSW' + utils.uuidv4(), this.x + 100, this.y - 100, { data })
     this.container.nodes.update(newNode)
@@ -1168,7 +1168,7 @@ class CsvNode extends BaseNode {
       }
     }
     this.shape = 'square'
-    if (csvFile !== undefined) {
+    if (csvFile != undefined) {
       this.csvText = csvFile
       this.color = {
         border: '#000000',
@@ -1190,21 +1190,21 @@ class CsvNode extends BaseNode {
     const optionsDiv = document.getElementById(optionsDivId)
     optionsDiv.innerHTML = `
   <table style="width:100%"><tr><th>x axis</th><th>y axis</th></tr><tr><th><select id="xSelect"name = "x"></select></th><th><select id="ySelect"name = "y"></select></th></tr></table>  <div id="plotDiv" width="320" height="240"></canvas>    <button id="usePlotAsThumbnail">Use Plot as Icon</button></div>`
-    const plot_div = document.querySelector('#plotDiv')
+    const plotDiv = document.querySelector('#plotDiv')
     const usePlotAsThumbnailButton = document.querySelector('#usePlotAsThumbnail')
     // initialize dropdowns
     const xSelect = document.getElementById('xSelect')
     const ySelect = document.getElementById('ySelect')
     Object.keys(this.columns).forEach((key) => {
-      const axis_option_x = document.createElement('option')
-      axis_option_x.textContent = key
-      axis_option_x.value = key
-      xSelect.appendChild(axis_option_x)
+      const axisOptionX = document.createElement('option')
+      axisOptionX.textContent = key
+      axisOptionX.value = key
+      xSelect.appendChild(axisOptionX)
 
-      const axis_option_y = document.createElement('option')
-      axis_option_y.textContent = key
-      axis_option_y.value = key
-      ySelect.appendChild(axis_option_y)
+      const axisOptionY = document.createElement('option')
+      axisOptionY.textContent = key
+      axisOptionY.value = key
+      ySelect.appendChild(axisOptionY)
     })
 
     // initialize column selection if not present so far
@@ -1257,7 +1257,7 @@ class CsvNode extends BaseNode {
       plotData()
     })
     usePlotAsThumbnailButton.addEventListener('click', () => {
-      Plotly.toImage(plot_div, {
+      Plotly.toImage(plotDiv, {
         format: 'png',
         width: 800,
         height: 600

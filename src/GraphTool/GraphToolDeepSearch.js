@@ -24,11 +24,11 @@ function searchAlert () {
   return true
 }
 
-function searchItem (node_id, fullGraph) {
+function searchItem (nodeId, fullGraph) {
   // if node id is not in the current graph
-  if (!this.itemExists(node_id)) {
+  if (!this.itemExists(nodeId)) {
     // get node from this.fullGraph
-    const searchValue = fullGraph.nodes.get(node_id)
+    const searchValue = fullGraph.nodes.get(nodeId)
     // get parent item from this.fullGraph of the given node id
     const parentItem = this.searchJSON(this.drawer.file, `${searchValue.path[1]}`)
     // get parent item id
@@ -48,7 +48,7 @@ function searchItem (node_id, fullGraph) {
     return
   }
 
-  this.expandNodesCleanedUp({ nodes: [node_id] })
+  this.expandNodesCleanedUp({ nodes: [nodeId] })
 }
 
 function deepSearchExpandNodes (foundNode, fullGraph) {
@@ -75,7 +75,7 @@ function deepSearchExpandNodes (foundNode, fullGraph) {
 
   // expand path if starting node is given
   for (let i = 2; i < path.length; i += 2) {
-    if (path[i + 1] === undefined) {
+    if (path[i + 1] == undefined) {
       break
     }
     currentID += `/${path[i]}/${path[i + 1]}`
@@ -114,7 +114,7 @@ function collapseSearch () {
 function deepSearchColorPath (foundNodes) {
   this.nodes.get().forEach(node => {
     // if the node is not expanded by deep search and is not in the found nodes, color it white
-    if (!this.deepSearchExpands.includes(node.id) && !foundNodes.some(obj => obj.id === node.id) && !this.searchExpands.includes(node.id)) {
+    if (!this.deepSearchExpands.includes(node.id) && !foundNodes.some(obj => obj.id == node.id) && !this.searchExpands.includes(node.id)) {
       if (node.group != 'root') {
         // console.log(node.id)
 
@@ -139,7 +139,7 @@ function expandNodesCleanedUp (params) {
   if (params.nodes.length > 0) {
     const node = this.nodes.get(params.nodes[0])
 
-    if ('item' in node && (this.clicked[params.nodes[0]] == false || !('' + params.nodes[0] in this.clicked)) && (this.network.getConnectedNodes(params.nodes[0], 'to').length === 0)) {
+    if ('item' in node && (this.clicked[params.nodes[0]] == false || !('' + params.nodes[0] in this.clicked)) && (this.network.getConnectedNodes(params.nodes[0], 'to').length == 0)) {
       // expand node
 
       const args = {
@@ -186,14 +186,14 @@ function deepSearch (searchValue) {
   // search for nodes with label containing search value
   let foundNodes = []
 
-  if (document.getElementById(this.prefix + 'search_select').value === 'search_node') {
+  if (document.getElementById(this.prefix + 'search_select').value == 'search_node') {
     const lowercaseSearchValue = searchValue.toLowerCase()
     foundNodes = fullGraph.nodes.get().filter(node =>
       node.label.toLowerCase().includes(lowercaseSearchValue)
     )
   }
 
-  if (document.getElementById(this.prefix + 'search_select').value === 'search_edge') {
+  if (document.getElementById(this.prefix + 'search_select').value == 'search_edge') {
     // search for edges with label containing search value
     let foundEdges = []
 

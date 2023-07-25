@@ -30,14 +30,14 @@ function getAllEdgesWithLabel (edges, label) {
 // Removes object with a given ID from the given array
 function removeObjectWithId (arr, id, edge) {
   if (edge) {
-    const objWithIdIndex = arr.findIndex((obj) => obj.from === edge.from && obj.to === edge.to)
+    const objWithIdIndex = arr.findIndex((obj) => obj.from == edge.from && obj.to == edge.to)
 
     if (objWithIdIndex > -1) {
       arr.splice(objWithIdIndex, 1)
     }
   }
 
-  const objWithIdIndex = arr.findIndex((obj) => obj.id === id)
+  const objWithIdIndex = arr.findIndex((obj) => obj.id == id)
 
   if (objWithIdIndex > -1) {
     arr.splice(objWithIdIndex, 1)
@@ -149,19 +149,19 @@ function isNodeLastInPath (node) {
 }
 
 // checks if the given node id exists in the current graph
-function itemExists (node_id) {
-  if (this.nodes.get(node_id)) {
+function itemExists (nodeId) {
+  if (this.nodes.get(nodeId)) {
     return true
   }
 
   return false
 }
 // checks if the given node is open/expanded
-function isNodeOpen (node_id) {
+function isNodeOpen (nodeId) {
   const edges = this.edges.get()
 
   for (const edge of edges) {
-    if (edge.from === node_id.trim()) {
+    if (edge.from == nodeId.trim()) {
       return true
     }
   }

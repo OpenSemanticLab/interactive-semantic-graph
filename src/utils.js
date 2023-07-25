@@ -1,5 +1,5 @@
 function isObject (item) {
-  return (item && typeof item === 'object' && !Array.isArray(item))
+  return (item && typeof item == 'object' && !Array.isArray(item))
 }
 
 // from https://stackoverflow.com/questions/27936772/how-to-deep-merge-instead-of-shallow-merge
@@ -33,10 +33,10 @@ function valueFromObjectPath (obj, path) {
 };
 
 function callbackObjectRecursion (obj, callback, args) {
-  if (args.recursionDepth === undefined) {
+  if (args.recursionDepth == undefined) {
     args.recursionDepth = 0
   }
-  if (args.baseObj === undefined) {
+  if (args.baseObj == undefined) {
     args.baseObj = obj
   }
   if (!args.currentPath) {
@@ -44,7 +44,7 @@ function callbackObjectRecursion (obj, callback, args) {
   }
   callback(obj, args)
 
-  if (typeof (obj) === 'object' && obj !== null) {
+  if (typeof (obj) == 'object' && obj != null) {
     for (const key in obj) {
       const nextPath = JSON.parse(JSON.stringify(args.currentPath))
       nextPath.push(key)

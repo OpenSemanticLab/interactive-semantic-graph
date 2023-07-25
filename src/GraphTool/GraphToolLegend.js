@@ -85,8 +85,8 @@ function createLegend () {
     document.getElementById(this.prefix + 'legendContainer').remove()
   }
   const legendDiv = document.createElement('div')
-  const vis_cont = document.getElementById(this.prefix + 'vis_container')
-  vis_cont.append(legendDiv)
+  const visCont = document.getElementById(this.prefix + 'vis_container')
+  visCont.append(legendDiv)
   legendDiv.style.width = '100%'
   legendDiv.style.position = 'relative'
   legendDiv.style.display = 'inline-block'
@@ -163,8 +163,8 @@ function setNodeVisibilityByVisiblePath (nodeId, rootNodeId) {
 // turns clicked properties of the legend invisible or back to visible
 function legendFunctionality (e) {
   let legendGroup
-  let group
-  let nodeChildren
+  // let group
+  // let nodeChildren
   const strategy = 'strategy2'
 
   // this.updatePositions()
@@ -203,13 +203,13 @@ function legendFunctionality (e) {
   }
 
   const allFalse = Object.keys(this.options.groups).every((k) => {
-    if (k === 'useDefaultGroups') {
+    if (k == 'useDefaultGroups') {
       return true
     }
-    return this.options.groups[k].hidden === false
+    return this.options.groups[k].hidden == false
   })
 
-  if (allFalse === true) {
+  if (allFalse == true) {
     /* oldGroups = {}; */
   }
 };

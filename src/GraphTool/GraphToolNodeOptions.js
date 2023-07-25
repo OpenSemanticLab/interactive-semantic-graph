@@ -1,6 +1,6 @@
 const JSONEditors = require('jsoneditor/dist/jsoneditor') // this is the multi-mode editor https://github.com/josdejong/jsoneditor
 
-function showOptions_default (node, optionsDivId = 'optionsDiv') {
+function showOptionsDefault (node, optionsDivId = 'optionsDiv') {
   document.getElementById(optionsDivId).innerHTML = "<button id='" + this.prefix + "setButton'>set!</button><br><div id='" + this.prefix + "visual_options_editor_div'></div><div id='" + this.prefix + "data_editor_div'></div>"
   const setButton = document.getElementById(this.prefix + 'setButton')
   const schema = {
@@ -56,40 +56,40 @@ function showOptions_default (node, optionsDivId = 'optionsDiv') {
     mode: 'tree',
     modes: ['code', 'tree'] // ['code', 'form', 'text', 'tree', 'view', 'preview']}
   }
-  const visual_options_editor_div = document.getElementById(this.prefix + 'visual_options_editor_div')
-  const visual_options_editor = new JSONEditors(visual_options_editor_div, options)
+  const visualOptionsEditorDiv = document.getElementById(this.prefix + 'visual_options_editor_div')
+  const visualOptionsEditor = new JSONEditors(visualOptionsEditorDiv, options)
   // make object of own properties
 
-  visual_options_editor.set(node)
-  visual_options_editor.onChange = (param) => {
+  visualOptionsEditor.set(node)
+  visualOptionsEditor.onChange = (param) => {
 
   }
   setButton.addEventListener('click', () => {
-    node = visual_options_editor.get()
+    node = visualOptionsEditor.get()
     this.nodes.update(node)
   })
-  const data_editor_div = document.getElementById(this.prefix + 'data_editor_div')
-  const data_editor = new JSONEditors(data_editor_div, options)
+  const dataEditorDiv = document.getElementById(this.prefix + 'data_editor_div')
+  const dataEditor = new JSONEditors(dataEditorDiv, options)
 
-  data_editor.set(this.drawer.getValueFromPathArray(node.path))
+  dataEditor.set(this.drawer.getValueFromPathArray(node.path))
 }
 
 function showSelectionOptions () {
-  const sel_nodes = this.network.getSelectedNodes()
-  if (sel_nodes.length == 0) {
+  const selNodes = this.network.getSelectedNodes()
+  if (selNodes.length == 0) {
     // remove options
     if (!this.pressed_keys.includes('q')) {
       this.options_container.innerHTML = ''
     }
-  } else if (sel_nodes.length == 1) {
+  } else if (selNodes.length == 1) {
     // show options of single node
 
-    const node = this.nodes.get(sel_nodes[0])
-    if (typeof node.showOptions === 'function') {
+    const node = this.nodes.get(selNodes[0])
+    if (typeof node.showOptions == 'function') {
       const optionsId = this.options_container.id
       node.showOptions(optionsId)
     } else {
-      this.showOptions_default(node, this.options_container.id)
+      this.showOptionsDefault(node, this.options_container.id)
     }
   } else {
     // show common properties
@@ -99,9 +99,9 @@ function showSelectionOptions () {
       // make options gui
 
       this.options_container.innerHTML = '<h3>comparison between nodes</h3>'
-      const comparison_container = document.createElement('div')
-      comparison_container.setAttribute('id', this.prefix + 'comparison_container')
-      this.options_container.append(comparison_container)
+      const comparisonContainer = document.createElement('div')
+      comparisonContainer.setAttribute('id', this.prefix + 'comparison_container')
+      this.options_container.append(comparisonContainer)
       this.options_container.append(document.createElement('H2').appendChild(document.createTextNode('common types')))
 
       const setForAllContainer = document.createElement('div')
@@ -110,11 +110,11 @@ function showSelectionOptions () {
 
       // create table_data for comparison
 
-      const table_data = []
-      for (const node_id of sel_nodes) {
-        const node = this.nodes.get(node_id)
-        table_data.push({
-          id: node_id,
+      const tableData = []
+      for (const nodeId of selNodes) {
+        const node = this.nodes.get(nodeId)
+        tableData.push({
+          id: nodeId,
           color: JSON.stringify(node.color),
           x: node.x,
           y: node.y,
@@ -169,8 +169,8 @@ function showSelectionOptions () {
         this.nodes.update(node)
       }
 
-      const tabul = new Tabulator('#' + comparison_container.id, {
-        data: table_data,
+      const tabul = new Tabulator('#' + comparisonContainer.id, {
+        data: tableData,
         columns: [{
           title: 'id',
           field: 'id',
@@ -209,9 +209,9 @@ function showSelectionOptions () {
       })
 
       const allXEdit = (cell) => {
-        for (const node_id of this.network.getSelectedNodes()) {
-          const node = this.nodes.get(node_id)
-          const id = node_id
+        for (const nodeId of this.network.getSelectedNodes()) {
+          const node = this.nodes.get(nodeId)
+          const id = nodeId
           const x = cell._cell.value
           const y = node.x
           this.network.moveNode(id, x, y)
@@ -222,9 +222,9 @@ function showSelectionOptions () {
         }
       }
       const allYEdit = (cell) => {
-        for (const node_id of this.network.getSelectedNodes()) {
-          const node = this.nodes.get(node_id)
-          const id = node_id
+        for (const nodeId of this.network.getSelectedNodes()) {
+          const node = this.nodes.get(nodeId)
+          const id = nodeId
           const x = node.x
           const y = cell._cell.value
 
@@ -236,16 +236,16 @@ function showSelectionOptions () {
         }
       }
       const allColorEdit = (cell) => {
-        for (const node_id of this.network.getSelectedNodes()) {
-          const node = this.nodes.get(node_id)
+        for (const nodeId of this.network.getSelectedNodes()) {
+          const node = this.nodes.get(nodeId)
           node.color = JSON.parse(cell._cell.value)
           this.nodes.update(node)
         }
       }
 
       const allFixedEdit = (cell) => {
-        for (const node_id of this.network.getSelectedNodes()) {
-          const node = this.nodes.get(node_id)
+        for (const nodeId of this.network.getSelectedNodes()) {
+          const node = this.nodes.get(nodeId)
           node.fixed = Boolean(cell._cell.value)
 
           this.nodes.update(node)
@@ -253,7 +253,7 @@ function showSelectionOptions () {
       }
 
       const setForAllTable = new Tabulator('#' + setForAllContainer.id, {
-        data: [table_data[0]],
+        data: [tableData[0]],
         columns: [{
           title: 'id',
           field: 'id',
@@ -292,8 +292,8 @@ function showSelectionOptions () {
       })
     } else {
       let content = '<h3>Node IDs</h3><br>'
-      for (const node_id of sel_nodes) {
-        content += '<br>' + node_id
+      for (const nodeId of selNodes) {
+        content += '<br>' + nodeId
       }
       this.options_container.innerHTML = content
     }
@@ -302,7 +302,7 @@ function showSelectionOptions () {
 
 export {
 
-  showOptions_default,
+  showOptionsDefault,
   showSelectionOptions
 
 }

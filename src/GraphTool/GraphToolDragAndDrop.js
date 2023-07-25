@@ -10,17 +10,17 @@ function initDragAndDrop () {
 
     for (const file of files) {
       // images
-      if (file.type === 'image/png' || file.type === 'image/jpeg') {
+      if (file.type == 'image/png' || file.type == 'image/jpeg') {
         this.imageToNode(file, this, e)
       }
 
       // csv files
-      else if (file.type === 'application/vnd.ms-excel' && file.name.endsWith('.csv')) {
+      else if (file.type == 'application/vnd.ms-excel' && file.name.endsWith('.csv')) {
         this.csvToNode(file, this, e)
       }
 
       // mp4 files  (not working so far)
-      else if (file.type === 'video/mp4') {
+      else if (file.type == 'video/mp4') {
         this.videoToNode(file, this, e)
       } else {
         window.alert('File type ' + file.type + ' not supported')

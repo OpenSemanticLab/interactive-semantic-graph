@@ -16,7 +16,7 @@ $(document).ready(function () {
 
   //     let path = paths[i].split(".");
 
-  //     if (Array.isArray(data[path[1]][path[2]]) && typeof data[path[1]][path[2]][0] === 'object' && data[path[1]][path[2]][0] !== null) {
+  //     if (Array.isArray(data[path[1]][path[2]]) && typeof data[path[1]][path[2]][0] == 'object' && data[path[1]][path[2]][0] != null) {
 
   //       let startId = 0;
 
@@ -27,7 +27,7 @@ $(document).ready(function () {
 
   //           const connectedNodes = graphtool.nodes.get(connectedNodeIds);
 
-  //           const filteredNodes = connectedNodes.filter(node => node.label === path[i]);
+  //           const filteredNodes = connectedNodes.filter(node => node.label == path[i]);
 
   //           const filteredNodeIds = filteredNodes.map(node => node.id);
 

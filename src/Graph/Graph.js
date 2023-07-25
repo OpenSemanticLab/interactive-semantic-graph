@@ -1,13 +1,13 @@
 const vis = require('vis-network/standalone/esm/index.js')
 
-const $ = require('jquery')
+// const $ = require('jquery')
 
 const GD = require('../GraphDrawer/GraphDrawer.js')
 const GT = require('../GraphTool/GraphTool.js')
 
 class Graph {
   constructor (file, configFile, onlyData) {
-    if ((file || configFile) === undefined) {
+    if ((file || configFile) == undefined) {
       return
     }
 
@@ -73,10 +73,10 @@ class Graph {
     let args
     const connections = []
 
-    const drawer_config = { lang: 'en', contractArrayPaths: true }
+    const drawerConfig = { lang: 'en', contractArrayPaths: true }
 
     for (let i = 0; i < configFile.root_node_objects.length; i++) {
-      if (drawer === undefined) {
+      if (drawer == undefined) {
         tempNodes = []
         tempEdges = []
         tempColorObj = {}
@@ -89,11 +89,11 @@ class Graph {
           if (edge.from == 'jsondata/' + configFile.root_node_objects[i].node_id || edge.to == 'jsondata/' + configFile.root_node_objects[i].node_id) {
             connections.push(edge)
 
-            tempEdges = tempEdges.filter(obj => obj.id !== edge.id)
+            tempEdges = tempEdges.filter(obj => obj.id != edge.id)
           }
         })
 
-        tempNodes = tempNodes.filter(obj => obj.id !== 'jsondata/' + configFile.root_node_objects[i].node_id)
+        tempNodes = tempNodes.filter(obj => obj.id != 'jsondata/' + configFile.root_node_objects[i].node_id)
       }
 
       args = {
@@ -107,7 +107,7 @@ class Graph {
         colorObj: tempColorObj
       }
 
-      drawer = new GD.GraphDrawer(drawer_config, args)
+      drawer = new GD.GraphDrawer(drawerConfig, args)
     }
 
     connections.forEach((edge) => {
@@ -128,7 +128,7 @@ class Graph {
     //   recursionDepth: configFile.root_node_objects[0].expansion_depth,
     // }
 
-    // drawer = new isg.GraphDrawer(drawer_config, args);
+    // drawer = new isg.GraphDrawer(drawerConfig, args);
 
     // args = {
     //   file: file,
@@ -141,14 +141,14 @@ class Graph {
     //   colorObj: drawer.colorObj,
     // }
 
-    // drawer = new isg.GraphDrawer(drawer_config, args);
+    // drawer = new isg.GraphDrawer(drawerConfig, args);
 
     // console.log(drawer)
     const config = {
       // nodes: nodes,
       // edges: edges,
       options,
-      file: new_json,
+      file: newJson,
       drawer,
       configFile
     }

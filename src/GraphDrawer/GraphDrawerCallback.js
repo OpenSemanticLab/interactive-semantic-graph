@@ -28,7 +28,7 @@ function onBeforeCreateNodeDefault (node) {
 
   // set group
   if (node.depth == 0) {
-    node.group = 'root',
+    node.group = 'root'
     node.color = this.config.rootColor
   } else {
     node.group = node.incomingLabels[0]

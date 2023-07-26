@@ -1,3 +1,5 @@
+const G = require('../Graph/Graph.js')
+
 // loads or saves the graph to a .txt file
 function loadSaveFunctionality (container) {
   // Todo: replace global ids with prefixed ids or class members to allow multiple instances on one page
@@ -124,7 +126,7 @@ function loadStateDefault (input) {
   reader.onload = () => {
     const jsonData = JSON.parse(reader.result)
 
-    const graph = new isg.Graph(jsonData.file, jsonData.config)
+    const graph = new G.Graph(jsonData.file, jsonData.config)
 
     // document.getElementById("mynetwork").innerHTML = "";
 

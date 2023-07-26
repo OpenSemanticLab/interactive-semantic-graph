@@ -1,8 +1,8 @@
 // repeats the invisibility of properties that are set invisible in the legend
 function repeatInvisibility (options) {
   for (const [key, value] of Object.entries(options.groups)) {
-    for (const [subKey, subValue] of Object.entries(value)) {
-      if (subValue == true) {
+    for (const [subKey, subValue] of Object.entries(value)) { // eslint-disable-line no-unused-vars
+      if (subValue === true) {
         const objectToRepeat = {
           repeat: key
         }
@@ -133,7 +133,7 @@ function createLegend () {
 // function to set nodes and edges hidden when legend is clicked
 function setNodeVisibilityByVisiblePath (nodeId, rootNodeId) {
   for (let i = 0; i < this.configFile.root_node_objects.length; i++) {
-    if (nodeId == 'jsondata/' + this.configFile.root_node_objects[i].node_id) {
+    if (nodeId === 'jsondata/' + this.configFile.root_node_objects[i].node_id) {
       return true
     }
   }
@@ -150,7 +150,7 @@ function setNodeVisibilityByVisiblePath (nodeId, rootNodeId) {
     const connectedNodesIds = this.network.getConnectedNodes(edge.id)
     const connectedNodes = this.nodes.get(connectedNodesIds)
     connectedNodes.forEach((connectedNode) => {
-      if (connectedNode.id == nodeId) return // prevent self evaluation
+      if (connectedNode.id === nodeId) return // prevent self evaluation
       if (this.setNodeVisibilityByVisiblePath(connectedNode.id, rootNodeId)) {
         node.hidden = false // set node visible, if at least one connected node is visible
       }
@@ -168,7 +168,7 @@ function legendFunctionality (e) {
   const strategy = 'strategy2'
 
   // this.updatePositions()
-  if (strategy == 'strategy2') {
+  if (strategy === 'strategy2') {
     if (!e.repeat) {
       legendGroup = e.target.parentNode.childNodes[1].innerHTML
       // A node is visible if at least one path over visible edges to the root node exists.
@@ -203,13 +203,13 @@ function legendFunctionality (e) {
   }
 
   const allFalse = Object.keys(this.options.groups).every((k) => {
-    if (k == 'useDefaultGroups') {
+    if (k === 'useDefaultGroups') {
       return true
     }
-    return this.options.groups[k].hidden == false
+    return this.options.groups[k].hidden === false
   })
 
-  if (allFalse == true) {
+  if (allFalse === true) {
     /* oldGroups = {}; */
   }
 };

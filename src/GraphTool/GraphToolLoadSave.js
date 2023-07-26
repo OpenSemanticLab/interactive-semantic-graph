@@ -31,7 +31,7 @@ function createSaveStateFunctionality () {
 
   const dropdown = coloringDiv.querySelector('select')
 
-  if (dropdown.value == 'setColorByValue') {
+  if (dropdown.value === 'setColorByValue') {
     this.configFile.coloring_function_object.function_name = 'colorByValue'
 
     const inputField = document.getElementById(this.prefix + 'setColorByValueInput')
@@ -42,7 +42,7 @@ function createSaveStateFunctionality () {
 
     const endColor = document.getElementById(this.prefix + 'endColor')
     this.configFile.coloring_function_object.end_color = endColor.value
-  } else if (dropdown.value == 'setColorByProperty') {
+  } else if (dropdown.value === 'setColorByProperty') {
     this.configFile.coloring_function_object.function_name = 'colorByProperty'
 
     this.configFile.coloring_function_object.path = ''
@@ -54,10 +54,10 @@ function createSaveStateFunctionality () {
 
   const deepSearchDropdown = document.getElementById(this.prefix + 'search_select')
 
-  if (deepSearchDropdown.value == 'search_node') {
+  if (deepSearchDropdown.value === 'search_node') {
     this.configFile.dataset_search_function_object.search_on = 'nodes'
     this.configFile.visual_search_function_object.search_on = 'nodes'
-  } else if (deepSearchDropdown.value == 'search_edge') {
+  } else if (deepSearchDropdown.value === 'search_edge') {
     this.configFile.dataset_search_function_object.search_on = 'edges'
     this.configFile.visual_search_function_object.search_on = 'edges'
   }
@@ -126,7 +126,7 @@ function loadStateDefault (input) {
   reader.onload = () => {
     const jsonData = JSON.parse(reader.result)
 
-    const graph = new G.Graph(jsonData.file, jsonData.config)
+    const graph = new G.Graph(jsonData.file, jsonData.config) // eslint-disable-line no-unused-vars
 
     // document.getElementById("mynetwork").innerHTML = "";
 

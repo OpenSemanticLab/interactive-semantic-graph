@@ -2,7 +2,7 @@ function getLabelFromLabelArray (labelArray) {
   let label
   for (const key in labelArray) {
     label = labelArray[key].text
-    if (labelArray[key].lang == this.lang) {
+    if (labelArray[key].lang === this.lang) {
       return (label)
     }
   }
@@ -11,7 +11,7 @@ function getLabelFromLabelArray (labelArray) {
 function getIdFromPathArray (pathArray) {
   let idString
   for (const i in pathArray) {
-    if (i == 0) {
+    if (i == 0) { // eslint-disable-line eqeqeq
       idString = pathArray[0]
     } else {
       idString += '/' + pathArray[i]
@@ -32,7 +32,7 @@ function getSchemaContextRecursive (file, schema, fullContext = []) {
 
   if (Array.isArray(startContext)) {
     for (let i = 0; i < startContext.length; i++) {
-      if (!(typeof startContext[i] == 'object' && startContext[i] != null)) {
+      if (!(typeof startContext[i] === 'object' && startContext[i] != null)) {
         this.getSchemaContextRecursive(file, startContext[i], fullContext)
       } else {
         fullContext.push(startContext[i])
@@ -59,7 +59,7 @@ function getCurrentJSONKey (pathArray) {
 function getLabelFromContext (context, key) {
   // get property string of shape: Property:PropertyLabel
   let propertyFullName = key
-  if (typeof (context[key]) == 'object') {
+  if (typeof (context[key]) === 'object') {
     propertyFullName = context[key]['@id']
   }
   // replace by name with correct language if available
@@ -81,7 +81,7 @@ function getStartItem (file) {
 
 function getItemPathArray (item) {
   for (const key in this.file.jsondata) {
-    if (key == item) {
+    if (key === item) {
       return ['jsondata', key]
     }
   }
@@ -143,12 +143,12 @@ function getValueFromPathArray (pathArr) {
 function getNodeLabelFromPathArray (pathArr) {
   const value = this.getValueFromPathArray(pathArr)
 
-  if (!(typeof (value) == 'object') && !(this.file.jsondata[value])) {
+  if (!(typeof (value) === 'object') && !(this.file.jsondata[value])) {
     // literals
     return (value)
   }
 
-  if (!(typeof (value) == 'object') && this.file.jsondata[value]) {
+  if (!(typeof (value) === 'object') && this.file.jsondata[value]) {
     return (this.getLabelFromLabelArray(this.file.jsondata[value].label))
   }
 

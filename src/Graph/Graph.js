@@ -7,13 +7,13 @@ const GT = require('../GraphTool/GraphTool.js')
 
 class Graph {
   constructor (file, configFile, onlyData) {
-    if ((file || configFile) == undefined) {
+    if ((file || configFile) === undefined) {
       return
     }
 
     this.file = file
     this.configFile = configFile
-    this.graphtool
+    this.graphtool // eslint-disable-line no-unused-expressions
     this.openPaths = []
 
     this.createGraphByConfig(file, configFile, onlyData)
@@ -23,7 +23,7 @@ class Graph {
     const edges = this.graphtool.edges.get()
 
     for (let i = 0; i < edges.length; i++) {
-      if (edges[i].from == node) {
+      if (edges[i].from === node) {
         return false
       }
     }
@@ -76,7 +76,7 @@ class Graph {
     const drawerConfig = { lang: 'en', contractArrayPaths: true }
 
     for (let i = 0; i < configFile.root_node_objects.length; i++) {
-      if (drawer == undefined) {
+      if (drawer === undefined) {
         tempNodes = []
         tempEdges = []
         tempColorObj = {}
@@ -86,14 +86,14 @@ class Graph {
         tempColorObj = drawer.colorObj
 
         drawer.edges.get().forEach((edge) => {
-          if (edge.from == 'jsondata/' + configFile.root_node_objects[i].node_id || edge.to == 'jsondata/' + configFile.root_node_objects[i].node_id) {
+          if (edge.from === 'jsondata/' + configFile.root_node_objects[i].node_id || edge.to === 'jsondata/' + configFile.root_node_objects[i].node_id) {
             connections.push(edge)
 
-            tempEdges = tempEdges.filter(obj => obj.id != edge.id)
+            tempEdges = tempEdges.filter(obj => obj.id !== edge.id)
           }
         })
 
-        tempNodes = tempNodes.filter(obj => obj.id != 'jsondata/' + configFile.root_node_objects[i].node_id)
+        tempNodes = tempNodes.filter(obj => obj.id !== 'jsondata/' + configFile.root_node_objects[i].node_id)
       }
 
       args = {
@@ -148,7 +148,7 @@ class Graph {
       // nodes: nodes,
       // edges: edges,
       options,
-      file: newJson,
+      file: newJson, // eslint-disable-line no-undef
       drawer,
       configFile
     }

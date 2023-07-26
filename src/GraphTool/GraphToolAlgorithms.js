@@ -17,7 +17,7 @@ function getAllReachableNodesTo (nodeId, excludeIds, reachableNodes) {
 // deletes the reachable nodes from the given node ID
 function deleteNodesChildren (nodeId, deleteEdge, clickedNode) {
   const excludedIds = []
-  if (deleteEdge == true) {
+  if (deleteEdge === true) { // eslint-disable-line no-empty
   } else {
     excludedIds.push(nodeId)
   }
@@ -34,7 +34,7 @@ function deleteNodesChildren (nodeId, deleteEdge, clickedNode) {
   const allIds = this.nodes.getIds()
 
   for (let i = 0; i < allIds.length; i++) {
-    if (allIds[i] == nodeId) {
+    if (allIds[i] == nodeId) { // eslint-disable-line eqeqeq
       this.deleteEdges(nodeId)
       continue
     }
@@ -55,7 +55,7 @@ function deleteNodesChildren (nodeId, deleteEdge, clickedNode) {
 function deleteEdges (nodeID) {
   const fromEdges = this.edges.get({
     filter: function (item) {
-      return item.from == nodeID
+      return item.from == nodeID // eslint-disable-line eqeqeq
     }
   })
   for (let j = 0; j < fromEdges.length; j++) {
@@ -100,7 +100,7 @@ function dfs (start, end, currentPath, allPaths, visitedNodes) {
   if (visitedNodes.includes(start)) return
   visitedNodes.push(start)
   currentPath.push(start)
-  if (start == end) {
+  if (start == end) { // eslint-disable-line eqeqeq
     const localCurrentPath = currentPath.slice()
     allPaths.push(localCurrentPath)
     this.removeItem(visitedNodes, start)
@@ -127,10 +127,10 @@ function getEdgeLabelStringsForPath (path) {
       let label = edge.label
       const nodeId1 = path[j]
       const nodeId2 = path[j + 1]
-      if (edge.to == nodeId1 && edge.from == nodeId2) {
+      if (edge.to == nodeId1 && edge.from == nodeId2) { // eslint-disable-line eqeqeq
         label = this.reverseLabel(label)
       }
-      if (j == (allEdgePaths[i].length - 1)) {
+      if (j == (allEdgePaths[i].length - 1)) { // eslint-disable-line eqeqeq
         s = s + label
       } else {
         s = s + label + '.'
@@ -167,7 +167,7 @@ function getEdgePathsForPath (path) {
 
 // Given Label is reversed with "-" or "-" is removed
 function reverseLabel (label) {
-  if (label[0] == '-') {
+  if (label[0] == '-') { // eslint-disable-line eqeqeq
     return label.substring(1)
   } else {
     return '-' + label
@@ -177,7 +177,7 @@ function reverseLabel (label) {
 // The function getAllEdgesBetween() returns all edges between two nodes
 function getAllEdgesBetween (node1, node2) {
   return this.edges.get().filter(function (edge) {
-    return (edge.from == node1 && edge.to == node2) || (edge.from == node2 && edge.to == node1)
+    return (edge.from == node1 && edge.to == node2) || (edge.from == node2 && edge.to == node1) // eslint-disable-line eqeqeq
   })
 }
 
@@ -206,7 +206,7 @@ function getStartAndEndNodesForPath (path) {
 
   // Get all edges that match the first element of the path
   const allStartEdges = this.edges.get().filter((edge) => {
-    return edge.label == path[0]
+    return edge.label == path[0] // eslint-disable-line eqeqeq
   })
 
   // For each start edge, get the "from" node and add it to the start nodes array
@@ -218,7 +218,7 @@ function getStartAndEndNodesForPath (path) {
 
   // Get all edges that match the last element of the path
   const allEndEdges = this.edges.get().filter((edge) => {
-    return edge.label == path[path.length - 1]
+    return edge.label == path[path.length - 1] // eslint-disable-line eqeqeq
   })
 
   // For each end edge, get the "to" node and add it to the end nodes array
@@ -233,7 +233,7 @@ function getStartAndEndNodesForPath (path) {
 // Compares the given path with the current paths and outputs the path nodes if they are equal
 function comparePaths (path, currentPaths, pathNodes) {
   for (let i = 0; i < currentPaths.length; i++) {
-    if (path.join('.') == currentPaths[i]) {
+    if (path.join('.') == currentPaths[i]) { // eslint-disable-line eqeqeq
       return pathNodes[0]
     }
   }

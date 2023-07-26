@@ -1,26 +1,22 @@
 function initDragAndDrop () {
   // drag & drop functionality
 
-  const container = this.vis_container
-  const handleDrop = (e) => {
+  const container = this.vis_container // eslint-disable-line no-unused-vars
+  const handleDrop = (e) => { // eslint-disable-line no-unused-vars
     e.stopPropagation() // Stops some browsers from redirecting
     e.preventDefault()
 
     const files = e.dataTransfer.files
 
     for (const file of files) {
-      // images
-      if (file.type == 'image/png' || file.type == 'image/jpeg') {
+      if (file.type === 'image/png' || file.type === 'image/jpeg') {
+        // images
         this.imageToNode(file, this, e)
-      }
-
-      // csv files
-      else if (file.type == 'application/vnd.ms-excel' && file.name.endsWith('.csv')) {
+      } else if (file.type === 'application/vnd.ms-excel' && file.name.endsWith('.csv')) {
+        // csv files
         this.csvToNode(file, this, e)
-      }
-
-      // mp4 files  (not working so far)
-      else if (file.type == 'video/mp4') {
+      } else if (file.type === 'video/mp4') {
+        // mp4 files  (not working so far)
         this.videoToNode(file, this, e)
       } else {
         window.alert('File type ' + file.type + ' not supported')
@@ -32,7 +28,7 @@ function initDragAndDrop () {
 function imageToNode (file, currentGraphObject, dropEvent) {
   // add image node to network
 
-  const xy = this.network.DOMtoCanvas({
+  const xy = this.network.DOMtoCanvas({ // eslint-disable-line no-unused-vars
     x: dropEvent.clientX,
     y: dropEvent.clientY
   })
@@ -54,7 +50,7 @@ function imageToNode (file, currentGraphObject, dropEvent) {
 
 function csvToNode (file, currentGraphObject, dropEvent) {
   // add csv node
-  const xy = this.network.DOMtoCanvas({
+  const xy = this.network.DOMtoCanvas({ // eslint-disable-line no-unused-vars
     x: dropEvent.clientX,
     y: dropEvent.clientY
   })
@@ -73,7 +69,7 @@ function csvToNode (file, currentGraphObject, dropEvent) {
 
 function videoToNode (file, currentGraphObject, dropEvent) {
   // add cameraNode node
-  const xy = this.network.DOMtoCanvas({
+  const xy = this.network.DOMtoCanvas({ // eslint-disable-line no-unused-vars
     x: dropEvent.clientX,
     y: dropEvent.clientY
   })

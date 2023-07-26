@@ -8,20 +8,19 @@ function copyNodesEdges () {
 // creates an ID for a new node that is to be created by copying an existing one
 function createIDForNewNode (node, receivingNode, copiedEdges) {
   // id when pasted into empty space
-  if (receivingNode == false) {
+  if (receivingNode === false) {
     return 'test'
   }
 
   const tempPath = node.id.split('/')
 
   // if nodes path length is 2, that means its an item and it puts out its id so that only an edge is created
-  if (this.drawer.file[tempPath[0]][tempPath[1]] && node.path.length == 2) {
+  if (this.drawer.file[tempPath[0]][tempPath[1]] && node.path.length === 2) {
     return node.id
   }
 
   let id
   let keyExists = false
-  let receivingNodePath
 
   const connectedEdges = this.network.getConnectedEdges(receivingNode.id)
   const coppiedEdgeObject = this.edges.get(copiedEdges[0])
@@ -30,12 +29,12 @@ function createIDForNewNode (node, receivingNode, copiedEdges) {
   connectedEdges.forEach((edge) => {
     const edgeObj = this.edges.get(edge)
 
-    if (edgeObj.from == receivingNode.id && coppiedEdgeObject.label == edgeObj.label) {
+    if (edgeObj.from === receivingNode.id && coppiedEdgeObject.label === edgeObj.label) {
       keyExists = true
     }
   })
 
-  receivingNodePath = receivingNode.path
+  const receivingNodePath = receivingNode.path
 
   let valueOfPath = this.drawer.file
 
@@ -91,7 +90,7 @@ function createNewNodesFromCopiedNodes (copiedNodes, copiedEdges, receivingNode)
   const keys = Object.getOwnPropertyNames(node)
 
   keys.forEach((key) => {
-    if (!(key == 'id') && !((typeof (node[key])) == 'function')) {
+    if (!(key === 'id') && !((typeof (node[key])) === 'function')) {
       newNode[key] = node[key]
     }
   })
@@ -135,7 +134,7 @@ function pasteNodeEdges (copiedNodes, copiedEdges) {
     }
 
     // if literal, then return
-    if (typeof json == 'string' && this.drawer.file[receivingNode.path[receivingNode.path.length - 1]] == undefined) {
+    if (typeof json === 'string' && this.drawer.file[receivingNode.path[receivingNode.path.length - 1]] === undefined) {
       return
     }
 
@@ -151,7 +150,7 @@ function pasteNodeEdges (copiedNodes, copiedEdges) {
 
       const newEdge = this.createNewEdgeForNewNode(newNode)
 
-      if (newNode.group != 'root') {
+      if (newNode.group !== 'root') {
         this.nodes.update(newNode)
         this.edges.update(newEdge)
 
@@ -160,7 +159,7 @@ function pasteNodeEdges (copiedNodes, copiedEdges) {
     }
   }
 
-  if (copiedNodes.length > 0 && this.network.getSelectedNodes().length == 0) {
+  if (copiedNodes.length > 0 && this.network.getSelectedNodes().length === 0) {
     // paste nodes and edges into empty space
 
     const newNode = this.createNewNodesFromCopiedNodes(copiedNodes, copiedEdges, false)
@@ -210,7 +209,7 @@ function addToJSON (newNode, newEdge, receivingNode) {
   }
 
   // if the path of the copied node is only two elements long, take the second element of the path as the value that will be added (only relevant for items)
-  if (valuePath.length == 2) {
+  if (valuePath.length === 2) {
     valueToBeAdded = valuePath[1]
   }
 
@@ -239,13 +238,13 @@ function duplicateNode (node) {
   let newNode = {}
   if (Object.getOwnPropertyNames(node).includes('typeString')) {
     const cls = this.classRegistry.get(node.typeString)
-    newNode = new cls(utils.uuidv4())
+    newNode = new cls(utils.uuidv4()) // eslint-disable-line new-cap
   } else {
     newNode.id = utils.uuidv4()
   }
   const keys = Object.getOwnPropertyNames(node)
   keys.forEach((key) => {
-    if (!(key == 'id') && !((typeof (node[key])) == 'function')) {
+    if (!(key === 'id') && !((typeof (node[key])) === 'function')) {
       newNode[key] = node[key]
     }
   })

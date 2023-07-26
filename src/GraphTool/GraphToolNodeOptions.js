@@ -76,16 +76,16 @@ function showOptionsDefault (node, optionsDivId = 'optionsDiv') {
 
 function showSelectionOptions () {
   const selNodes = this.network.getSelectedNodes()
-  if (selNodes.length == 0) {
+  if (selNodes.length === 0) {
     // remove options
     if (!this.pressed_keys.includes('q')) {
       this.options_container.innerHTML = ''
     }
-  } else if (selNodes.length == 1) {
+  } else if (selNodes.length === 1) {
     // show options of single node
 
     const node = this.nodes.get(selNodes[0])
-    if (typeof node.showOptions == 'function') {
+    if (typeof node.showOptions === 'function') {
       const optionsId = this.options_container.id
       node.showOptions(optionsId)
     } else {
@@ -95,7 +95,7 @@ function showSelectionOptions () {
     // show common properties
     /**/
 
-    if (true) {
+    if (true) { // eslint-disable-line no-constant-condition
       // make options gui
 
       this.options_container.innerHTML = '<h3>comparison between nodes</h3>'
@@ -125,7 +125,7 @@ function showSelectionOptions () {
 
       const fixedEdit = (cell) => {
         const node = this.nodes.get(cell._cell.row.data.id)
-        const id = cell._cell.row.data.id
+        const id = cell._cell.row.data.id // eslint-disable-line no-unused-vars
         node.fixed = Boolean(cell._cell.value)
 
         this.nodes.update(node)
@@ -162,14 +162,14 @@ function showSelectionOptions () {
       const colorEdit = (cell) => {
         const node = this.nodes.get(cell._cell.row.data.id)
 
-        const id = cell._cell.row.data.id
+        const id = cell._cell.row.data.id // eslint-disable-line no-unused-vars
 
         node.color = JSON.parse(cell._cell.value)
 
         this.nodes.update(node)
       }
 
-      const tabul = new Tabulator('#' + comparisonContainer.id, {
+      const tabul /* eslint-disable-line no-unused-vars */ = new Tabulator('#' + comparisonContainer.id, { // eslint-disable-line no-undef
         data: tableData,
         columns: [{
           title: 'id',
@@ -252,7 +252,7 @@ function showSelectionOptions () {
         }
       }
 
-      const setForAllTable = new Tabulator('#' + setForAllContainer.id, {
+      const setForAllTable /* eslint-disable-line no-unused-vars */ = new Tabulator('#' + setForAllContainer.id, { // eslint-disable-line no-undef
         data: [tableData[0]],
         columns: [{
           title: 'id',

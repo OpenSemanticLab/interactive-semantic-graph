@@ -11,7 +11,7 @@ function recolorByProperty () {
     edge.color = this.drawer.colorObj[edge.label]
     this.edges.update(edge)
     for (const node of nodes) {
-      if (edge.to == node.id) {
+      if (edge.to === node.id) {
         node.color = edge.color
         this.nodes.update(node)
       }
@@ -33,7 +33,7 @@ function getEdgeByIDsAndLabel (fromNodeID, toNodeID, label) {
   const edges = this.edges.get()
 
   const edge = edges.find((edge) => {
-    return edge.from == fromNodeID && edge.to == toNodeID && edge.label == label
+    return edge.from === fromNodeID && edge.to === toNodeID && edge.label === label
   })
 
   return edge
@@ -59,7 +59,7 @@ function buildFullPath (path, currentNodePath) {
 // removes duplicates from multidimensional array
 function arrayExistsInMultidimensionalArray (arr, multidimensionalArr) {
   return multidimensionalArr.some((element) => {
-    return JSON.stringify(element) == JSON.stringify(arr)
+    return JSON.stringify(element) === JSON.stringify(arr)
   })
 }
 
@@ -75,7 +75,7 @@ function getRightPathsBetweenNodes (path, startNodes, endNodes) {
       // gets edge paths between start and end nodes
       const currentEdgePaths = this.getAllStringsForAllPaths(currentNodePaths)
 
-      if (currentEdgePaths.length == 0) {
+      if (currentEdgePaths.length === 0) {
         continue
       }
 
@@ -119,13 +119,13 @@ function colorPaths (paths, colorArray, valueArray) {
   for (let i = 0; i < valueArray.length; i++) {
     for (let j = 0; j < paths.length; j++) {
       // only color the paths with the given value
-      if (!(paths[j][paths[j].length - 1].label == valueArray[i])) {
+      if (!(paths[j][paths[j].length - 1].label === valueArray[i])) {
         continue
       }
 
       for (let k = 0; k < paths[j].length; k++) {
         // dont color root node
-        if (paths[j][k].group == 'root') {
+        if (paths[j][k].group === 'root') {
           paths[j][k].color = '#6dbfa9'
           this.nodes.update(paths[j][k])
           continue

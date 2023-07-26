@@ -27,7 +27,7 @@ function onBeforeCreateNodeDefault (node) {
   }
 
   // set group
-  if (node.depth == 0) {
+  if (node.depth === 0) {
     node.group = 'root'
     node.color = this.config.rootColor
   } else {

@@ -19,7 +19,7 @@ function getAllEdgesWithLabel (edges, label) {
   const tempArray = []
 
   for (let index = 0; index < edges.length; index++) {
-    if (edges[index].label == label) {
+    if (edges[index].label === label) {
       tempArray.push(edges[index])
     }
   }
@@ -30,14 +30,14 @@ function getAllEdgesWithLabel (edges, label) {
 // Removes object with a given ID from the given array
 function removeObjectWithId (arr, id, edge) {
   if (edge) {
-    const objWithIdIndex = arr.findIndex((obj) => obj.from == edge.from && obj.to == edge.to)
+    const objWithIdIndex = arr.findIndex((obj) => obj.from === edge.from && obj.to === edge.to)
 
     if (objWithIdIndex > -1) {
       arr.splice(objWithIdIndex, 1)
     }
   }
 
-  const objWithIdIndex = arr.findIndex((obj) => obj.id == id)
+  const objWithIdIndex = arr.findIndex((obj) => obj.id === id)
 
   if (objWithIdIndex > -1) {
     arr.splice(objWithIdIndex, 1)
@@ -51,8 +51,8 @@ function legendInvisibleGroups (options) {
   const invisibleGroups = []
 
   for (const [key, value] of Object.entries(options.groups)) {
-    for (const [subKey, subValue] of Object.entries(value)) {
-      if (subValue == true) {
+    for (const [subKey, subValue] of Object.entries(value)) { // eslint-disable-line no-unused-vars
+      if (subValue === true) {
         invisibleGroups.push(key)
       }
     }
@@ -102,11 +102,11 @@ function createOverlapArray (paths) {
 
   for (let i = 0; i < paths.length; i++) {
     for (let j = 0; j < paths.length; j++) {
-      if (i == j) {
+      if (i == j) { // eslint-disable-line eqeqeq
         continue
       }
 
-      if (paths[i][0].id == paths[j][0].id) {
+      if (paths[i][0].id === paths[j][0].id) {
         overlap.push(paths[i][0].id)
       }
     }
@@ -140,7 +140,7 @@ function isNodeLastInPath (node) {
   const edges = this.edges.get()
 
   for (let i = 0; i < edges.length; i++) {
-    if (edges[i].from == node) {
+    if (edges[i].from === node) {
       return false
     }
   }
@@ -161,7 +161,7 @@ function isNodeOpen (nodeId) {
   const edges = this.edges.get()
 
   for (const edge of edges) {
-    if (edge.from == nodeId.trim()) {
+    if (edge.from === nodeId.trim()) {
       return true
     }
   }

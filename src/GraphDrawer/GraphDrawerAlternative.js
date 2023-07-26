@@ -14,7 +14,7 @@ function createNxGraph () {
     }) //, {"id":(String(args.currentPath)+args.key),"key":args.key})
   }
 
-  args = {}
+  const args = {}
   utils.callbackObjectRecursion(this.file, recursionCallback, args)
 
   // replace Array nodes
@@ -43,7 +43,7 @@ function createNxGraph () {
   for (const val of MDG.nodes(true)) {
     const nodeId = val[0]
     const nodeData = val[1]
-    if (typeof (nodeData.obj) == 'string') {
+    if (typeof (nodeData.obj) === 'string') {
       const checkPaths = [
         ['jsondata', nodeData.obj],
         ['jsonschema', nodeData.obj]
@@ -64,9 +64,7 @@ function createNxGraph () {
   const visEdges = new vis.DataSet()
 
   for (const id of MDG.nodes()) {
-    let node
-
-    node = {
+    const node = {
       id,
       label: String(id),
       data: MDG.nodes()[id]
@@ -75,11 +73,8 @@ function createNxGraph () {
   }
 
   for (const i in MDG.edges()) {
-    let edgeArr
-    let edge
-    edgeArr = MDG.edges(true)[i]
-
-    edge = {
+    const edgeArr = MDG.edges(true)[i]
+    const edge = {
       from: edgeArr[0],
       to: edgeArr[1],
       data: edgeArr[2],
@@ -109,7 +104,7 @@ function createNxGraph () {
       useDefaultGroups: false
     }
   }
-  const network = new vis.Network(container, data, options)
+  const network = new vis.Network(container, data, options) // eslint-disable-line no-unused-vars
 
   // color nodes in path
   const path = jsnx.bidirectionalShortestPath(new jsnx.Graph(MDG), 'jsonschema,Category:Item,properties,label,0,items,properties,text', 'jsondata,Item:MyProject,budget,1,budget,1,year', 19)

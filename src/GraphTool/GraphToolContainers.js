@@ -64,7 +64,7 @@ function colorPicker (graph, container) {
   // create container if not specified
   if (!container) container = document.createElement('div')
 
-  var graph = graph
+  var /* eslint-disable-line no-var */ graph = graph // eslint-disable-line no-redeclare
   const prefix = this.prefix
   const dropdownDiv = document.createElement('div')
   dropdownDiv.id = this.prefix + 'dropdown'
@@ -116,7 +116,7 @@ function colorPicker (graph, container) {
   document.querySelector('#' + this.prefix + 'myDropdown select').addEventListener('change', function () {
     const selectedValue = this.value
 
-    if (selectedValue == 'setColorByValue') {
+    if (selectedValue === 'setColorByValue') {
       const input = document.createElement('input')
       input.type = 'text'
       input.id = prefix + 'setColorByValueInput'
@@ -161,7 +161,7 @@ function colorPicker (graph, container) {
       }
     }
 
-    if (selectedValue == 'setColorByProperty') {
+    if (selectedValue === 'setColorByProperty') {
       if (document.getElementById(prefix + 'setColorByValueInput')) {
         document.getElementById(prefix + 'setColorByValueInput').remove()
         document.getElementById(prefix + 'startColor').remove()

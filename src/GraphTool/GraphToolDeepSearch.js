@@ -75,7 +75,7 @@ function deepSearchExpandNodes (foundNode, fullGraph) {
 
   // expand path if starting node is given
   for (let i = 2; i < path.length; i += 2) {
-    if (path[i + 1] == undefined) {
+    if (path[i + 1] === undefined) {
       break
     }
     currentID += `/${path[i]}/${path[i + 1]}`
@@ -114,8 +114,8 @@ function collapseSearch () {
 function deepSearchColorPath (foundNodes) {
   this.nodes.get().forEach(node => {
     // if the node is not expanded by deep search and is not in the found nodes, color it white
-    if (!this.deepSearchExpands.includes(node.id) && !foundNodes.some(obj => obj.id == node.id) && !this.searchExpands.includes(node.id)) {
-      if (node.group != 'root') {
+    if (!this.deepSearchExpands.includes(node.id) && !foundNodes.some(obj => obj.id === node.id) && !this.searchExpands.includes(node.id)) {
+      if (node.group !== 'root') {
         // console.log(node.id)
 
         node.color = '#ffffff'
@@ -127,7 +127,7 @@ function deepSearchColorPath (foundNodes) {
 
   this.edges.get().forEach(edge => {
     // if the edge is connected to colored nodes but not white nodes, color it black
-    if (!(this.nodes.get(edge.from).color != '#ffffff' && this.nodes.get(edge.to).color != '#ffffff')) {
+    if (!(this.nodes.get(edge.from).color !== '#ffffff' && this.nodes.get(edge.to).color !== '#ffffff')) {
       edge.color = '#000000'
 
       this.edges.update(edge)
@@ -139,7 +139,7 @@ function expandNodesCleanedUp (params) {
   if (params.nodes.length > 0) {
     const node = this.nodes.get(params.nodes[0])
 
-    if ('item' in node && (this.clicked[params.nodes[0]] == false || !('' + params.nodes[0] in this.clicked)) && (this.network.getConnectedNodes(params.nodes[0], 'to').length == 0)) {
+    if ('item' in node && (this.clicked[params.nodes[0]] === false || !('' + params.nodes[0] in this.clicked)) && (this.network.getConnectedNodes(params.nodes[0], 'to').length === 0)) {
       // expand node
 
       const args = {
@@ -173,7 +173,7 @@ function deepSearch (searchValue) {
   const fullGraph = this.fullGraph
 
   // if search value is empty, collapse all expanded nodes and return
-  if (searchValue == '') {
+  if (searchValue === '') {
     this.collapseSearch()
     this.recolorByProperty()
 
@@ -186,14 +186,14 @@ function deepSearch (searchValue) {
   // search for nodes with label containing search value
   let foundNodes = []
 
-  if (document.getElementById(this.prefix + 'search_select').value == 'search_node') {
+  if (document.getElementById(this.prefix + 'search_select').value === 'search_node') {
     const lowercaseSearchValue = searchValue.toLowerCase()
     foundNodes = fullGraph.nodes.get().filter(node =>
       node.label.toLowerCase().includes(lowercaseSearchValue)
     )
   }
 
-  if (document.getElementById(this.prefix + 'search_select').value == 'search_edge') {
+  if (document.getElementById(this.prefix + 'search_select').value === 'search_edge') {
     // search for edges with label containing search value
     let foundEdges = []
 
@@ -207,7 +207,7 @@ function deepSearch (searchValue) {
     }
   }
 
-  if (foundNodes.length == 0) {
+  if (foundNodes.length === 0) {
     this.collapseSearch()
     this.recolorByProperty()
     if (document.getElementById(this.prefix + 'myCheckbox').checked) {
@@ -252,7 +252,7 @@ function deepSearch (searchValue) {
   this.createLegend()
   this.repeatInvisibility(this.options)
 
-  if (this.legendInvisibleGroups(this.options).length == 0) {
+  if (this.legendInvisibleGroups(this.options).length === 0) {
     this.resetNodesAndEdgesVisibility()
   }
 }

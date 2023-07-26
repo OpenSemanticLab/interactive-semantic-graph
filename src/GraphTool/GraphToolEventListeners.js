@@ -16,16 +16,16 @@ function addKeyEventListeners () {
       this.pressed_keys.push(event.key)
     }
     // delete function
-    if (event.key == 'Delete') {
+    if (event.key === 'Delete') {
       this.network.deleteSelected()
     }
     // copy
-    if (event.key == 'c' && this.pressed_keys.includes('Control')) {
+    if (event.key === 'c' && this.pressed_keys.includes('Control')) {
       // copy nodes
       this.copyNodesEdges()
     }
     // paste
-    if (event.key == 'v' && this.pressed_keys.includes('Control')) {
+    if (event.key === 'v' && this.pressed_keys.includes('Control')) {
       // paste copied nodes
       this.pasteNodeEdges(this.copiedNodes, this.copiedEdges)
     }
@@ -43,8 +43,8 @@ function addContainerEventListeners (container) {
     container.style.border = '1px solid lightgray'
   }, false)
   container.addEventListener('drop', function (e) {
-    e.preventDefault
-    handleDrop(e)
+    e.preventDefault()
+    handleDrop(e) // eslint-disable-line no-undef
   }, false)
   container.addEventListener('dragover', function (e) {
     e.preventDefault()

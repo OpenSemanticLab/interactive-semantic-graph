@@ -19,7 +19,7 @@ function registerPropertyColor (property) {
     }
   })) {
     for (const x in this.colorObj) {
-      if (property == x) {
+      if (property === x) {
         return this.colorObj[x] // this is the color-object in GraphDrawer that contains colors per property.
       }
     }

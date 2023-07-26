@@ -150,7 +150,7 @@ class GraphDrawer {
     if (args.previousNode) {
       depthObject[args.recursionRootId] = args.previousNode.depthObject[args.recursionRootId] + 1
     }
-    if (args.recursionRootId == currentNodeId) {
+    if (args.recursionRootId === currentNodeId) {
       depthObject[args.recursionRootId] = 0
     }
     // create edge and node
@@ -239,7 +239,7 @@ class GraphDrawer {
     }
     if (args.recurse) {
       // loop through keys / indices of current item if it is an object / array
-      if (typeof (currentValue) == 'object') {
+      if (typeof (currentValue) === 'object') {
         if (Array.isArray(currentValue) && this.config.contractArrayPaths) {
           for (const i in currentValue) {
             if (!this.excludeList.includes(i) && depthObject[args.recursionRootId] < args.recursionDepth + 1) {

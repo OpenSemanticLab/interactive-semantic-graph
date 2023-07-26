@@ -102,7 +102,7 @@ class GraphTool {
     // for having different node classes.
     this.classRegistry = new Map() // maps from typeString to class
     this.classRegistry.register = (cls) => {
-      this.classRegistry.set((new cls()).typeString, cls)
+      this.classRegistry.set((new cls()).typeString, cls) // eslint-disable-line new-cap
     }
     // for (let cls of [NodeClasses.RocketBase, NodeClasses.RocketBase, NodeClasses.Fountain, NodeClasses.DelayNode, NodeClasses.TextSpeechNode, NodeClasses.VideoNode,
     //     NodeClasses.DrawNode,
@@ -185,7 +185,7 @@ class GraphTool {
 
       connEdges.forEach(function (edgeId) {
         const edge = this.edges.get(edgeId)
-        if (edge.from == nodeId) {
+        if (edge.from === nodeId) {
           const neighborNode = this.nodes.get(edge.to)
 
           if (neighborNode.run) {
@@ -217,7 +217,7 @@ class GraphTool {
     if (params.nodes.length > 0) {
       const node = this.nodes.get(params.nodes[0])
 
-      if ('item' in node && (this.clicked[params.nodes[0]] == false || !('' + params.nodes[0] in this.clicked)) && (this.network.getConnectedNodes(params.nodes[0], 'to').length == 0)) {
+      if ('item' in node && (this.clicked[params.nodes[0]] === false || !('' + params.nodes[0] in this.clicked)) && (this.network.getConnectedNodes(params.nodes[0], 'to').length === 0)) {
         // expand node
 
         const args = {
@@ -240,7 +240,7 @@ class GraphTool {
 
         this.createLegend()
 
-        if (document.querySelector('#' + this.prefix + 'myDropdown select').value == 'setColorByValue') {
+        if (document.querySelector('#' + this.prefix + 'myDropdown select').value === 'setColorByValue') {
           this.colorByValue([document.querySelector('#' + this.prefix + 'setColorByValueInput').value], this.nodes, this.edges, document.querySelector('#' + this.prefix + 'startColor').value, document.querySelector('#' + this.prefix + 'endColor').value)
         }
         this.clicked[params.nodes[0]] = true
@@ -257,7 +257,7 @@ class GraphTool {
         this.deleteNodesChildren(params.nodes[0])
         this.createLegend()
 
-        if (this.legendInvisibleGroups(this.options).length == 0) {
+        if (this.legendInvisibleGroups(this.options).length === 0) {
           // this.nodes.update(nodes);
           // this.edges.update(edges);
         }
@@ -266,7 +266,7 @@ class GraphTool {
 
     this.repeatInvisibility(this.options)
 
-    if (this.legendInvisibleGroups(this.options).length == 0) {
+    if (this.legendInvisibleGroups(this.options).length === 0) {
       this.resetNodesAndEdgesVisibility()
     }
 

@@ -1,0 +1,49 @@
+*, *:before, *:after {
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 100%;
+}
+
+body {
+  font-family: Arial, Helvetica, sans-serif;
+  color: black;
+  background: rgb(0/91/127);
+  background: linear-gradient(170deg, rgba(0,91,127,1) 20%, rgba(57,193,205,1) 40%, rgba(23,156,125,1) 75%);
+}
+
+.container {
+  display: flex;
+  flex-wrap: wrap;
+  max-width: 90%;
+  margin: 0 auto 0 auto;
+}
+
+header {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+}
+
+#title {
+  font: bold 3rem Arial, sans-serif;
+  color: #ffffff;
+}
+
+.logo {
+  max-width: 20%;
+  height: auto;
+  margin-bottom: 2rem;
+}
+
+#mynetwork {
+  background-color: #ffffff;
+  width: 100%;
+  margin-bottom: 3rem;
+}
+
+#mynetwork2{
+  background-color: #ffffff;
+  width: 100%;
+}

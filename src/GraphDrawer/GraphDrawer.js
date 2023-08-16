@@ -7,6 +7,10 @@ const GDColoring = require('./GraphDrawerColoring.js')
 
 class GraphDrawer {
   constructor (config, args) {
+    if ((config || args) === undefined) {
+      return
+    }
+
     this.BindToClass(GDHelper, this)
     this.BindToClass(GDCallback, this)
     this.BindToClass(GDAlternative, this)
@@ -209,7 +213,7 @@ class GraphDrawer {
       //   new_y = args.previousNode.y + this.config.nodeDistance * Math.sin(angle);
       // }
 
-      // create current Node
+      // create current Nodes
       currentNode = {
         id: currentNodeId,
         label,
@@ -295,6 +299,10 @@ class GraphDrawer {
 
     // }
   }
+
+  unit () {
+    return "GraphDrawer"
+  } 
 }
 
 export {

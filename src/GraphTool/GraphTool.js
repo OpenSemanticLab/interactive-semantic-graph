@@ -21,6 +21,10 @@ class GraphTool {
   static instanceCount = 0
 
   constructor (divId, config, callbackConfig) {
+    if ((divId || config) === undefined) {
+      return
+    }
+
     this.BindToClass(GTHelper, this)
     this.BindToClass(GTContainers, this)
     this.BindToClass(GTEventListeners, this)
@@ -272,6 +276,10 @@ class GraphTool {
 
     // this.createLegend()
   }
+
+  unit () {
+    return "GraphTool"
+  } 
 }
 
 export {

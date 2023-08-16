@@ -17,6 +17,8 @@ class Graph {
     this.openPaths = []
 
     this.createGraphByConfig(file, configFile, onlyData)
+
+    this.drawer
   }
 
   isNodeLastInPath (node) {
@@ -66,7 +68,7 @@ class Graph {
       }
     }
 
-    let drawer
+    // let drawer
     let tempNodes
     let tempEdges
     let tempColorObj
@@ -76,16 +78,16 @@ class Graph {
     const drawerConfig = { lang: 'en', contractArrayPaths: true }
 
     for (let i = 0; i < configFile.root_node_objects.length; i++) {
-      if (drawer === undefined) {
+      if (this.drawer === undefined) {
         tempNodes = []
         tempEdges = []
         tempColorObj = {}
       } else {
-        tempNodes = drawer.nodes.get()
-        tempEdges = drawer.edges.get()
-        tempColorObj = drawer.colorObj
+        tempNodes = this.drawer.nodes.get()
+        tempEdges = this.drawer.edges.get()
+        tempColorObj = this.drawer.colorObj
 
-        drawer.edges.get().forEach((edge) => {
+        this.drawer.edges.get().forEach((edge) => {
           if (edge.from === 'jsondata/' + configFile.root_node_objects[i].node_id || edge.to === 'jsondata/' + configFile.root_node_objects[i].node_id) {
             connections.push(edge)
 
@@ -107,15 +109,15 @@ class Graph {
         colorObj: tempColorObj
       }
 
-      drawer = new GD.GraphDrawer(drawerConfig, args)
+      this.drawer = new GD.GraphDrawer(drawerConfig, args)
     }
 
     connections.forEach((edge) => {
-      drawer.edges.update(edge)
+      this.drawer.edges.update(edge)
     })
 
     if (onlyData) {
-      return drawer
+      return this.drawer
     }
 
     // let args = {
@@ -128,30 +130,33 @@ class Graph {
     //   recursionDepth: configFile.root_node_objects[0].expansion_depth,
     // }
 
-    // drawer = new isg.GraphDrawer(drawerConfig, args);
+    // this.drawer = new isg.GraphDrawer(drawerConfig, args);
 
     // args = {
     //   file: file,
     //   depth: 1,
     //   mode: true,
-    //   nodes: drawer.nodes.get(),
-    //   edges: drawer.edges.get(),
+    //   nodes: this.drawer.nodes.get(),
+    //   edges: this.drawer.edges.get(),
     //   rootItem: "Item:MyOtherItem",//configFile.root_node_objects[0].node_id,
     //   recursionDepth: configFile.root_node_objects[0].expansion_depth,
-    //   colorObj: drawer.colorObj,
+    //   colorObj: this.drawer.colorObj,
     // }
 
-    // drawer = new isg.GraphDrawer(drawerConfig, args);
+    // this.drawer = new isg.GraphDrawer(drawerConfig, args);
 
-    // console.log(drawer)
+    // console.log(this.drawer)
     const config = {
       // nodes: nodes,
       // edges: edges,
-      options,
-      file: newJson, // eslint-disable-line no-undef
-      drawer,
-      configFile
+      options: options,
+      file: file, // eslint-disable-line no-undef
+      drawer: this.drawer,
+      configFile:configFile
     }
+
+    console.log(this.drawer.nodes.get())
+    console.log(this.drawer.edges.get())
 
     this.graphtool = new GT.GraphTool(config.configFile.graph_container_id, config)
     // this.graphtool = new isg.GraphTool("mynetwork2", config);
@@ -270,11 +275,23 @@ class Graph {
     //   }
     // }
   }
+
+  unit () {
+    return "Graph"
+  }
+  
+  getGraphToolInstance () {
+    return this.graphtool
+  }
 }
+
+
 
 export {
 
   Graph,
+  GD,
+  GT,
   vis
 
 }

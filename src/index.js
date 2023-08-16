@@ -1,7 +1,7 @@
 const $ = require('jquery')
-// const GD = require("./GraphDrawer.js");
-// const GT = require("./GraphTool.js");
 const Graph = require('./Graph/Graph.js')
+const GD = require('./GraphDrawer/GraphDrawer.js')
+const GT = require('./GraphTool/GraphTool.js')
 
 // let clicked = {};
 $(document).ready(function () {
@@ -53,8 +53,9 @@ $(document).ready(function () {
 
 export {
 
-  Graph
-  // GT,
-  // GD
+  
+  GT,
+  GD,
+  Graph,
 
 }

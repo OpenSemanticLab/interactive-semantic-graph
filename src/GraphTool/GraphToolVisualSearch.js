@@ -179,6 +179,7 @@ function searchNodes (searchString) {
     }
     // colors all nodes and edges that get found
     this.deepSearchColorPath([])
+    return this.searchExpands
   }
 }
 

@@ -155,8 +155,8 @@ class Graph {
       configFile:configFile
     }
 
-    console.log(this.drawer.nodes.get())
-    console.log(this.drawer.edges.get())
+    // console.log(this.drawer.nodes.get())
+    // console.log(this.drawer.edges.get())
 
     this.graphtool = new GT.GraphTool(config.configFile.graph_container_id, config)
     // this.graphtool = new isg.GraphTool("mynetwork2", config);

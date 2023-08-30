@@ -1,16 +1,19 @@
 // repeats the invisibility of properties that are set invisible in the legend
 function repeatInvisibility (options) {
+  let objectToRepeat = {}
   for (const [key, value] of Object.entries(options.groups)) {
     for (const [subKey, subValue] of Object.entries(value)) { // eslint-disable-line no-unused-vars
       if (subValue === true) {
-        const objectToRepeat = {
+        objectToRepeat = {
           repeat: key
         }
-
+        
         this.legendFunctionality(objectToRepeat)
       }
     }
   }
+
+  return objectToRepeat
 
   // Array.from(options.groups).forEach((group)=> {
 
@@ -163,6 +166,7 @@ function setNodeVisibilityByVisiblePath (nodeId, rootNodeId) {
 // turns clicked properties of the legend invisible or back to visible
 function legendFunctionality (e) {
   let legendGroup
+  this.visibilityByVisiblePath = {}
   // let group
   // let nodeChildren
   const strategy = 'strategy2'
@@ -192,7 +196,8 @@ function legendFunctionality (e) {
 
     // check each node
     this.nodes.forEach((node) => {
-      this.setNodeVisibilityByVisiblePath(node.id, 0)
+      this.visibilityByVisiblePath[node.id] = this.setNodeVisibilityByVisiblePath(node.id, 0)
+      //this.setNodeVisibilityByVisiblePath(node.id, 0)
       // reset visited state. Todo: Reuse visited nodes between runs
       this.nodes.forEach((node) => {
         node.visited = false
@@ -212,6 +217,7 @@ function legendFunctionality (e) {
   if (allFalse === true) {
     /* oldGroups = {}; */
   }
+  return this.visibilityByVisiblePath
 };
 
 export {

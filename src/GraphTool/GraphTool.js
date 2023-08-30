@@ -159,6 +159,7 @@ class GraphTool {
 
     // this.initRectangleSelection()
     this.initDragAndDrop()
+    this.visibilityByVisiblePath = {}
   }
 
   BindToClass (functionsObject, thisClass) {
@@ -211,6 +212,7 @@ class GraphTool {
 
   // expands the object that is saved inside a node and on second doubleclick deletes nodes and edges that go out of the clicked node
   expandNodes (params) {
+
     if (!this.searchAlert()) {
       return
     }

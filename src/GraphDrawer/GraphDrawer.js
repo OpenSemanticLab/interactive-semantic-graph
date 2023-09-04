@@ -301,8 +301,8 @@ class GraphDrawer {
   }
 
   unit () {
-    return "GraphDrawer"
-  } 
+    return 'GraphDrawer'
+  }
 }
 
 export {

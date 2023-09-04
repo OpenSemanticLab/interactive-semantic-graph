@@ -28,21 +28,20 @@
 // //     await test(`new test`, /*{ skip: process.env.WITH_BROWSERS != 'true' },*/ async assert => {
 
 // //         assert.plan(1)
-    
+
 // //         // run in the browser
 // //         const result = await page.evaluate(() => {
 // //             const ge = new isg.GT.GraphTool()// new isg.GraphEditor()
 // //             return ge.unit()// ge.test()
 // //         })
-    
+
 // //         assert.equal(result, 'GraphTool')//'test')
-    
+
 // //     })
 
 // //     await browser.close()
 
 // // })()
-
 
 // import { test } from 'tap'
 // import { fileURLToPath } from 'node:url'
@@ -119,8 +118,8 @@
 //                 }
 //             }
 //         }
-        
-//         }, 
+
+//         },
 //       "jsondata": {
 //         "Item:MyProject": {
 //             "type": ["Category:Item"],
@@ -169,23 +168,23 @@
 //                   "value": "10"}, {
 //                     "year": "2022",
 //                     "value": "20"}]
-          
+
 //         },
 //         "Item:MyNewItem": {
 //           "type": ["Category:Item"],
 //           "label": [{"text": "My New Other", "lang": "en"}],
 //           "other":["Item:MySecondItem"]
-          
+
 //         },
 //         "Item:MySecondItem": {
 //           "type": ["Category:Item"],
 //           "label": [{"text": "My Second Other", "lang": "en"}]
-          
+
 //         },
-      
+
 //       }};
-      
-//       let configFile = 
+
+//       let configFile =
 //       {
 //           "type": [
 //             "Category:OSWaf511685f7c044e49bcdc5e32e58b19a"
@@ -410,7 +409,7 @@
 
 //     const evaluationResult = await page.evaluate(({ newJson, configFile }) => {
 //       const ge = new isg.Graph.Graph(newJson, configFile);
-      
+
 //       const result = ge.graphtool.unit()
 //       const result2 = ge.graphtool.unit()
 
@@ -431,10 +430,9 @@
 
 //   await browser.close();
 
-
 // //   page.evaluate(async ({ newJson, configFile }) => {
 // //     const ge = new isg.Graph.Graph(newJson, configFile);
-    
+
 // //     const result = ge.isNodeLastInPath('test');
 // //     const result2 = ge.isNodeLastInPath('jsondata/Item:MyProject1');
 
@@ -455,8 +453,3 @@
 // // });
 
 // })()
-
-
-
-
-

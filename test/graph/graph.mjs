@@ -73,8 +73,8 @@
 //               }
 //           }
 //       }
-      
-//       }, 
+
+//       },
 //     "jsondata": {
 //       "Item:MyProject": {
 //           "type": ["Category:Item"],
@@ -123,20 +123,20 @@
 //                 "value": "10"}, {
 //                   "year": "2022",
 //                   "value": "20"}]
-        
+
 //       },
 //       "Item:MyNewItem": {
 //         "type": ["Category:Item"],
 //         "label": [{"text": "My New Other", "lang": "en"}],
 //         "other":["Item:MySecondItem"]
-        
+
 //       },
 //       "Item:MySecondItem": {
 //         "type": ["Category:Item"],
 //         "label": [{"text": "My Second Other", "lang": "en"}]
-        
+
 //       },
-    
+
 //     }};
 
 //     const configFile = {
@@ -363,7 +363,7 @@
 
 //     const evaluationResult = await page.evaluate(({ newJson, configFile }) => {
 //       const ge = new isg.Graph.Graph(newJson, configFile);
-      
+
 //       const result = ge.isNodeLastInPath('randominput');
 //       const result2 = ge.isNodeLastInPath('jsondata/Item:MyProject');
 
@@ -384,10 +384,9 @@
 
 //   await browser.close();
 
-
 // //   page.evaluate(async ({ newJson, configFile }) => {
 // //     const ge = new isg.Graph.Graph(newJson, configFile);
-    
+
 // //     const result = ge.isNodeLastInPath('test');
 // //     const result2 = ge.isNodeLastInPath('jsondata/Item:MyProject1');
 
@@ -408,5 +407,3 @@
 // // });
 
 // })()
-
-

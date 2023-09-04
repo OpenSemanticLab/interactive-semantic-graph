@@ -53,9 +53,8 @@ $(document).ready(function () {
 
 export {
 
-  
   GT,
   GD,
-  Graph,
+  Graph
 
 }

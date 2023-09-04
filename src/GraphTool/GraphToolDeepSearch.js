@@ -1,7 +1,7 @@
 function searchFunctionality (data, searchValue) {
   document.getElementById(this.prefix + 'search_input').value = ''
 
-  this.deepSearch(searchValue)  
+  this.deepSearch(searchValue)
 }
 
 // resets deep search if user accepts the search results to open further nodes
@@ -107,7 +107,7 @@ function collapseSearch () {
     this.deepSearchExpands = []
     this.deepSearchExpandsFull = []
     this.clicked = {}
-    document.getElementById(this.prefix + "legendContainer").remove()
+    document.getElementById(this.prefix + 'legendContainer').remove()
     this.createLegend()
   }
 }
@@ -258,7 +258,6 @@ function deepSearch (searchValue) {
     this.resetNodesAndEdgesVisibility()
   }
 }
-
 
 export {
 

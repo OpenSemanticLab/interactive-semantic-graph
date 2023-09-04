@@ -106,7 +106,7 @@ function createSaveStateFunctionality () {
   element.click()
 
   document.body.removeChild(element)
-  let objectKeys = []
+  const objectKeys = []
   objectKeys.push(Object.keys(json.config))
   objectKeys.push(Object.keys(json.file))
   console.log(objectKeys)
@@ -145,8 +145,6 @@ function loadStateDefault (input) {
     // if (document.getElementById('setPath')) {
     //   document.getElementById('setPath').remove();
     // }
-    console.log(reader.result)
-    callback(reader.result)
   }
   reader.readAsText(input.target.files[0])
 }

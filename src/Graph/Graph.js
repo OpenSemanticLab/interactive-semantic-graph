@@ -18,7 +18,7 @@ class Graph {
 
     this.createGraphByConfig(file, configFile, onlyData)
 
-    this.drawer
+    this.drawer // eslint-disable-line no-unused-expressions
   }
 
   isNodeLastInPath (node) {
@@ -149,10 +149,10 @@ class Graph {
     const config = {
       // nodes: nodes,
       // edges: edges,
-      options: options,
-      file: file, // eslint-disable-line no-undef
+      options,
+      file, // eslint-disable-line no-undef
       drawer: this.drawer,
-      configFile:configFile
+      configFile
     }
 
     // console.log(this.drawer.nodes.get())
@@ -277,15 +277,13 @@ class Graph {
   }
 
   unit () {
-    return "Graph"
+    return 'Graph'
   }
-  
+
   getGraphToolInstance () {
     return this.graphtool
   }
 }
-
-
 
 export {
 

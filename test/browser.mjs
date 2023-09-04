@@ -16,7 +16,7 @@ const engines = [
 ]
 
 for (const engine of engines) {
-  test(`test with ${engine}`, { skip: process.env.WITH_BROWSERS != 'true' }, async assert => {
+  test(`test with ${engine}`, { skip: process.env.WITH_BROWSERS !== 'true' }, async assert => {
     browser = await browsers[engine].launch()
     page = await browser.newPage()
 
@@ -29,11 +29,11 @@ for (const engine of engines) {
 
     // run in the browser
     const result = await page.evaluate(() => {
-      const ge = new isg.Graph.Graph()// new isg.GraphEditor()
-      return ge.unit()// ge.test()
+      const ge = new isg.Graph.Graph() // eslint-disable-line no-undef
+      return ge.unit()
     })
 
-    assert.equal(result, 'Graph')//'test')
+    assert.equal(result, 'Graph')// 'test')
 
     await browser.close()
   })

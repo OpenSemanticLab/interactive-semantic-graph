@@ -7,7 +7,7 @@ function repeatInvisibility (options) {
         objectToRepeat = {
           repeat: key
         }
-        
+
         this.legendFunctionality(objectToRepeat)
       }
     }
@@ -197,7 +197,7 @@ function legendFunctionality (e) {
     // check each node
     this.nodes.forEach((node) => {
       this.visibilityByVisiblePath[node.id] = this.setNodeVisibilityByVisiblePath(node.id, 0)
-      //this.setNodeVisibilityByVisiblePath(node.id, 0)
+      // this.setNodeVisibilityByVisiblePath(node.id, 0)
       // reset visited state. Todo: Reuse visited nodes between runs
       this.nodes.forEach((node) => {
         node.visited = false

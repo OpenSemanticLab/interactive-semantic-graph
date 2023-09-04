@@ -38,7 +38,8 @@
     "test:browser": "tap test --no-coverage",
     "test:watch": "tap test --watch",
     "test:ci": "tap test --100",
-    "test:report": "opener coverage/lcov-report/index.html"
+    "test:report": "opener coverage/lcov-report/index.html",
+    "eslint": "npx eslint ../interactive-semantic-graph/test --ext=mjs,js && npx eslint ../interactive-semantic-graph/src --ext=mjs,js"
   },
   "dependencies": {
     "@json-editor/json-editor": "^2.10.1",

@@ -1,0 +1,17 @@
+#!/bin/bash
+
+# Run npm test
+echo "Running npm test..."
+npm test
+
+# Check for ESLint errors
+echo "Running ESLint..."
+npm run eslint
+
+# Check the exit codes of the previous commands
+if [ $? -eq 0 ]; then
+    exit 0 # Commit allowed
+else
+    echo "ERROR: Commit aborted due to failing tests or ESLint errors. Please fix and try again."
+    exit 1 # Commit blocked
+fi

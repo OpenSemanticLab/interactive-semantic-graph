@@ -1,5 +1,21 @@
 #!/bin/bash
 
+# Clone the latest pre-commit hook script from GitHub
+GITHUB_REPO_URL="https://github.com/OpenSemanticLab/interactive-semantic-graph.git"
+HOOK_SCRIPT="pre-commit"
+
+# Remove the existing pre-commit script (optional)
+rm -f .git/hooks/pre-commit
+
+# Clone the pre-commit script from GitHub
+curl -sSfL "$GITHUB_REPO_URL/$HOOK_SCRIPT" -o .git/hooks/pre-commit || {
+    echo "Failed to clone the pre-commit hook from GitHub."
+    exit 1
+}
+
+# Make the hook script executable
+chmod +x .git/hooks/pre-commit
+
 # Run npm test
 echo "Running npm test..."
 npm test
@@ -12,6 +28,6 @@ npm run eslint
 if [ $? -eq 0 ]; then
     exit 0 # Commit allowed
 else
-    echo "ERROR: Commit aborted due to failing tests or ESLint errors. Please fix and try again."
+    echo "ERROR: Commit aborted due to failing tests or ESLint errors. Please fix the issues and try again."
     exit 1 # Commit blocked
 fi

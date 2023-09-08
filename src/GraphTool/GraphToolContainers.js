@@ -68,6 +68,15 @@ function initGraphContainers(div_id) {
     let edit_element = document.createElement("ICON");
     edit_element.style = "width: 100%; text-align: center; margin-top: 4px; margin-bottom: 4px;";
     edit_element.innerHTML = '<i class="fa-solid text-info-emphasis fa-2xl fa-pen-to-square"></i>';
+    edit_element.addEventListener("click", () => {
+      this.options.manipulation.enabled = !this.options.manipulation.enabled;
+      this.options.manipulation.initiallyActive = !this.options.manipulation.initiallyActive;
+      this.network.setOptions(this.options);
+      
+      if(this.options.manipulation.enabled){
+        document.getElementById(this.prefix + "vis_container").querySelector(".vis-close").style = "display: none;"
+      }
+    });
     edit_legend.textContent ="Edit";
     edit_legend.style = "width: max-content; font-size: 0.85rem; margin: 0 auto;";
     edit_container.append( edit_element );

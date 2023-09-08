@@ -1,51 +1,82 @@
 *, *:before, *:after {
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
   box-sizing: border-box;
 }
 
-html {
-  font-size: 100%;
+:root {
+    --clr-font: rgb(60, 49,91);
+    --clr-highlight: rgb(226, 223, 254);
 }
 
 body {
-  font-family: Arial, Helvetica, sans-serif;
-  color: black;
-  background: rgb(0/91/127);
-  background: linear-gradient(170deg, rgba(0,91,127,1) 20%, rgba(57,193,205,1) 40%, rgba(23,156,125,1) 75%);
+    margin: 0;
+    padding: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    color: black;
 }
 
 .container {
   display: flex;
   flex-wrap: wrap;
-  max-width: 90%;
   margin: 0 auto 0 auto;
+  background-color: rgb(220, 224, 224);
 }
 
 header {
   width: 100%;
   display: flex;
+  align-items: center;
   justify-content: space-between;
 }
 
-#title {
-  font: bold 3rem Arial, sans-serif;
-  color: #ffffff;
+.title {
+  margin-left: 2rem;;
+  font: bold 2rem Arial, sans-serif;
+  color: var(--clr-font);
 }
 
-.logo {
-  max-width: 20%;
-  height: auto;
-  margin-bottom: 2rem;
-}
 
-#mynetwork {
-  background-color: #ffffff;
+/* nav {
+    width: 100%;
+    position: absolute;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    margin: 0;
+    padding: 0;
+    background: #fff;
+    display: flex;
+    border-radius: 1rem;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
+} */
+
+/* following classes added for js test */
+
+.navbar {
   width: 100%;
-  margin-bottom: 3rem;
+  margin-top: 24px;
+  padding: 0;
+  background: #fff;
+  display: flex;
+  border-radius: 0.5rem;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
 }
 
-#mynetwork2{
-  background-color: #ffffff;
-  width: 100%;
+i:hover {
+  scale: 1.1;
+  cursor: pointer;
 }
 
+/* end */
 
+/* .nav-item {
+  border-right: darkgrey 1px solid;
+}
+
+a:hover {
+  transform: scale(1.1);
+}
+
+.nav-item:last-child {
+  border-right: 0;
+} */

@@ -10,7 +10,8 @@
     },
     "ignorePatterns": [
         "NodeClasses.js",
-        "defaults.js"
+        "defaults.js",
+        "playwright.spec.js"
     ],
     "rules": {
     }

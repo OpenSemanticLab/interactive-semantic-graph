@@ -1,45 +1,19 @@
 
     // loads or saves the graph to a .txt file
-    function loadFunctionality(container) {
-
-
+    function loadFunctionality(element) {
         // Todo: replace global ids with prefixed ids or class members to allow multiple instances on one page
-
-
-        // create container element if not defined
-        if (!container) container = document.createElement("div");
-
-        let element = document.createElement("ICON");
-        element.id = this.prefix + "load"
-        element.style = "width: 100%; text-align: center; margin-top: 4px; margin-bottom: 4px;";
-        element.innerHTML = '<i class="fa-solid text-info-emphasis fa-2xl fa-folder-open"></i>';
+        element.setAttribute("id", this.prefix + "load");
         element.addEventListener("click", () => {
           this.createLoadStateFunctionality()
         });
-
-        container.append(element)
-        return container;
       }
 
-      function saveFunctionality(container) {
-
-
+      function saveFunctionality(element) {
         // Todo: replace global ids with prefixed ids or class members to allow multiple instances on one page
-
-
-        // create container element if not defined
-        if (!container) container = document.createElement("div");
-
-        let element = document.createElement("ICON");
-        element.style = "width: 100%; text-align: center; margin-top: 4px; margin-bottom: 4px;";
-        element.innerHTML = '<i class="fa-solid text-info-emphasis fa-2xl fa-floppy-disk"></i>';
-        element.id = this.prefix + "save";
+        element.setAttribute("id", this.prefix + "save");
         element.addEventListener("click", () => {
           this.createSaveStateFunctionality()
         });
-        container.append(element)
-
-        return container;
       }
 
 

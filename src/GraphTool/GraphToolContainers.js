@@ -1,3 +1,4 @@
+import { event } from "jquery";
 
 
 function initGraphContainers(div_id) {
@@ -14,131 +15,75 @@ function initGraphContainers(div_id) {
     //this.options_container.width = "30%"
     this.options_container.style = "margin-left: 68%; width: 30%; height: 800px; border: 1px solid lightgray;";
 
+
     this.tool_container = document.createElement("div");
-    this.tool_container.style = "display: flex; padding: 4px 0; margin-bottom: 24px;";
+    this.tool_container.style = "display: flex; justify-content: start; padding: 16px 16px 8px 16px; margin: 24px 0; border-radius: 8px; background: rgb(0, 91, 127);";
     this.tool_container.setAttribute("class", "navbar");
     this.container.append(this.tool_container);
-
-    // Todo: the following should go to vue.js templates
+    // // Todo: the following should go to vue.js templates
+    // // Bootstrap class for open button
     let open_container = document.createElement("fieldset");
-    open_container.style = "display: flex; flex-wrap: wrap-reverse; border-right: 1px solid silver;";
-    let open_legend = document.createElement("legend");
-    open_legend.textContent = "Open";
-    open_legend.style = "width: max-content; font-size: 0.85rem; margin: 0 auto;";
-    open_container.append( open_legend );
+    let open_button = document.createElement("button");
+    open_button.setAttribute("type", "button");
+    open_button.setAttribute("class", "btn btn-outline-light");
+    open_button.style = "margin: 0 8px 8px 0;";
+    open_button.innerHTML = "<i class='fa-regular fa-xl fa-folder-open me-1'></i> Open";
+    open_container.append( open_button );
     this.tool_container.append( open_container );
-    this.loadFunctionality(open_container);
+    this.loadFunctionality( open_button );
 
-    let io_container = document.createElement("fieldset");
-    io_container.style = "display: flex; flex-wrap: wrap-reverse; border-right: 1px solid silver;";
-    let io_legend = document.createElement("legend");
-    io_legend.textContent = "Save";
-    io_legend.style = "width: max-content; font-size: 0.85rem; margin: 0 auto;";
-    io_container.append( io_legend );
-    this.tool_container.append( io_container );
-    this.saveFunctionality(io_container);
+      // Bootstrap class for save button
+    let save_container = document.createElement("fieldset");
+    let save_button = document.createElement("button");
+    save_button.setAttribute("type", "button");
+    save_button.setAttribute("class", "btn btn-outline-light");
+    save_button.style = "margin: 0 8px 8px 8px;";
+    save_button.innerHTML = "<i class='fa-regular fa-xl fa-floppy-disk me-1'></i> Save";
+    save_container.append( save_button );
+    this.tool_container.append( save_container );
+    this.saveFunctionality( save_button );
 
-    let undo_container = document.createElement("fieldset");
-    undo_container.style = "display: flex; flex-wrap: wrap; border-right: 1px solid silver;";
-    let undo_legend = document.createElement("legend");
-    let undo_element = document.createElement("ICON");
-    undo_element.style = "width: 100%; text-align: center; margin-top: 4px; margin-bottom: 4px;";
-    undo_element.innerHTML = '<i class="fa-solid text-info-emphasis fa-2xl fa-rotate-left"></i>';
-    undo_legend.textContent ="Undo";
-    undo_legend.style = "width: max-content; font-size: 0.85rem; margin: 0 auto;";
-    undo_container.append( undo_element );
-    undo_container.append( undo_legend );
-    this. tool_container.append( undo_container );
-
-    let redo_container = document.createElement("fieldset");
-    redo_container.style = "display: flex; flex-wrap: wrap; border-right: 1px solid silver;";
-    let redo_legend = document.createElement("legend");
-    let redo_element = document.createElement("ICON");
-    redo_element.style = "width: 100%; text-align: center; margin-top: 4px; margin-bottom: 4px;";
-    redo_element.innerHTML = '<i class="fa-solid text-info-emphasis fa-2xl fa-rotate-right"></i>';
-    redo_legend.textContent ="Redo";
-    redo_legend.style = "width: max-content; font-size: 0.85rem; margin: 0 auto;";
-    redo_container.append( redo_element );
-    redo_container.append( redo_legend );
-    this. tool_container.append( redo_container );
-
+      // Bootstrap class for edit button
     let edit_container = document.createElement("fieldset");
-    edit_container.style = "display: flex; flex-wrap: wrap; border-right: 1px solid silver;";
-    let edit_legend = document.createElement("legend");
-    let edit_element = document.createElement("ICON");
-    edit_element.style = "width: 100%; text-align: center; margin-top: 4px; margin-bottom: 4px;";
-    edit_element.innerHTML = '<i class="fa-solid text-info-emphasis fa-2xl fa-pen-to-square"></i>';
-    edit_element.addEventListener("click", () => {
+    let edit_button = document.createElement("button");
+    edit_button.setAttribute("type", "button");
+    edit_button.setAttribute("class", "btn btn-light");
+    edit_button.style = "margin: 0 0 8px 8px; width: 90px;";
+    edit_button.innerHTML = "<i class='fa-regular fa-xl fa-pen-to-square me-1'></i> Edit";
+    edit_button.addEventListener("click", () => {
       this.options.manipulation.enabled = !this.options.manipulation.enabled;
       this.options.manipulation.initiallyActive = !this.options.manipulation.initiallyActive;
       this.network.setOptions(this.options);
-      
+
       if(this.options.manipulation.enabled){
         document.getElementById(this.prefix + "vis_container").querySelector(".vis-close").style = "display: none;"
       }
     });
-    edit_legend.textContent ="Edit";
-    edit_legend.style = "width: max-content; font-size: 0.85rem; margin: 0 auto;";
-    edit_container.append( edit_element );
-    edit_container.append( edit_legend );
-    this. tool_container.append( edit_container );
 
-    let help_container = document.createElement("fieldset");
-    help_container.style = "display: flex; flex-wrap: wrap; border-right: 1px solid silver;";
-    let help_legend = document.createElement("legend");
-    let help_element = document.createElement("ICON");
-    help_element.style = "width: 100%; text-align: center; margin-top: 4px; margin-bottom: 4px;";
-    help_element.innerHTML = '<i class="fa-solid text-info-emphasis fa-2xl fa-question"></i>';
-    help_legend.textContent ="Help";
-    help_legend.style = "width: max-content; font-size: 0.85rem; margin: 0 auto;";
-    help_container.append( help_element );
-    help_container.append( help_legend );
-    this. tool_container.append( help_container );
+    let isEditMode = true;
+    edit_button.addEventListener("click", () => {
+    edit_button.innerHTML = isEditMode? "<i class='fa-regular fa-xl fa-circle-xmark'></i> Exit" : "<i class='fa-regular fa-xl fa-pen-to-square me-1'></i> Edit"
+    isEditMode = !isEditMode;
+    });
 
-    // let settings_container = document.createElement("fieldset");
-    // settings_container.style = "border-right: 1px solid silver;";
-    // let settings_legend = document.createElement("legend");
-    // settings_legend.textContent ="Settings";
-    // settings_legend.style = "width: max-content; font-size: 1.0rem; margin-left: 8px; margin-right: 8px;";
-    // settings_container.append( settings_legend );
-    // this. tool_container.append( settings_container );
+    edit_container.append( edit_button );
+    this.tool_container.append( edit_button );
 
+    // visual filter
     let search_container = document.createElement("fieldset");
-    search_container.style = "padding-left: 8px;";
+    search_container.style = "padding: 0 8px; margin: 0 8px 8px 8px; border-left: 2px dotted lightgrey; border-right: 2px dotted lightgrey;";
     this.tool_container.append( search_container );
     this.createSearchUI(search_container);
 
     let deepsearch_container = document.createElement("fieldset");
-    deepsearch_container.style = "border-right: 1px solid silver; padding-left: 8px; padding-right: 8px;";
+    deepsearch_container.style = "padding: 0 8px 0 0; margin: 0 8px 8px 0; border-right: 2px dotted lightgrey; ";
     this.tool_container.append( deepsearch_container );
     this.initDeepSearch(deepsearch_container);
 
     let coloring_container = document.createElement("fieldset");
-    coloring_container.style = "padding-left: 8px; padding-right: 16px;";
+    coloring_container.style = "margin-bottom: 8px;";
     this.tool_container.append( coloring_container );
     this.colorPicker(this, coloring_container);
-
-     // var settingsElement = document.createElement('select');
-    // settingsElement.style = "margin-left: 8px;";
-
-    // var settingOption1 = document.createElement('option');
-    // settingOption1.text = 'Settings';
-
-    // var settingOption2 = document.createElement('option');
-    // settingOption2.text = 'Edge labeling';
-
-    // var settingOption3 = document.createElement('option');
-    // settingOption3.text = 'Physics';
-
-    // var settingOption4 = document.createElement('option');
-    // settingOption4.text = 'Developer Info';
-
-    // settingsElement.add(settingOption1);
-    // settingsElement.add(settingOption2);
-    // settingsElement.add(settingOption3);
-    // settingsElement.add(settingOption4);
-
-    // this.tool_container.append(settingsElement);
 
     this.container.append(this.vis_container);
     this.container.append(this.options_container);
@@ -211,6 +156,8 @@ function initGraphContainers(div_id) {
 
             var input = document.createElement("input");
             input.type = "text";
+            input.placeholder = "Set path";
+            input.style = "padding-left: 8px; margin: 0 4px 0 4px; border-radius: 4px;";
             input.id = prefix + "setColorByValueInput";
 
 
@@ -232,6 +179,7 @@ function initGraphContainers(div_id) {
 
 
             const select2 = document.createElement("select");
+            select2.style = "margin: 0 4px;";
 
             // Add options to the select element
             for (let i = 0; i < usefulColors2.length; i++) {
@@ -245,7 +193,8 @@ function initGraphContainers(div_id) {
             // Add a button to get the selected value
             var button = document.createElement("button");
             button.id = prefix + "setPath";
-            button.innerHTML = "Set path";
+            button.innerHTML = "Apply";
+            button.style = "border-radius: 4px;";
             button.addEventListener("click", getPath);
 
             if (!document.getElementById(this.prefix + "setColorByValueInput")) {

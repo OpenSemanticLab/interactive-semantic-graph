@@ -20,8 +20,9 @@ function initGraphContainers(div_id) {
     this.tool_container.style = "display: flex; justify-content: start; padding: 16px 16px 8px 16px; margin: 24px 0; border-radius: 8px; background: rgb(0, 91, 127);";
     this.tool_container.setAttribute("class", "navbar");
     this.container.append(this.tool_container);
-    // // Todo: the following should go to vue.js templates
-    // // Bootstrap class for open button
+
+    // Todo: the following should go to vue.js templates
+    // Bootstrap class for open button
     let open_container = document.createElement("fieldset");
     let open_button = document.createElement("button");
     open_button.setAttribute("type", "button");

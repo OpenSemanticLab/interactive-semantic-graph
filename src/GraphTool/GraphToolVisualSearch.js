@@ -2,7 +2,7 @@
 
 
 function createSearchUI(container) {
-  
+
     // create the container if not defined
     if (!container) container = document.createElement('div');
 
@@ -10,6 +10,8 @@ function createSearchUI(container) {
     let inputField = document.createElement('input');
     inputField.type = 'text';
     inputField.id = this.prefix + 'search_input';
+    inputField.placeholder = "Search";
+    inputField.style = "padding-left: 8px; border-radius: 4px; margin-right: 4px;"
 
     // add the event listener to the input element
     let debounceTimer;
@@ -30,17 +32,17 @@ function createSearchUI(container) {
           this.saveGraphColorsVisualSearch();
 
           firstInput = false;
-  
+
         }
-  
+
         if(inputField.value.length === 0 && !firstInput){
-  
+
             //this.recolorByProperty();
 
             this.loadGraphColorsVisualSearch();
-            
+
             firstInput = true;
-  
+
             return;
         }
 
@@ -68,12 +70,12 @@ function createSearchUI(container) {
     // create the first option element
     const optionElement1 = document.createElement('option');
     optionElement1.value = 'search_node';
-    optionElement1.text = 'Search nodes';
+    optionElement1.text = 'Node';
 
     // create the second option element
     const optionElement2 = document.createElement('option');
     optionElement2.value = 'search_edge';
-    optionElement2.text = 'Search edges';
+    optionElement2.text = 'Edge';
 
     // add the option elements to the select element
     selectElement.add(optionElement1);
@@ -87,163 +89,163 @@ function createSearchUI(container) {
 
       //saves colors of nodes and edges before visual search
       function saveGraphColorsVisualSearch() {
-  
+
         for(let i = 0; i < this.nodes.get().length; i++){
-    
+
           let node = this.nodes.get()[i];
-    
+
           if(node.color){
-    
+
             this.colorsBeforeVisualSearch[node.id] = node.color;
-    
-    
-    
+
+
+
           }
-    
+
         }
-    
+
         for(let i = 0; i < this.edges.get().length; i++){
-            
+
             let edge = this.edges.get()[i];
-      
+
             if(edge.color){
-      
+
               this.colorsBeforeVisualSearch[edge.id] = edge.color;
-      
+
             }
         }
-    
+
       }
-    
+
       //loads colors of nodes and edges after visual search
       function loadGraphColorsVisualSearch() {
-    
+
         for(let i = 0; i < this.nodes.get().length; i++){
-    
+
           let node = this.nodes.get()[i];
-    
+
           if(node.color){
-    
+
             node.color = this.colorsBeforeVisualSearch[node.id];
-    
+
             this.nodes.update(node);
-    
+
           }
-    
+
         }
-    
+
         for(let i = 0; i < this.edges.get().length; i++){
-            
+
             let edge = this.edges.get()[i];
-      
+
             if(edge.color){
-      
+
               edge.color = this.colorsBeforeVisualSearch[edge.id];
-    
+
               this.edges.update(edge);
-      
+
             }
         }
-        
+
       }
 
 
     //visual search for nodes and edges
     function searchNodes(searchString){
-  
+
         //this.updatePositions()
-    
+
         if (this.handleCallbacks({id: 'onBeforeSearchNodes', params: {graph: this, searchString: searchString}})) {
-    
+
           this.recolorByProperty();
           this.searchExpands = [];
           this.deepSearchExpands = [];
-    
+
           //searches for edges with the given search string
           if (document.getElementById(this.prefix + 'search_select').value === 'search_edge') {
-    
-    
+
+
             this.edges.forEach((edge) => {
-    
+
               if(edge.label.toLowerCase().includes(searchString.toLowerCase())){
-    
+
                 //gets all paths from root to the node that the edge points to
                 let paths = [];
-    
+
                 for(let i = 0; i < this.rootNodesArray.length; i++){
-            
+
                   let tempPaths = this.findAllPaths(this.rootNodesArray[i], edge.to);
-            
+
                   for(let j = 0; j < tempPaths.length; j++){
-            
+
                     paths.push(tempPaths[j]);
-            
+
                   }
-                  
+
                 }
-    
+
                 //let paths = this.findAllPaths(this.drawer.rootId, edge.to);
-    
+
                 for(let i = 0; i < paths.length; i++){
-    
+
                   for(let j = 0; j < paths[i].length; j++){
-    
+
                     //pushes all nodes that get colored
                     this.searchExpands.push(paths[i][j]);
-    
+
                   }
-    
+
                 }
-    
+
               }
-    
+
             });
           }
           //searches for nodes with the given search string
           if (document.getElementById(this.prefix + 'search_select').value === 'search_node') {
             this.nodes.forEach((node) => {
               if (node.label) {
-    
+
                 if(node.label.toLowerCase().includes(searchString.toLowerCase()) || node.group == "root"){
-    
+
                   let paths = [];
-    
+
                   for(let i = 0; i < this.rootNodesArray.length; i++){
-              
+
                     let tempPaths = this.findAllPaths(this.rootNodesArray[i], node.id);
-              
+
                     for(let j = 0; j < tempPaths.length; j++){
-              
+
                       paths.push(tempPaths[j]);
-              
+
                     }
-                    
+
                   }
-                  
+
                   //let paths = this.findAllPaths(this.drawer.rootId, node.id);
-      
+
                   for(let i = 0; i < paths.length; i++){
-      
+
                     for(let j = 0; j < paths[i].length; j++){
-      
+
                       this.searchExpands.push(paths[i][j]);
-      
+
                     }
-      
+
                   }
                 }
-                
+
               }
-    
+
             });
-    
+
           }
           //colors all nodes and edges that get found
           this.deepSearchColorPath([]);
-    
+
         }
       }
-    
+
 
 export{
 

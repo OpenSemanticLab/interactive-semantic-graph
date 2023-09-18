@@ -398,6 +398,6 @@ let configFile =
 
     let graph = new isg.Graph.Graph(new_json, configFile);
 
-    configFile.graph_container_id = "mynetwork2";
+    // configFile.graph_container_id = "mynetwork2";
 
-    let graph2 = new isg.Graph.Graph(new_json, configFile);
+    // let graph2 = new isg.Graph.Graph(new_json, configFile);

@@ -45,7 +45,21 @@ class GraphTool {
     const defaultConfig = {
       callbacks: {
         loadState: (e) => this.loadStateDefault(e),
-        onBeforeSearchNodes: [(graph, searchString) => true]
+        onBeforeSearchNodes: [(graph, searchString) => true],
+        onBeforeRecolorByProperty: [(graph) => true],
+        onBeforeColorByValue: [(graph, colorByValueArgs) => true],
+        onBeforeInitGraphContainers: [(graph, divId) => true],
+        onBeforeColorPicker: [(graph, colorPickerArgs) => true],
+        onBeforeInitDeepSearch: [(graph, container) => true],
+        onBeforeCopyNodesEdges: [(graph) => true],
+        onBeforePasteNodesEdges: [(graph, copiedNodes, copiedEdges) => true],
+        onBeforeDeepSearch: [(graph, searchValue) => true],
+        onBeforeLegendFunctionality: [(graph, e) => true],
+        onBeforeCreateLegend: [(graph) => true],
+        onBeforeCreateSaveStateFunctionality: [(graph) => true],
+        onBeforeCreateLoadStateFunctionality: [(graph) => true],
+        onBeforeCreateSearchUI: [(graph, container) => true]
+
       }
     }
 
@@ -87,6 +101,10 @@ class GraphTool {
     })
 
     const newInstanceOfGraphClass = new G.Graph()
+
+    this.fullGraphData = {}
+    this.fullGraphData.file = config.file
+    this.fullGraphData.copiedConfig = copiedConfig
 
     this.fullGraph = newInstanceOfGraphClass.createGraphByConfig(config.file, copiedConfig, true)
 
@@ -214,6 +232,12 @@ class GraphTool {
   expandNodes (params) {
     if (!this.searchAlert()) {
       return
+    }
+
+    this.dataFile.jsondata['Item:SomePerson'] = {
+      type: ['Category:Item'],
+      label: [{ text: 'Max Mustermann', lang: 'en' }],
+      some_property: 'Item:MyOtherItem'
     }
 
     this.searchNodes('')

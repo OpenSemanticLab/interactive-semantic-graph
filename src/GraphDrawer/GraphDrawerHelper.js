@@ -165,6 +165,158 @@ function getNodeLabelFromPathArray (pathArr) {
   return (pathArr[pathArr.length - 2])// + "[" + pathArr[pathArr.length - 1] + "]")
 }
 
+function loadItemToFile (file, objectName) {
+  if (this.handleCallbacks({ id: 'onBeforeLoadItemToFile', params: { graph: this, file, objectName } })) {
+    let item
+
+    if (!Object.keys(file.jsondata).includes(objectName) && objectName.startsWith('Item:')) {
+      console.log(objectName)
+      item = getItem(objectName)
+    }
+
+    if (item) {
+      file.jsondata[objectName] = item.jsondata
+      file.jsonschema[item.jsondata.type[0]] = item.jsonschema
+    }
+  }
+}
+
+function getItem (itemName) {
+  if (this.handleCallbacks({ id: 'onBeforeGetItem', params: { graph: this, itemName } })) {
+    const fullFile = {
+      jsonschema: {
+        'Category:Entity': {
+          '@context': {
+            label: 'Property:HasLabel'
+          }
+        },
+        'Category:Item': {
+          '@context': [
+            'Category:Entity',
+            {
+              member: { '@id': 'Property:HasMember', '@type': '@id' },
+              other: { '@id': 'Property:HasOther', '@type': '@id' },
+              budget: { '@id': 'Property:HasBudget', '@type': '@id' },
+              some_property: { '@id': 'Property:HasSomeItem', '@type': '@id' },
+              some_literal: 'Property:HasSomeLiteral'
+            }
+          ],
+          properties: {
+            label: [{
+              type: 'array',
+              title: 'Labels',
+              items: {
+                type: 'object',
+                title: 'Label',
+                properties: {
+                  text: {},
+                  lang: {}
+                }
+              }
+            }],
+            member: {
+              type: 'string',
+              title: 'Member'
+            },
+            budget: {
+              type: 'array',
+              title: 'Budgets',
+              items: {
+                type: 'object',
+                title: 'Budget',
+                properties: {
+                  year: { title: 'Year' },
+                  value: { title: 'BudgetValue' }
+                }
+              }
+            }
+          }
+        }
+
+      },
+      jsondata: {
+        'Item:MyProject': {
+          type: ['Category:Item'],
+          label: [{ text: 'My Project', lang: 'en' }, { text: 'Projekt', lang: 'de' }],
+          member: ['Item:SomePerson', 'Item:SomePerson'], // "Item:MyOtherItem"
+          other: ['Item:SomePerson'],
+          some_literal: ['Some string', 'Some', 'string'],
+          not_in_context: 'Not in Context',
+          budget: [{
+            year: '2000',
+            value: '10000',
+            budget: [{
+              year: '2023',
+              value: '10'
+            }, {
+              year: '2022',
+              value: '20'
+            }]
+          }, {
+            year: '2001',
+            value: '20000'
+          }, {
+            year: '2002',
+            value: '30000'
+          }, {
+            year: '2003',
+            value: ['40000', '50000']
+          }]
+        },
+        'Item:SomePerson': {
+          type: ['Category:Item'],
+          label: [{ text: 'Max Mustermann', lang: 'en' }],
+          some_property: 'Item:MyOtherItem'
+        },
+        'Property:HasMember': {
+          type: ['Category:Property'],
+          label: [{ text: 'Has Member', lang: 'en' }]
+        },
+        'Item:MyOtherItem': {
+          type: ['Category:Item'],
+          label: [{ text: 'My Other', lang: 'en' }],
+          member: ['Item:MyNewItem'],
+          some_literal: 'Some string',
+          not_in_context: 'Not in Context',
+          budget: [{
+            year: '2022',
+            value: '10'
+          }, {
+            year: '2022',
+            value: '20'
+          }]
+
+        },
+        'Item:MyNewItem': {
+          type: ['Category:Item'],
+          label: [{ text: 'My New Other', lang: 'en' }],
+          other: ['Item:MySecondItem']
+
+        },
+        'Item:MySecondItem': {
+          type: ['Category:Item'],
+          label: [{ text: 'My Second Other', lang: 'en' }]
+
+        }
+
+      }
+    }
+
+    let apiGET = false
+    if (fullFile.jsondata[itemName] !== undefined) {
+      apiGET = {}
+      apiGET.jsondata = fullFile.jsondata[itemName]
+      apiGET.jsonschema = fullFile.jsonschema[fullFile.jsondata[itemName].type[0]]
+    }
+
+    if (apiGET) {
+      return apiGET
+    } else {
+      return false
+    }
+  }
+}
+
 export {
   getLabelFromLabelArray,
   getIdFromPathArray,
@@ -177,5 +329,7 @@ export {
   getAngleFromProperty,
   getLabelFromItem,
   getValueFromPathArray,
-  getNodeLabelFromPathArray
+  getNodeLabelFromPathArray,
+  loadItemToFile,
+  getItem
 }

@@ -1,3 +1,5 @@
+const G = require('../Graph/Graph.js')
+
 function searchFunctionality (data, searchValue) {
   document.getElementById(this.prefix + 'search_input').value = ''
 
@@ -172,90 +174,118 @@ function expandNodesCleanedUp (params) {
 }
 
 function deepSearch (searchValue) {
-  const fullGraph = this.fullGraph
+  if (this.handleCallbacks({ id: 'onBeforeDeepSearch', params: { graph: this, searchValue } })) {
+    const fullGraph = this.fullGraph
 
-  // if search value is empty, collapse all expanded nodes and return
-  if (searchValue === '') {
-    this.collapseSearch()
-    this.recolorByProperty()
+    // if search value is empty, collapse all expanded nodes and return
+    if (searchValue === '') {
+      this.collapseSearch()
+      this.recolorByProperty()
 
-    return
-  }
-
-  // before searching, collapse all expanded nodes from previous search
-  this.collapseSearch()
-
-  // search for nodes with label containing search value
-  let foundNodes = []
-
-  if (document.getElementById(this.prefix + 'search_select').value === 'search_node') {
-    const lowercaseSearchValue = searchValue.toLowerCase()
-    foundNodes = fullGraph.nodes.get().filter(node =>
-      node.label.toLowerCase().includes(lowercaseSearchValue)
-    )
-  }
-
-  if (document.getElementById(this.prefix + 'search_select').value === 'search_edge') {
-    // search for edges with label containing search value
-    let foundEdges = []
-
-    const lowercaseSearchValue = searchValue.toLowerCase()
-    foundEdges = fullGraph.edges.get().filter(edge =>
-      edge.label.toLowerCase().includes(lowercaseSearchValue)
-    )
-
-    for (let i = 0; i < foundEdges.length; i++) {
-      foundNodes.push(this.fullGraph.nodes.get(foundEdges[i].to))
+      return
     }
-  }
 
-  if (foundNodes.length === 0) {
+    // before searching, collapse all expanded nodes from previous search
     this.collapseSearch()
-    this.recolorByProperty()
-    if (document.getElementById(this.prefix + 'myCheckbox').checked) {
-      this.setGraphColorsBlackAndWhite(this.nodes.get(), this.edges.get())
+
+    // search for nodes with label containing search value
+    let foundNodes = []
+
+    if (document.getElementById(this.prefix + 'search_select').value === 'search_node') {
+      const lowercaseSearchValue = searchValue.toLowerCase()
+      foundNodes = fullGraph.nodes.get().filter(node =>
+        node.label.toLowerCase().includes(lowercaseSearchValue)
+      )
     }
-    return
-  }
 
-  this.deepSearchExpands = []
+    if (document.getElementById(this.prefix + 'search_select').value === 'search_edge') {
+      // search for edges with label containing search value
+      let foundEdges = []
 
-  foundNodes.forEach(node => {
-    // expand the paths to the found nodes
-    this.deepSearchExpandNodes(node, fullGraph)
+      const lowercaseSearchValue = searchValue.toLowerCase()
+      foundEdges = fullGraph.edges.get().filter(edge =>
+        edge.label.toLowerCase().includes(lowercaseSearchValue)
+      )
 
-    const pathsToColor = []
+      for (let i = 0; i < foundEdges.length; i++) {
+        foundNodes.push(this.fullGraph.nodes.get(foundEdges[i].to))
+      }
+    }
 
-    for (let i = 0; i < this.rootNodesArray.length; i++) {
-      const tempPaths = this.findAllPaths(this.rootNodesArray[i], node.id)
+    if (foundNodes.length === 0) {
+      this.collapseSearch()
+      this.recolorByProperty()
+      if (document.getElementById(this.prefix + 'myCheckbox').checked) {
+        this.setGraphColorsBlackAndWhite(this.nodes.get(), this.edges.get())
+      }
+      return
+    }
 
-      for (let j = 0; j < tempPaths.length; j++) {
-        pathsToColor.push(tempPaths[j])
+    this.deepSearchExpands = []
+
+    foundNodes.forEach(node => {
+      // expand the paths to the found nodes
+      this.deepSearchExpandNodes(node, fullGraph)
+
+      const pathsToColor = []
+
+      for (let i = 0; i < this.rootNodesArray.length; i++) {
+        const tempPaths = this.findAllPaths(this.rootNodesArray[i], node.id)
+
+        for (let j = 0; j < tempPaths.length; j++) {
+          pathsToColor.push(tempPaths[j])
+        }
+
+        // pathsToColor = [...pathsToColor, ...tempPaths] //this.findAllPaths(this.drawer.rootId, node.id);
       }
 
-      // pathsToColor = [...pathsToColor, ...tempPaths] //this.findAllPaths(this.drawer.rootId, node.id);
-    }
-
-    for (let i = 0; i < pathsToColor.length; i++) {
-      for (let j = 0; j < pathsToColor[i].length; j++) {
-        if (!this.deepSearchExpands.includes(pathsToColor[i][j])) {
-          if (/* pathsToColor[i][j] != this.drawer.rootId */!this.rootNodesArray.includes(pathsToColor[i][j])) {
-            this.deepSearchExpands.push(pathsToColor[i][j])
+      for (let i = 0; i < pathsToColor.length; i++) {
+        for (let j = 0; j < pathsToColor[i].length; j++) {
+          if (!this.deepSearchExpands.includes(pathsToColor[i][j])) {
+            if (/* pathsToColor[i][j] != this.drawer.rootId */!this.rootNodesArray.includes(pathsToColor[i][j])) {
+              this.deepSearchExpands.push(pathsToColor[i][j])
+            }
           }
         }
       }
+    })
+
+    this.recolorByProperty()
+    this.deepSearchColorPath(foundNodes)
+    this.deepSearchExpandsFull = this.deepSearchExpandsFull.concat(this.deepSearchExpands)
+
+    this.createLegend()
+    this.repeatInvisibility(this.options)
+
+    let maxDepthFULL = 0
+    let maxDepthEXPANDS = 0
+
+    for (let i = 0; i < fullGraph.nodes.get().length; i++) {
+      if (fullGraph.nodes.get()[i].depth > maxDepthFULL) {
+        maxDepthFULL = fullGraph.nodes.get()[i].depth
+      }
     }
-  })
 
-  this.recolorByProperty()
-  this.deepSearchColorPath(foundNodes)
-  this.deepSearchExpandsFull = this.deepSearchExpandsFull.concat(this.deepSearchExpands)
+    for (let i = 0; i < this.nodes.get().length; i++) {
+      if (this.nodes.get()[i].depth > maxDepthEXPANDS) {
+        maxDepthEXPANDS = this.nodes.get()[i].depth
+      }
+    }
 
-  this.createLegend()
-  this.repeatInvisibility(this.options)
+    if (maxDepthEXPANDS === maxDepthFULL) {
+      this.fullGraphData.copiedConfig.root_node_objects.forEach((node) => {
+        node.expansion_depth += 10
 
-  if (this.legendInvisibleGroups(this.options).length === 0) {
-    this.resetNodesAndEdgesVisibility()
+        this.rootNodesArray.push('jsondata/' + node.node_id)
+      })
+
+      const graphInstance = new G.Graph()
+      this.fullGraph = graphInstance.createGraphByConfig(this.fullGraphData.file, this.fullGraphData.copiedConfig, true)
+    }
+
+    if (this.legendInvisibleGroups(this.options).length === 0) {
+      this.resetNodesAndEdgesVisibility()
+    }
   }
 }
 

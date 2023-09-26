@@ -26,7 +26,10 @@ class GraphDrawer {
         onBeforeCreateNode: (node) => this.onBeforeCreateNodeDefault(node),
         onBeforeSetColor: [(graph, property) => true],
         onBeforeGetStartItem: [(graph, item) => true],
-        onBeforeCreateContext: [(graph, context) => true]
+        onBeforeCreateContext: [(graph, context) => true],
+        onBeforeLoadItemToFile: [(graph, file, objectName) => true],
+        onBeforeGetItem: [(graph, itemName) => true]
+
       },
 
       rootColor: '#6dbfa9',
@@ -123,7 +126,10 @@ class GraphDrawer {
     } else {
       currentPath = this.getItemPathArray(currentItem)
     }
-
+    let currentValue = this.getValueFromPathArray(currentPath)
+    if (typeof currentValue === 'string') {
+      this.loadItemToFile(this.file, currentValue)
+    }
     const currentContext = this.config.callbacks.createContext(this.file, currentItem)
 
     const label = this.getNodeLabelFromPathArray(currentPath)
@@ -139,7 +145,7 @@ class GraphDrawer {
 
     // loop through keys / indices of current item
 
-    let currentValue = this.getValueFromPathArray(currentPath)
+    currentValue = this.getValueFromPathArray(currentPath)
     const reverseCurrentValue = currentValue
 
     // resolve references if possible

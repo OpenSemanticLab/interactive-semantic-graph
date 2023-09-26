@@ -3,26 +3,28 @@ const chroma = require('chroma-js')
 // recolors all nodes and edges
 
 function recolorByProperty () {
-  // this.updatePositions()
-  const nodes = this.nodes.get()
-  const edges = this.edges.get()
+  if (this.handleCallbacks({ id: 'onBeforeRecolorByProperty', params: { graph: this } })) {
+    // this.updatePositions()
+    const nodes = this.nodes.get()
+    const edges = this.edges.get()
 
-  for (const edge of edges) {
-    edge.color = this.drawer.colorObj[edge.label]
-    this.edges.update(edge)
-    for (const node of nodes) {
-      if (edge.to === node.id) {
-        node.color = edge.color
-        this.nodes.update(node)
+    for (const edge of edges) {
+      edge.color = this.drawer.colorObj[edge.label]
+      this.edges.update(edge)
+      for (const node of nodes) {
+        if (edge.to === node.id) {
+          node.color = edge.color
+          this.nodes.update(node)
+        }
       }
     }
-  }
-  // root Nodes
+    // root Nodes
 
-  for (let i = 0; i < this.rootNodesArray.length; i++) {
-    const rootNode = this.nodes.get(this.rootNodesArray[i]) // this.drawer.rootId;
-    rootNode.color = this.drawer.config.rootColor
-    this.nodes.update(rootNode)
+    for (let i = 0; i < this.rootNodesArray.length; i++) {
+      const rootNode = this.nodes.get(this.rootNodesArray[i]) // this.drawer.rootId;
+      rootNode.color = this.drawer.config.rootColor
+      this.nodes.update(rootNode)
+    }
   }
 }
 
@@ -168,33 +170,36 @@ function createColorArray (startColor, endColor, valueArray) {
 
 // Colors all nodes and edges connected by the given path. The colors are a gradient between the given colors.
 function colorByValue (path, nodes, edges, startColor, endColor) {
-  // this.updatePositions()
+  const colorByValueArgs = { path, nodes, edges, startColor, endColor }
+  if (this.handleCallbacks({ id: 'onBeforeColorByValue', params: { graph: this, colorByValueArgs } })) {
+    // this.updatePositions()
 
-  // All start and end nodes for the given path
-  const startEndNodes = this.getStartAndEndNodesForPath(path)
+    // All start and end nodes for the given path
+    const startEndNodes = this.getStartAndEndNodesForPath(path)
 
-  // All paths between start and end nodes, that match the given path
-  const pathsToColor = this.getRightPathsBetweenNodes(path, startEndNodes.startNodes, startEndNodes.endNodes)
+    // All paths between start and end nodes, that match the given path
+    const pathsToColor = this.getRightPathsBetweenNodes(path, startEndNodes.startNodes, startEndNodes.endNodes)
 
-  // generates the values array for the color gradient
-  let valueArray = this.createValuesArray(pathsToColor)
+    // generates the values array for the color gradient
+    let valueArray = this.createValuesArray(pathsToColor)
 
-  // removes duplicates
-  valueArray = [...new Set(valueArray)]
+    // removes duplicates
+    valueArray = [...new Set(valueArray)]
 
-  // sorts the array
-  valueArray.sort(function (a, b) {
-    return a - b
-  })
+    // sorts the array
+    valueArray.sort(function (a, b) {
+      return a - b
+    })
 
-  // creates the color array for the color gradient
-  const colorArray = this.createColorArray(startColor, endColor, valueArray)
+    // creates the color array for the color gradient
+    const colorArray = this.createColorArray(startColor, endColor, valueArray)
 
-  // sets all nodes to white and all edges to black
-  this.setGraphColorsBlackAndWhite(nodes, edges)
+    // sets all nodes to white and all edges to black
+    this.setGraphColorsBlackAndWhite(nodes, edges)
 
-  // colors the paths
-  this.colorPaths(pathsToColor, colorArray, valueArray)
+    // colors the paths
+    this.colorPaths(pathsToColor, colorArray, valueArray)
+  }
 }
 
 export {

@@ -1,8 +1,10 @@
 const utils = require('../utils.js')
 
 function copyNodesEdges () {
-  this.copiedNodes = this.network.getSelectedNodes()
-  this.copiedEdges = this.network.getSelectedEdges()
+  if (this.handleCallbacks({ id: 'onBeforeCopyNodesEdges', params: { graph: this } })) {
+    this.copiedNodes = this.network.getSelectedNodes()
+    this.copiedEdges = this.network.getSelectedEdges()
+  }
 }
 
 // creates an ID for a new node that is to be created by copying an existing one
@@ -115,74 +117,76 @@ function createNewEdgeForNewNode (newNode) {
 }
 
 function pasteNodeEdges (copiedNodes, copiedEdges) {
-  const xy = this.network.DOMtoCanvas({
-    x: this.mouseX,
-    y: this.mouseY
-  })
+  if (this.handleCallbacks({ id: 'onBeforePasteNodesEdges', params: { graph: this, copiedNodes, copiedEdges } })) {
+    const xy = this.network.DOMtoCanvas({
+      x: this.mouseX,
+      y: this.mouseY
+    })
 
-  // paste nodes and edges into existing nodes
-  if (copiedNodes.length > 0 && this.network.getSelectedNodes().length > 0) {
-    // TODO: encapsulate in: this.pasteNodeIntoExistingItem()
-    // TODO: paste node into empty space and create corresponding item this.pasteNodeIntoNewItem(node,xy)
+    // paste nodes and edges into existing nodes
+    if (copiedNodes.length > 0 && this.network.getSelectedNodes().length > 0) {
+      // TODO: encapsulate in: this.pasteNodeIntoExistingItem()
+      // TODO: paste node into empty space and create corresponding item this.pasteNodeIntoNewItem(node,xy)
 
-    const receivingNode = this.nodes.get(this.network.getSelectedNodes()[0])
+      const receivingNode = this.nodes.get(this.network.getSelectedNodes()[0])
 
-    let json = this.drawer.file
+      let json = this.drawer.file
 
-    for (let i = 0; i < receivingNode.path.length; i++) {
-      json = json[receivingNode.path[i]]
-    }
+      for (let i = 0; i < receivingNode.path.length; i++) {
+        json = json[receivingNode.path[i]]
+      }
 
-    // if literal, then return
-    if (typeof json === 'string' && this.drawer.file[receivingNode.path[receivingNode.path.length - 1]] === undefined) {
-      return
-    }
+      // if literal, then return
+      if (typeof json === 'string' && this.drawer.file[receivingNode.path[receivingNode.path.length - 1]] === undefined) {
+        return
+      }
 
-    if (this.nodes.get(this.network.getSelectedNodes()[0]).item) {
-      const newNode = this.createNewNodesFromCopiedNodes(copiedNodes, copiedEdges, receivingNode)
+      if (this.nodes.get(this.network.getSelectedNodes()[0]).item) {
+        const newNode = this.createNewNodesFromCopiedNodes(copiedNodes, copiedEdges, receivingNode)
 
-      newNode.depth = this.nodes.get(this.network.getSelectedNodes()[0]).depth + 1
+        newNode.depth = this.nodes.get(this.network.getSelectedNodes()[0]).depth + 1
 
-      newNode.x = xy.x
-      newNode.y = xy.y
+        newNode.x = xy.x
+        newNode.y = xy.y
 
-      // config.graph.id += 1;
+        // config.graph.id += 1;
 
-      const newEdge = this.createNewEdgeForNewNode(newNode)
+        const newEdge = this.createNewEdgeForNewNode(newNode)
 
-      if (newNode.group !== 'root') {
-        this.nodes.update(newNode)
-        this.edges.update(newEdge)
+        if (newNode.group !== 'root') {
+          this.nodes.update(newNode)
+          this.edges.update(newEdge)
 
-        this.addToJSON(newNode, newEdge, receivingNode)
+          this.addToJSON(newNode, newEdge, receivingNode)
+        }
       }
     }
-  }
 
-  if (copiedNodes.length > 0 && this.network.getSelectedNodes().length === 0) {
-    // paste nodes and edges into empty space
+    if (copiedNodes.length > 0 && this.network.getSelectedNodes().length === 0) {
+      // paste nodes and edges into empty space
 
-    const newNode = this.createNewNodesFromCopiedNodes(copiedNodes, copiedEdges, false)
+      const newNode = this.createNewNodesFromCopiedNodes(copiedNodes, copiedEdges, false)
 
-    if (this.drawer.file.jsondata[newNode.path[1]]) {
-      newNode.depth = 0
+      if (this.drawer.file.jsondata[newNode.path[1]]) {
+        newNode.depth = 0
 
-      newNode.x = xy.x
-      newNode.y = xy.y
+        newNode.x = xy.x
+        newNode.y = xy.y
 
-      newNode.group = 'root'
+        newNode.group = 'root'
 
-      newNode.key = newNode.path[1]
+        newNode.key = newNode.path[1]
 
-      newNode.incomingLabels = []
+        newNode.incomingLabels = []
 
-      newNode.color = '#6dbfa9'
+        newNode.color = '#6dbfa9'
 
-      newNode.fixed = true
+        newNode.fixed = true
 
-      this.nodes.update(newNode)
+        this.nodes.update(newNode)
 
-      // TODO: add to json, id is not correct
+        // TODO: add to json, id is not correct
+      }
     }
   }
 }

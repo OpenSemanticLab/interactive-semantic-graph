@@ -1,77 +1,79 @@
 function createSearchUI (container) {
-  // create the container if not defined
-  if (!container) container = document.createElement('div')
+  if (this.handleCallbacks({ id: 'onBeforeCreateSearchUI', params: { graph: this, container } })) {
+    // create the container if not defined
+    if (!container) container = document.createElement('div')
 
-  // create the input element
-  const inputField = document.createElement('input')
-  inputField.type = 'text'
-  inputField.id = this.prefix + 'search_input'
+    // create the input element
+    const inputField = document.createElement('input')
+    inputField.type = 'text'
+    inputField.id = this.prefix + 'search_input'
 
-  // add the event listener to the input element
-  let debounceTimer
+    // add the event listener to the input element
+    let debounceTimer
 
-  let firstInput = true
-  inputField.addEventListener('input', () => {
-    // Clear previous debounce timer
-    clearTimeout(debounceTimer)
-    // document.getElementById('input-field').value = "";
+    let firstInput = true
+    inputField.addEventListener('input', () => {
+      // Clear previous debounce timer
+      clearTimeout(debounceTimer)
+      // document.getElementById('input-field').value = "";
 
-    // Set a new debounce timer
-    debounceTimer = setTimeout(() => {
-      if (firstInput && inputField.value.length > 0) {
-        this.saveGraphColorsVisualSearch()
+      // Set a new debounce timer
+      debounceTimer = setTimeout(() => {
+        if (firstInput && inputField.value.length > 0) {
+          this.saveGraphColorsVisualSearch()
 
-        firstInput = false
-      }
+          firstInput = false
+        }
 
-      if (inputField.value.length === 0 && !firstInput) {
-        // this.recolorByProperty();
+        if (inputField.value.length === 0 && !firstInput) {
+          // this.recolorByProperty();
 
-        this.loadGraphColorsVisualSearch()
+          this.loadGraphColorsVisualSearch()
 
-        firstInput = true
+          firstInput = true
 
-        return
-      }
+          return
+        }
 
-      // Execute the search after the debounce timeout
-      this.searchNodes(inputField.value)
-    }, 300) // Adjust the debounce timeout as needed (e.g., 300ms)
-  })
+        // Execute the search after the debounce timeout
+        this.searchNodes(inputField.value)
+      }, 300) // Adjust the debounce timeout as needed (e.g., 300ms)
+    })
 
-  // add the input field to the DOM
-  container.appendChild(inputField)
+    // add the input field to the DOM
+    container.appendChild(inputField)
 
-  // create the select element
-  const selectElement = document.createElement('select')
-  selectElement.id = this.prefix + 'search_select'
-  selectElement.addEventListener('change', (event) => {
-    // get the selected value
-    document.getElementById(this.prefix + 'search_input').value = ''
-    document.getElementById(this.prefix + 'input-field').value = ''
-    this.collapseSearch()
-    this.recolorByProperty()
-    // this.searchNodes("");
-  })
+    // create the select element
+    const selectElement = document.createElement('select')
+    selectElement.id = this.prefix + 'search_select'
+    selectElement.addEventListener('change', (event) => {
+      // get the selected value
+      document.getElementById(this.prefix + 'search_input').value = ''
+      document.getElementById(this.prefix + 'input-field').value = ''
+      this.collapseSearch()
+      this.recolorByProperty()
+      // this.searchNodes("");
+    })
 
-  // create the first option element
-  const optionElement1 = document.createElement('option')
-  optionElement1.value = 'search_node'
-  optionElement1.text = 'Search nodes'
+    // create the first option element
+    const optionElement1 = document.createElement('option')
+    optionElement1.value = 'search_node'
+    optionElement1.text = 'Search nodes'
 
-  // create the second option element
-  const optionElement2 = document.createElement('option')
-  optionElement2.value = 'search_edge'
-  optionElement2.text = 'Search edges'
+    // create the second option element
+    const optionElement2 = document.createElement('option')
+    optionElement2.value = 'search_edge'
+    optionElement2.text = 'Search edges'
 
-  // add the option elements to the select element
-  selectElement.add(optionElement1)
-  selectElement.add(optionElement2)
+    // add the option elements to the select element
+    selectElement.add(optionElement1)
+    selectElement.add(optionElement2)
 
-  // add the select element to the DOM
-  container.appendChild(selectElement)
+    // add the select element to the DOM
+    container.appendChild(selectElement)
 
-  return container
+    return container
+  }
 }
 
 // saves colors of nodes and edges before visual search

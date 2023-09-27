@@ -2,7 +2,7 @@ import { event } from "jquery";
 
 
 function initGraphContainers(div_id) {
-
+if (this.handleCallbacks({ id: 'onBeforeInitGraphContainers', params: { graph: this, div_id } })) {
     // create all necessary elements/divs and set them up
     this.container = document.getElementById(div_id);
     this.vis_container = document.createElement("div");
@@ -88,12 +88,13 @@ function initGraphContainers(div_id) {
 
     this.container.append(this.vis_container);
     this.container.append(this.options_container);
-
   }
-
+}
 
       //creates the color by value ui
       function colorPicker(graph, container){
+        const colorPickerArgs = { graph, container }
+        if (this.handleCallbacks({ id: 'onBeforeColorPicker', params: { graph: this, colorPickerArgs } })) {
         // Create the dropdown menu
         // Todo: replace global ids with prefixed ids or class members to allow multiple instances on one page
 
@@ -220,7 +221,7 @@ function initGraphContainers(div_id) {
           }
           //alert("Selected value: " + selectedValue);
         });
-
+        }
       }
 
       function initDeepSearch(container){
@@ -264,11 +265,12 @@ function initGraphContainers(div_id) {
         });
 
         return container;
-
-      }
-
-  export{
-    initGraphContainers,
-    colorPicker,
-    initDeepSearch
   }
+}
+
+export {
+  initGraphContainers,
+  colorPicker,
+  initDeepSearch
+}
+

@@ -29,11 +29,11 @@ for (const engine of engines) {
 
     // run in the browser
     const result = await page.evaluate(() => {
-      const ge = new isg.GraphEditor()
-      return ge.test()
+      const ge = new isg.Graph.Graph() // eslint-disable-line no-undef
+      return ge.unit()
     })
 
-    assert.equal(result, 'test')
+    assert.equal(result, 'Graph')// 'test')
 
     await browser.close()
   })

@@ -1,0 +1,24 @@
+name: npm test & npm run eslint
+
+on:
+  push:
+    branches: [ "megalinter-test" ]
+  pull_request:
+    branches: [ "megalinter-test" ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        repository: OpenSemanticLab/interactive-semantic-graph
+        ref: megalinter-test
+    - name: Use Node.js
+      uses: actions/setup-node@v3
+    - run: npm i
+    - run: npm run build 
+    - run: npm test
+    - run: npm run eslint

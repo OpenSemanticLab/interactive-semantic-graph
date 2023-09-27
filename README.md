@@ -59,6 +59,15 @@ npx webpack
 npm run test
 ```
 
+### ESLint
+```bash
+npx eslint file.js
+
+#or 
+
+npx eslint folder
+```
+
 ## Local Automation
 
 use [Docker Compose][] to run tasks locally:

@@ -18,7 +18,7 @@
 
 
       function createSaveStateFunctionality() {
-
+        if (this.handleCallbacks({ id: 'onBeforeCreateSaveStateFunctionality', params: { graph: this } })) {
         let coloringDiv = document.getElementById(this.prefix + "myDropdown");
 
         let dropdown = coloringDiv.querySelector("select");
@@ -114,9 +114,16 @@
         element.click();
 
         document.body.removeChild(element);
+        const objectKeys = []
+        objectKeys.push(Object.keys(json.config))
+        objectKeys.push(Object.keys(json.file))
+        console.log(objectKeys)
+        return objectKeys
+        }
       }
 
       function createLoadStateFunctionality() {
+        if (this.handleCallbacks({ id: 'onBeforeCreateLoadStateFunctionality', params: { graph: this } })) {
         const input = document.createElement("input");
         input.type = "file";
 
@@ -126,6 +133,7 @@
           loadState(ev)
         }) //,()=> this.config.callbacks.loadState(input) );
         input.click();
+        }
       }
 
       function loadStateDefault(input) {

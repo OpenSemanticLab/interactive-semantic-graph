@@ -2,13 +2,13 @@
     //repeats the invisibility of properties that are set invisible in the legend
     function repeatInvisibility(options) {
 
-
+        let objectToRepeat = {}
         for (const [key, value] of Object.entries(options.groups)) {
 
           for (const [subKey, subValue] of Object.entries(value)) {
             if (subValue == true) {
 
-              let objectToRepeat = {
+              objectToRepeat = {
                 repeat: key
               }
 
@@ -17,8 +17,9 @@
             }
           }
         }
-
-
+        
+        return objectToRepeat  
+      
         // Array.from(options.groups).forEach((group)=> {
 
         // });
@@ -79,6 +80,7 @@
 
     //generates the legend for the graph
     function createLegend() {
+      if (this.handleCallbacks({ id: 'onBeforeCreateLegend', params: { graph: this } })) {
         var invisibleGroups = [];
 
 
@@ -140,7 +142,7 @@
             propertyColor.style.background = legendColors[edge.group]
             propertyColor.innerHTML = "";
             propertyName.innerHTML = edge.label;
-            // propertyName.style.background = '#DEF';
+            propertyName.style.background = '#DEF';
             // propertyName.text-align = 'center';
             // propertyContainer.padding = '5px 5px 5px 5px';
             propertyName.addEventListener("click", (e) => this.legendFunctionality(e));
@@ -155,6 +157,7 @@
 
 
         this.setInvisibleLegendGroupsWhite(invisibleGroups);
+      }
       }
 
     //function to set nodes and edges hidden when legend is clicked
@@ -192,11 +195,12 @@
 
       //turns clicked properties of the legend invisible or back to visible
     function legendFunctionality(e){
-
+        if (this.handleCallbacks({ id: 'onBeforeLegendFunctionality', params: { graph: this, e } })) {
 
         let legendGroup;
-        let group;
-        let nodeChildren;
+        this.visibilityByVisiblePath = {}
+        // let group;
+        // let nodeChildren;
         let strategy = "strategy2"
 
 
@@ -226,7 +230,7 @@
 
           //check each node
           this.nodes.forEach((node) => {
-            this.setNodeVisibilityByVisiblePath(node.id, 0)
+            this.visibilityByVisiblePath[node.id] = this.setNodeVisibilityByVisiblePath(node.id, 0)
             //reset visited state. Todo: Reuse visited nodes between runs
             this.nodes.forEach((node) => {
               node.visited = false;
@@ -236,7 +240,7 @@
           });
         }
 
-        var allFalse = Object.keys(this.options.groups).every((k) => {
+        const allFalse = Object.keys(this.options.groups).every((k) => {
           if (k === 'useDefaultGroups') {
             return true
           }
@@ -246,8 +250,8 @@
         if (allFalse === true) {
           /*oldGroups = {};*/
         }
-
-
+        return this.visibilityByVisiblePath
+        }
       };
 
 

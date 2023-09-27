@@ -7,6 +7,8 @@ function createSearchUI (container) {
     const inputField = document.createElement('input')
     inputField.type = 'text'
     inputField.id = this.prefix + 'search_input'
+    inputField.placeholder = "Search"
+    inputField.style = "padding-left: 8px; border-radius: 4px; margin-right: 4px;"
 
     // add the event listener to the input element
     let debounceTimer
@@ -58,12 +60,12 @@ function createSearchUI (container) {
     // create the first option element
     const optionElement1 = document.createElement('option')
     optionElement1.value = 'search_node'
-    optionElement1.text = 'Search nodes'
+    optionElement1.text = 'Node'
 
     // create the second option element
     const optionElement2 = document.createElement('option')
     optionElement2.value = 'search_edge'
-    optionElement2.text = 'Search edges'
+    optionElement2.text = 'Edge'
 
     // add the option elements to the select element
     selectElement.add(optionElement1)

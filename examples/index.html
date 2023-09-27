@@ -5,14 +5,14 @@
   <meta charset="utf-8" />
   <title>GraphTool Test Page</title>
   <script src="../dist/isg.umd.js"></script>
-  <style type="text/css">
+  <link href="style.css" rel="stylesheet" type="text/css">
+
+ <!-- <style type="text/css">
     #mynetwork {
       width: 100%;
       height: 800px;
       border: 1px solid lightgray;
-    }
-
-  </style>
+    } </style> -->
 
 
   <link href="https://unpkg.com/tabulator-tables@4.3.0/dist/css/tabulator.min.css" rel="stylesheet">
@@ -35,419 +35,32 @@
 <link rel='stylesheet' id='theme-link' href = 'https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css'>
 <link rel='stylesheet' id='iconlib-link', href = 'https://use.fontawesome.com/releases/v5.6.1/css/all.css'>
 -->
+
+<!-- following for navbar -->
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-4bw+/aepP/YC94hEpVNVgiZdgIC5+VKNBQNGCHeKRQN+PtmoHDEXuppvnDJzQIu9" crossorigin="anonymous">
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" integrity="sha512-z3gLpd7yknf1YoNbCzqRKc4qyor8gaKU1qmn+CShxbuBusANI9QpRohGBreCFkKxLhei6S9CQXFEbbKuqLg0DA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-HwwvtgBNo3bZJJLYd8oVXjrBZt8cqVSpeBNS5n7C8IVInixGAoxmnlMuBnhbgrkm" crossorigin="anonymous"></script>
+
+<!-- <link rel="icon" href="favicon.ico" type="image/x-icon" /> -->
+
 </head>
 
 <body>
-  <h1 id="title">GraphTool Test Page</h1>
+  <div class="container">
+    <header><h1>GraphTool Test Page</h1>
+    </header>
 
-  <div id="mynetwork"></div>
-  <div id="mynetwork2"></div>
-  <script>
-    let newJson = {"jsonschema": {
-  "Category:Entity": {
-      "@context": {
-          "label": "Property:HasLabel"
-      }
-  },
-  "Category:Item": {
-      "@context": [
-          "Category:Entity",
-          {
-              "member": {"@id": "Property:HasMember", "@type": "@id"},
-              "other": {"@id": "Property:HasOther", "@type": "@id"},
-              "budget": {"@id": "Property:HasBudget", "@type": "@id"},
-              "some_property": {"@id": "Property:HasSomeItem", "@type": "@id"},
-              "some_literal": "Property:HasSomeLiteral"
-          }
-          ],
-      "properties": {
-          "label": [{
-              "type": "array",
-              "title": "Labels",
-              "items": {
-                  "type": "object",
-                  "title": "Label",
-                  "properties": {
-                      "text": {},
-                      "lang": {}
-                  }
-              }
-          }],
-          "member": {
-              "type": "string",
-              "title": "Member"
-          },
-          "budget": {
-              "type": "array",
-              "title": "Budgets",
-              "items": {
-                  "type": "object",
-                  "title": "Budget",
-                  "properties": {
-                      "year": {"title": "Year"},
-                      "value": {"title": "BudgetValue"}
-                  }
-              }
-          }
-      }
-  }
-  
-  }, 
-"jsondata": {
-  "Item:MyProject": {
-      "type": ["Category:Item"],
-      "label": [{"text": "My Project", "lang": "en"}, {"text": "Projekt", "lang": "de"}],
-      "member": ["Item:SomePerson", "Item:SomePerson"], //"Item:MyOtherItem"
-      "other": ["Item:SomePerson"],
-      "some_literal": ["Some string","Some","string",],
-      "not_in_context": "Not in Context",
-      "budget": [{
-          "year": "2000",
-          "value": "10000",
-          "budget":[{
-            "year": "2023",
-            "value": "10",
-            }, {
-              "year": "2022",
-              "value": "20"}]
-      },{
-        "year": "2001",
-        "value": "20000"
-    },{
-      "year": "2002",
-      "value": "30000"
-  },{
-    "year": "2003",
-    "value": ["40000","50000"]
-}]
-  },
-  // "Item:SomePerson": {
-  //     "type": ["Category:Item"],
-  //     "label": [{"text": "Max Mustermann", "lang": "en"}],
-  //     "some_property": "Item:MyOtherItem"
-  // },
-  // "Property:HasMember": {
-  //     "type": ["Category:Property"],
-  //     "label": [{"text": "Has Member", "lang": "en"}]
-  // },
-  // "Item:MyOtherItem": {
-  //   "type": ["Category:Item"],
-  //   "label": [{"text": "My Other", "lang": "en"}],
-  //   "member": ["Item:MyNewItem"],
-  //   "some_literal": "Some string",
-  //   "not_in_context": "Not in Context",
-  //   "budget":[{
-  //           "year": "2022",
-  //           "value": "10"}, {
-  //             "year": "2022",
-  //             "value": "20"}]
-    
-  // },
-  // "Item:MyNewItem": {
-  //   "type": ["Category:Item"],
-  //   "label": [{"text": "My New Other", "lang": "en"}],
-  //   "other":["Item:MySecondItem"]
-    
-  // },
-  // "Item:MySecondItem": {
-  //   "type": ["Category:Item"],
-  //   "label": [{"text": "My Second Other", "lang": "en"}]
-    
-  // },
 
-}};
+    <div id="mynetwork"></div>
 
-let configFile = 
-{
-    "type": [
-      "Category:OSWaf511685f7c044e49bcdc5e32e58b19a"
-    ],
-    "graph_container_id": "mynetwork",
-    "root_node_objects": [
-      {
-        "node_id": "Item:MyProject",
-        "expansion_depth": 10,
-        "properties": [
-          "property1"
-        ],
-        "expansion_path": "path.path.path"
-      },
-      {
-        "node_id": "Item:MyOtherItem",
-        "expansion_depth": 1,
-        "properties": [
-          "property2"
-        ],
-        "expansion_path": "path.path.path.path"
-      }
-    ],
-    "uuid": "c70c0a9a-dc29-4d92-92d6-043c5ec760ea",
-    "label": [
-      {
-        "text": "config1",
-        "lang": "en"
-      }
-    ],
-    "expanded_paths": [
-    [
-        "jsondata/Item:MyProject",
-        "jsondata/Item:MyProject/some_literal/0"
-    ],
-    [
-        "jsondata/Item:MyProject",
-        "jsondata/Item:MyProject/some_literal/1"
-    ],
-    [
-        "jsondata/Item:MyProject",
-        "jsondata/Item:MyProject/some_literal/2"
-    ],
-    [
-        "jsondata/Item:MyProject",
-        "jsondata/Item:MyProject/not_in_context"
-    ],
-    [
-        "jsondata/Item:MyProject",
-        "jsondata/Item:SomePerson",
-        "jsondata/Item:MyOtherItem",
-        "jsondata/Item:MyNewItem"
-    ],
-    [
-        "jsondata/Item:MyProject",
-        "jsondata/Item:SomePerson",
-        "jsondata/Item:MyOtherItem",
-        "jsondata/Item:MyOtherItem/some_literal"
-    ],
-    [
-        "jsondata/Item:MyProject",
-        "jsondata/Item:SomePerson",
-        "jsondata/Item:MyOtherItem",
-        "jsondata/Item:MyOtherItem/not_in_context"
-    ],
-    [
-        "jsondata/Item:MyProject",
-        "jsondata/Item:SomePerson",
-        "jsondata/Item:MyOtherItem",
-        "jsondata/Item:MyOtherItem/budget/0",
-        "jsondata/Item:MyOtherItem/budget/0/year"
-    ],
-    [
-        "jsondata/Item:MyProject",
-        "jsondata/Item:SomePerson",
-        "jsondata/Item:MyOtherItem",
-        "jsondata/Item:MyOtherItem/budget/0",
-        "jsondata/Item:MyOtherItem/budget/0/value"
-    ],
-    [
-        "jsondata/Item:MyProject",
-        "jsondata/Item:SomePerson",
-        "jsondata/Item:MyOtherItem",
-        "jsondata/Item:MyOtherItem/budget/1",
-        "jsondata/Item:MyOtherItem/budget/1/year"
-    ],
-    [
-        "jsondata/Item:MyProject",
-        "jsondata/Item:SomePerson",
-        "jsondata/Item:MyOtherItem",
-        "jsondata/Item:MyOtherItem/budget/1",
-        "jsondata/Item:MyOtherItem/budget/1/value"
-    ],
-    [
-        "jsondata/Item:MyProject",
-        "jsondata/Item:MyProject/budget/0",
-        "jsondata/Item:MyProject/budget/0/year"
-    ],
-    [
-        "jsondata/Item:MyProject",
-        "jsondata/Item:MyProject/budget/0",
-        "jsondata/Item:MyProject/budget/0/value"
-    ],
-    [
-        "jsondata/Item:MyProject",
-        "jsondata/Item:MyProject/budget/0",
-        "jsondata/Item:MyProject/budget/0/budget/0",
-        "jsondata/Item:MyProject/budget/0/budget/0/year"
-    ],
-    [
-        "jsondata/Item:MyProject",
-        "jsondata/Item:MyProject/budget/0",
-        "jsondata/Item:MyProject/budget/0/budget/0",
-        "jsondata/Item:MyProject/budget/0/budget/0/value"
-    ],
-    [
-        "jsondata/Item:MyProject",
-        "jsondata/Item:MyProject/budget/0",
-        "jsondata/Item:MyProject/budget/0/budget/1",
-        "jsondata/Item:MyProject/budget/0/budget/1/year"
-    ],
-    [
-        "jsondata/Item:MyProject",
-        "jsondata/Item:MyProject/budget/0",
-        "jsondata/Item:MyProject/budget/0/budget/1",
-        "jsondata/Item:MyProject/budget/0/budget/1/value"
-    ],
-    [
-        "jsondata/Item:MyProject",
-        "jsondata/Item:MyProject/budget/1",
-        "jsondata/Item:MyProject/budget/1/year"
-    ],
-    [
-        "jsondata/Item:MyProject",
-        "jsondata/Item:MyProject/budget/1",
-        "jsondata/Item:MyProject/budget/1/value"
-    ],
-    [
-        "jsondata/Item:MyProject",
-        "jsondata/Item:MyProject/budget/2",
-        "jsondata/Item:MyProject/budget/2/year"
-    ],
-    [
-        "jsondata/Item:MyProject",
-        "jsondata/Item:MyProject/budget/2",
-        "jsondata/Item:MyProject/budget/2/value"
-    ],
-    [
-        "jsondata/Item:MyProject",
-        "jsondata/Item:MyProject/budget/3",
-        "jsondata/Item:MyProject/budget/3/year"
-    ],
-    [
-        "jsondata/Item:MyProject",
-        "jsondata/Item:MyProject/budget/3",
-        "jsondata/Item:MyProject/budget/3/value/0"
-    ],
-    [
-        "jsondata/Item:MyProject",
-        "jsondata/Item:MyProject/budget/3",
-        "jsondata/Item:MyProject/budget/3/value/1"
-    ]
-],
-    "expanded_nodes": [
-      {
-        "node_id": "item:test",
-        "expansion_depth": 1,
-        "properties": [
-          "property 1"
-        ],
-        "expansion_path": "path.path"
-      }
-    ],
-    "coloring_function_object": {
-      "function_name": "colorByValue",
-      "path": "value",
-      "start_color": "orangered",
-      "end_color": "limegreen"
-    },
-    "positioning_function_object": {
-      "test": null
-    },
-    "visual_search_function_object": {
-      "search_string": "budget",
-      "search_on": "nodes"
-    },
-    "dataset_search_function_object": {
-      "search_string": "20",
-      "search_on": "nodes",
-      "keep_expanded": true
-    },
-    "visual_nodes_edges_object": {
-      "nodes": [
-        [
-          "node 1",
-          "node 2"
-        ]
-      ],
-      "edges": [
-        [
-          "edge 1",
-          "edge 2"
-        ]
-      ]
-    },
-    "initial_dataset": {
-      "jsondata": {
-        "jsondata_old": {}
-      },
-      "jsonschema": {
-        "jsonschema_old": {}
-      }
-    },
-    "data_format": [
-      "format"
-    ],
-    "dataset_schema": [
-      "schema"
-    ],
-    "name": "Config1"
-  }
+    <!-- <div id="mynetwork2"></div> -->
 
-    //const clone = structuredClone(newJson);
+    <script src="script.js"></script>
 
-    // var options = {
-    //   interaction: {
-    //     hover: true,
-    //     multiselect: true,
-    //   },
-    //   manipulation: {
-    //     enabled: true,
-    //   },
-    //   physics: {
-    //     stabilization: {
-    //       enabled: true,
-    //     },
-    //     barnesHut: {
-    //       gravitationalConstant: -40000,
-    //       centralGravity: 0,
-    //       springLength: 0,
-    //       springConstant: 0.5,
-    //       damping: 1,
-    //       avoidOverlap: 0
-    //     },
-    //     maxVelocity: 5
-    //   },
-    //   edges: {
-    //     arrows: "to",
-        
-    //   },
-    //   groups: {
-    //     useDefaultGroups: false
-    //   }
-    // }
-   
-    // let args = {
-    //   file: newJson,
-    //   depth: 1,
-    //   mode: true,
-    //  // nodes: nodes,
-    //  // edges: edges,
-    //   rootItem: "Item:MyProject",
-    //   recursionDepth: 1,
-    // }
-
-    // let drawer = new isg.GraphDrawer(drawer_config={lang:"en",contractArrayPaths: true}, args);
-    // let config = {
-    //  // nodes: nodes,
-    //  // edges: edges,
-    //   options: options,
-    //   file: newJson,
-    //   drawer: drawer,
-    //   configFile: configFile,
-    //  // clone: clone,
-    // };
-    // let graphtool = new isg.GraphTool("mynetwork", config);
-
-    // let graph = new isg.Graph(newJson, configFile);
-
-    // configFile.graph_container_id = "mynetwork2";
-
-    // let graph2 = new isg.Graph(newJson, configFile);
-
-    let graph = new isg.Graph.Graph(newJson, configFile);
-
-    // configFile.graph_container_id = "mynetwork2";
-
-    // let graph2 = new isg.Graph.Graph(newJson, configFile);
-
-  </script>
+  </div>
 </body>
 
 </html>

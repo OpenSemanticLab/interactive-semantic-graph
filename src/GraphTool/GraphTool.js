@@ -85,6 +85,8 @@ class GraphTool {
       edges: this.edges
     }
     this.options = config.options
+    this.options.manipulation.enabled = false
+    this.options.manipulation.initiallyActive = false
     this.network = new vis.Network(this.vis_container, this.data, this.options)
 
     this.BindToClass(GTVisjsEvents, this)

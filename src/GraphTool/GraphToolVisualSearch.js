@@ -7,8 +7,8 @@ function createSearchUI (container) {
     const inputField = document.createElement('input')
     inputField.type = 'text'
     inputField.id = this.prefix + 'search_input'
-    inputField.placeholder = "Search"
-    inputField.style = "padding-left: 8px; border-radius: 4px; margin-right: 4px;"
+    inputField.placeholder = 'Search'
+    inputField.style = 'padding-left: 8px; border-radius: 4px; margin-right: 4px;'
 
     // add the event listener to the input element
     let debounceTimer

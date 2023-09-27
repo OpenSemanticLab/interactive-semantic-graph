@@ -120,8 +120,6 @@ function deepSearchColorPath (foundNodes) {
     // if the node is not expanded by deep search and is not in the found nodes, color it white
     if (!this.deepSearchExpands.includes(node.id) && !foundNodes.some(obj => obj.id === node.id) && !this.searchExpands.includes(node.id)) {
       if (node.group !== 'root') {
-        // console.log(node.id)
-
         node.color = '#ffffff'
 
         this.nodes.update(node)

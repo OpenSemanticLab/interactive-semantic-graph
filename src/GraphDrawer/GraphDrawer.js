@@ -42,6 +42,8 @@ class GraphDrawer {
 
     this.file = args.file
     this.rootItem = args.rootItem
+    this.itemSeparator = args.configFile.item_prefix_separator
+    this.loadItemToFile(this.file, this.rootItem, this.itemSeparator)
     this.rootId = this.getIdFromPathArray(this.getItemPathArray(this.rootItem))
     this.depth = args.depth
     this.excludeList = ['type', 'label']
@@ -86,10 +88,6 @@ class GraphDrawer {
 
     this.edges = new vis.DataSet(args.edges)
 
-    // console.log(this.nodes.get())
-    // console.log(this.edges.get())
-    // console.log(args.nodes)
-
     this.createGraphNodesEdges(this.createArgs)
   }
 
@@ -128,7 +126,7 @@ class GraphDrawer {
     }
     let currentValue = this.getValueFromPathArray(currentPath)
     if (typeof currentValue === 'string') {
-      this.loadItemToFile(this.file, currentValue)
+      this.loadItemToFile(this.file, currentValue, this.itemSeparator)
     }
     const currentContext = this.config.callbacks.createContext(this.file, currentItem)
 

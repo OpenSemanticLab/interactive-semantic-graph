@@ -106,7 +106,8 @@ class Graph {
         edges: tempEdges,
         rootItem: configFile.root_node_objects[i].node_id,
         recursionDepth: configFile.root_node_objects[i].expansion_depth,
-        colorObj: tempColorObj
+        colorObj: tempColorObj,
+        configFile
       }
 
       this.drawer = new GD.GraphDrawer(drawerConfig, args)
@@ -145,7 +146,6 @@ class Graph {
 
     // this.drawer = new isg.GraphDrawer(drawerConfig, args);
 
-    // console.log(this.drawer)
     const config = {
       // nodes: nodes,
       // edges: edges,
@@ -154,9 +154,6 @@ class Graph {
       drawer: this.drawer,
       configFile
     }
-
-    // console.log(this.drawer.nodes.get())
-    // console.log(this.drawer.edges.get())
 
     this.graphtool = new GT.GraphTool(config.configFile.graph_container_id, config)
     // this.graphtool = new isg.GraphTool("mynetwork2", config);

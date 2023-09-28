@@ -1,4 +1,4 @@
-const jsnx = require('jsnetworkx')
+// const jsnx = require('jsnetworkx')
 const utils = require('../utils.js')
 const vis = require('vis-network/standalone/esm/index.js')
 

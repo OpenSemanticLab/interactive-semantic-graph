@@ -1,198 +1,66 @@
 <!DOCTYPE html>
 <html>
-  <head>  
-    <meta charset="utf-8" />  
-    <title>GraphTool Test Page</title>  
-    <script src="../dist/isg.umd.js"></script>
-    <style type="text/css">    #mynetwork {
-  width: 100%;
-  height: 800px;
-  border: 1px solid lightgray;
-}
-</style>
+
+<head>
+  <meta charset="utf-8" />
+  <title>GraphTool Test Page</title>
+  <script src="../dist/isg.umd.js"></script>
+  <link href="style.css" rel="stylesheet" type="text/css">
+
+ <!-- <style type="text/css">
+    #mynetwork {
+      width: 100%;
+      height: 800px;
+      border: 1px solid lightgray;
+    } </style> -->
 
 
-<link href="https://unpkg.com/tabulator-tables@4.3.0/dist/css/tabulator.min.css" rel="stylesheet">
-<script type="text/javascript" src="https://unpkg.com/tabulator-tables@4.3.0/dist/js/tabulator.min.js"></script>
+  <link href="https://unpkg.com/tabulator-tables@4.3.0/dist/css/tabulator.min.css" rel="stylesheet">
+  <script type="text/javascript" src="https://unpkg.com/tabulator-tables@4.3.0/dist/js/tabulator.min.js"></script>
 
-<!--for jsoneditor-->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jsoneditor/9.10.0/jsoneditor.min.js"></script>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jsoneditor/9.10.0/jsoneditor.css" integrity="sha512-/JghmMAi5bleEgj1BT7h7Jm2+o4I4AbJYRVaY3eGGfdyTzV+yW3n0IedWH4ysbws5zpNK1beCqVJh0MSZxvNaA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-<script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.4/lodash.min.js"></script>
 
-<!--for json-editor-->
-<!--
+
+  <!--for jsoneditor-->
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jsoneditor/9.10.0/jsoneditor.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jsoneditor/9.10.0/jsoneditor.css"
+    integrity="sha512-/JghmMAi5bleEgj1BT7h7Jm2+o4I4AbJYRVaY3eGGfdyTzV+yW3n0IedWH4ysbws5zpNK1beCqVJh0MSZxvNaA=="
+    crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.4/lodash.min.js"></script>
+
+
+
+  <!--for json-editor-->
+  <!--
 <link rel='stylesheet' id='theme-link' href = 'https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css'>
 <link rel='stylesheet' id='iconlib-link', href = 'https://use.fontawesome.com/releases/v5.6.1/css/all.css'>
 -->
-</head><body>
-  <h1 id="title">GraphTool Test Page</h1>
 
-<div id="mynetwork"></div>  <script>
+<!-- following for navbar -->
 
-let new_json = {"jsonschema": {
-  "Category:Entity": {
-      "@context": {
-          "label": "Property:HasLabel"
-      }
-  },
-  "Category:Item": {
-      "@context": [
-          "Category:Entity",
-          {
-              "member": {"@id": "Property:HasMember", "@type": "@id"},
-              "other": {"@id": "Property:HasOther", "@type": "@id"},
-              "budget": {"@id": "Property:HasBudget", "@type": "@id"},
-              "some_property": {"@id": "Property:HasSomeItem", "@type": "@id"},
-              "some_literal": "Property:HasSomeLiteral"
-          }
-          ],
-      "properties": {
-          "label": [{
-              "type": "array",
-              "title": "Labels",
-              "items": {
-                  "type": "object",
-                  "title": "Label",
-                  "properties": {
-                      "text": {},
-                      "lang": {}
-                  }
-              }
-          }],
-          "member": {
-              "type": "string",
-              "title": "Member"
-          },
-          "budget": {
-              "type": "array",
-              "title": "Budgets",
-              "items": {
-                  "type": "object",
-                  "title": "Budget",
-                  "properties": {
-                      "year": {"title": "Year"},
-                      "value": {"title": "BudgetValue"}
-                  }
-              }
-          }
-      }
-  }
-  
-  }, 
-"jsondata": {
-  "Item:MyProject": {
-      "type": ["Category:Item"],
-      "label": [{"text": "My Project", "lang": "en"}],
-      "member": ["Item:SomePerson", "Item:SomePerson"], //"Item:MyOtherItem"
-      "start": true,
-      "some_literal": ["Some string","Some","string",],
-      "not_in_context": "Not in Context",
-      "budget": [{
-          "year": "2000",
-          "value": "10000",
-          "budget":[{
-            "year": "2023",
-            "value": "10"}, {
-              "year": "2022",
-              "value": "20"}]
-      },{
-        "year": "2001",
-        "value": "20000"
-    },{
-      "year": "2002",
-      "value": "30000"
-  },{
-    "year": "2003",
-    "value": "40000"
-}]
-  },
-  "Item:SomePerson": {
-      "type": ["Category:Item"],
-      "label": [{"text": "Max Mustermann", "lang": "en"}],
-      "some_property": "Item:MyOtherItem"
-  },
-  "Property:HasMember": {
-      "type": ["Category:Property"],
-      "label": [{"text": "Has Member", "lang": "en"}]
-  },
-  "Item:MyOtherItem": {
-    "type": ["Category:Item"],
-    "label": [{"text": "My Other", "lang": "en"}],
-    "member": ["Item:MyNewItem"],
-    "some_literal": "Some string",
-    "not_in_context": "Not in Context",
-    "budget":[{
-            "year": "2022",
-            "value": "10"}, {
-              "year": "2022",
-              "value": "20"}]
-    
-  },
-  "Item:MyNewItem": {
-    "type": ["Category:Item"],
-    "label": [{"text": "My New Other", "lang": "en"}],
-    "other":["Item:MySecondItem"]
-    
-  },
-  "Item:MySecondItem": {
-    "type": ["Category:Item"],
-    "label": [{"text": "My Second Other", "lang": "en"}]
-    
-  },
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-4bw+/aepP/YC94hEpVNVgiZdgIC5+VKNBQNGCHeKRQN+PtmoHDEXuppvnDJzQIu9" crossorigin="anonymous">
 
-}};
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" integrity="sha512-z3gLpd7yknf1YoNbCzqRKc4qyor8gaKU1qmn+CShxbuBusANI9QpRohGBreCFkKxLhei6S9CQXFEbbKuqLg0DA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 
-const clone = structuredClone(new_json);
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-HwwvtgBNo3bZJJLYd8oVXjrBZt8cqVSpeBNS5n7C8IVInixGAoxmnlMuBnhbgrkm" crossorigin="anonymous"></script>
 
-let nodes = [];
-let edges = [];
+<!-- <link rel="icon" href="favicon.ico" type="image/x-icon" /> -->
+
+</head>
+
+<body>
+  <div class="container">
+    <header><h1>GraphTool Test Page</h1>
+    </header>
 
 
-let _config = {
-  // callbacks: {
-  //   getStartItem: (data) => "Item:MyOtherItem",
-  //   setColor: (data) => "#491230"
-  //   createContext: (data) => ""
-  // }
-};
+    <div id="mynetwork"></div>
 
-let args = {file: new_json, depth:1, mode: true, nodes: nodes, edges: edges}
+    <!-- <div id="mynetwork2"></div> -->
 
-var draw = new isg.GraphDrawer(_config, args);
+    <script src="script.js"></script>
 
+  </div>
+</body>
 
-
-
-var options = {interaction: {hover: true,multiselect: true,},
-      manipulation: {enabled: true,},
-      physics: {
-        stabilization: {
-            enabled: true,
-        },
-        barnesHut: {
-            gravitationalConstant: -40000,
-            centralGravity: 0,
-            springLength: 0,
-            springConstant: 0.5,
-            damping: 1,
-            avoidOverlap: 0
-        },
-        maxVelocity: 5
-      },
-      edges: {arrows: "to"},
-      groups: {
-        useDefaultGroups: false
-      }
-    }
-let config = {nodes:nodes,edges:edges,options:options, graph: draw, file: new_json};
-
-  // let _config = {
-
-  // }
-
-var graphtool = new isg.GraphTool("mynetwork", config, _config);
-
-
-
-</script></body></html>
+</html>

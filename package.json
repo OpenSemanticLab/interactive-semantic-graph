@@ -38,35 +38,34 @@
     "test:browser": "tap test --no-coverage",
     "test:watch": "tap test --watch",
     "test:ci": "tap test --100",
-    "test:report": "opener coverage/lcov-report/index.html"
+    "test:report": "opener coverage/lcov-report/index.html",
+    "eslint": "npx eslint ../interactive-semantic-graph/test --ext=mjs,js --fix && npx eslint ../interactive-semantic-graph/src --ext=mjs,js --fix"
   },
   "dependencies": {
-
-
     "@json-editor/json-editor": "^2.10.1",
+    "bootstrap": "^5.2.3",
+    "bootstrap-icons": "^1.10.5",
     "chroma-js": "^2.4.2",
-    "jquery": "^3.7.0",
+    "jquery": "^3.7.1",
     "jsoneditor": "^9.10.2",
     "jsonpath": "^1.1.1",
     "plotly.js-dist": "^2.24.3",
     "vis-data": "^7.1.6",
-
     "vis-network": "^9.1.6"
-
   },
   "devDependencies": {
+    "@playwright/test": "^1.37.1",
+    "eslint": "^8.45.0",
+    "eslint-config-standard": "^17.1.0",
+    "eslint-plugin-import": "^2.27.5",
+    "eslint-plugin-n": "^16.0.1",
+    "eslint-plugin-promise": "^6.1.1",
     "microbundle": "^0.15.1",
-
-
     "playwright": "^1.36.1",
     "sinon": "^15.2.0",
-
     "tabulator-tables": "^5.5.2",
     "tap": "^16.3.7",
-
     "webpack": "^5.88.2",
     "webpack-cli": "^5.1.4"
-
-
   }
 }

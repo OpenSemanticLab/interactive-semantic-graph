@@ -49,10 +49,23 @@ npm i
 ```bash
 npm run build
 ```
+or
+```bash
+npx webpack
+```
 
 ### Build
 ```bash
 npm run test
+```
+
+### ESLint
+```bash
+npx eslint file.js
+
+#or 
+
+npx eslint folder
 ```
 
 ## Local Automation

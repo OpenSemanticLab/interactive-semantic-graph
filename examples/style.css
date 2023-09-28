@@ -1,0 +1,26 @@
+*, *:before, *:after {
+  box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    color: black;
+}
+
+.container {
+  display: flex;
+  flex-wrap: wrap;
+  background-color: #fff;
+}
+
+/* .navbar {
+  width: 100%;
+  margin-top: 24px;
+  padding: 0;
+  background: rgb(0, 91, 127);
+  display: flex;
+  border-radius: 0.5rem;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
+} */

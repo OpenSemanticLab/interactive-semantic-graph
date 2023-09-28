@@ -50,7 +50,7 @@
     "jsoneditor": "^9.10.2",
     "jsonpath": "^1.1.1",
     "plotly.js-dist": "^2.24.3",
-    "vis-data": "^7.1.6",
+    "vis-data": "^7.1.7",
     "vis-network": "^9.1.6"
   },
   "devDependencies": {

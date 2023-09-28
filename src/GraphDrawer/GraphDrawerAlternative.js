@@ -3,7 +3,8 @@ const utils = require('../utils.js')
 const vis = require('vis-network/standalone/esm/index.js')
 
 function createNxGraph () {
-  const MDG = new jsnx.MultiDiGraph() // a jsNetworkX MultiDiGraph
+  const MDG = new jsnx.MultiDiGraph() // eslint-disable-line no-undef
+  // a jsNetworkX MultiDiGraph
 
   const recursionCallback = (obj, args) => {
     MDG.addNode(String(args.currentPath), {
@@ -107,7 +108,7 @@ function createNxGraph () {
   const network = new vis.Network(container, data, options) // eslint-disable-line no-unused-vars
 
   // color nodes in path
-  const path = jsnx.bidirectionalShortestPath(new jsnx.Graph(MDG), 'jsonschema,Category:Item,properties,label,0,items,properties,text', 'jsondata,Item:MyProject,budget,1,budget,1,year', 19)
+  const path = jsnx.bidirectionalShortestPath(new jsnx.Graph(MDG), 'jsonschema,Category:Item,properties,label,0,items,properties,text', 'jsondata,Item:MyProject,budget,1,budget,1,year', 19) // eslint-disable-line no-undef
 
   function colorByPath (visNodes, path) {
     for (const node of visNodes.get()) {

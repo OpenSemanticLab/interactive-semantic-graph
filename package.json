@@ -46,7 +46,7 @@
     "bootstrap": "^5.2.3",
     "bootstrap-icons": "^1.10.5",
     "chroma-js": "^2.4.2",
-    "jquery": "^3.7.0",
+    "jquery": "^3.7.1",
     "jsoneditor": "^9.10.2",
     "jsonpath": "^1.1.1",
     "plotly.js-dist": "^2.24.3",

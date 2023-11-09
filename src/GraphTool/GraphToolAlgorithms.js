@@ -46,9 +46,28 @@ function deleteNodesChildren (nodeId, deleteEdge, clickedNode) {
     nodesToDelete.push(allIds[i])
     this.deleteEdges(allIds[i])
 
+    let group = this.nodes.get(allIds[i]).group
     this.nodes.remove(allIds[i])
+    this.deleteOptionsGroup(group)    
   }
   return nodesToDelete
+}
+
+function deleteOptionsGroup(group){
+
+  let noNodesInGroup = true
+
+  this.nodes.get().forEach((node) => {
+    if(node.group === group) { 
+      noNodesInGroup = false
+    }
+  })
+  if (noNodesInGroup) {
+    
+    delete this.options.groups[group];
+    this.network.setOptions(this.options);
+    
+  }
 }
 
 // deletes edges that are connected to the given node ID
@@ -256,6 +275,7 @@ export {
   cartesianProduct,
   getAllCombs,
   getStartAndEndNodesForPath,
-  comparePaths
+  comparePaths,
+  deleteOptionsGroup
 
 }

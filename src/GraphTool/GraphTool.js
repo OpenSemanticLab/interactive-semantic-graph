@@ -16,6 +16,7 @@ const GTColoring = require('./GraphToolColoring.js')
 const GTAlgorithms = require('./GraphToolAlgorithms.js')
 const GTLegend = require('./GraphToolLegend.js')
 const GTLoadSave = require('./GraphToolLoadSave.js')
+const GTManipulation = require('./GraphToolManipulation.js')
 
 class GraphTool {
   static instanceCount = 0
@@ -88,6 +89,8 @@ class GraphTool {
     this.options.manipulation.enabled = false
     this.options.manipulation.initiallyActive = false
     this.network = new vis.Network(this.vis_container, this.data, this.options)
+    this.BindToClass(GTManipulation, this)
+    this.setManipulationOptions(this.data)
 
     this.BindToClass(GTVisjsEvents, this)
     this.BindToClass(GTCopyPaste, this)
@@ -180,6 +183,8 @@ class GraphTool {
     // this.initRectangleSelection()
     this.initDragAndDrop()
     this.visibilityByVisiblePath = {}
+
+    this.initPopUpHTML()
   }
 
   BindToClass (functionsObject, thisClass) {

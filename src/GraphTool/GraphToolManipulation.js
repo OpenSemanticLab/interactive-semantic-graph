@@ -1,4 +1,7 @@
 const $ = require('jquery')
+const GDHelper = require('../GraphDrawer/GraphDrawerHelper.js')
+const GDColoring = require('../GraphDrawer/GraphDrawerColoring.js')
+const utils = require('../utils.js')
 
 function multipleEdgesToSameNode(nodeID){
     let edges = this.edges.get()
@@ -55,18 +58,18 @@ function editNode(data, cancelAction, callback, mainObject){
 }
 
 //addEdge popup
-function editEdgeWithoutDrag(data, callback){
+function editEdgeWithoutDrag(data, callback, newThis){
     var newEdgeActive = true;
     // filling in the popup DOM elements
     document.getElementById("edge-label").value = data.label;
     
     document.getElementById("edge-saveButton").onclick = saveEdgeData.bind(
-        this,
+        newThis,
         data,
         callback
     );
     document.getElementById("edge-cancelButton").onclick = cancelEdgeEdit.bind(
-        this,
+        newThis,
         callback
     );
     $('canvas').on('click', function(e) {
@@ -83,6 +86,7 @@ function editEdgeWithoutDrag(data, callback){
         }
         newEdgeActive = false;
     });
+    console.log("here")
     //document.getElementById("edge-popUp").style.display = "block";
 }
 
@@ -90,7 +94,237 @@ function saveEdgeData(data, callback) {
     data.label = document.getElementById("edge-label").value;
     document.getElementById("edge-label").value = "";
     clearEdgePopUp();
+    data = addPropertyToJSON(data, this)
+    console.log(this.dataFile.jsondata)
+    //this.nodes.get(data.to).id = data.nodeID
     callback(data);
+    if(data !== null){
+        this.nodes.update(this.nodes.get(data.to))
+    }
+    this.createLegend()
+
+    // let newId = data.nodeID
+    // this.nodes.get(data.to).id = newId
+    // this.edges.get(data.id).to = newId
+
+}
+
+function setEdgeColor(data, mainObject){
+
+    if(mainObject.drawer.colorObj[data.label] !== undefined){
+        data.group = data.label
+        data.color = mainObject.drawer.colorObj[data.label]
+    }
+
+    if(mainObject.drawer.colorObj[data.label] === undefined){
+
+        mainObject.drawer.colorObj[data.label] = GDColoring.randomHSL()
+        data.group = data.label
+        data.color = mainObject.drawer.colorObj[data.label]
+    }
+
+    return data
+}
+
+function createFullContextAndSetEdgeKey(data, mainObject, combine){
+
+    for(let key in mainObject.dataFile.jsonschema){
+
+        let context = GDHelper.getSchemaContextRecursive(mainObject.dataFile, key, [])
+
+        for(let i = 0; i < context.length; i++){
+            combine = {...combine, ...context[i]}
+        }
+    }
+    
+    for(let key in combine){
+
+        if((combine[key]["@id"] !== undefined && combine[key]["@id"].split(":")[1] === data.label)){
+
+            data.objectKey = key
+
+        }
+
+        if(combine[key]["@id"] === undefined && combine[key].split(":")[1] === data.label){
+
+            data.objectKey = key
+
+        }
+    }
+    data.context = combine
+    return data
+}
+
+function addPropertyToJSON(data, mainObject){
+
+    // set edge id
+    data.id = data.from + "=" + data.label + "=>" + data.to
+
+    // check if edge already exists
+    if(mainObject.edges.get(data.id)){
+        data = null
+        return data
+    }
+
+    // set edge color and group
+    data = setEdgeColor(data, mainObject)
+
+    // set edge key
+    let context= {}
+    data = createFullContextAndSetEdgeKey(data, mainObject, context)
+    context = data.context
+    delete data.context
+
+    let fromNode = mainObject.nodes.get(data.from)
+    let finalPlace = mainObject.dataFile
+
+    // go down the "from" nodes path to add the new node to the correct place in the JSON
+    for (let i = 0; i < fromNode.path.length; i++) {
+        finalPlace = finalPlace[fromNode.path[i]]
+      }
+    
+    if (typeof finalPlace === 'string' && mainObject.dataFile[fromNode.path[fromNode.path.length - 1]] === undefined) {
+        data = null
+        return data
+    }
+
+    if(mainObject.nodes.get(data.to).path === undefined){
+        mainObject.nodes.get(data.to).path = ""
+    }
+// finalPlace is the object where the new node will be added to the JSON    
+//key is in context
+    if(data.objectKey){
+        // key is in context and is not in finalPlace
+        if(finalPlace[data.objectKey] === undefined){
+            if(mainObject.nodes.get(data.to).path.length === 2){
+                finalPlace[data.objectKey] = [mainObject.nodes.get(data.to).path[1]]
+            }else if(mainObject.nodes.get(data.to).manuallyAdded === true){
+                finalPlace[data.objectKey] = [mainObject.nodes.get(data.to).label]
+                data.nodeID = mainObject.nodes.get(data.from).id + "/" + data.objectKey
+            }else{
+                data = null
+                return data
+            }
+        }else{// key is in context and is in finalPlace
+            // key is in context and is in finalPlace and is an array
+            if(Array.isArray(finalPlace[data.objectKey])){
+                if(mainObject.nodes.get(data.to).path.length === 2){
+                    finalPlace[data.objectKey].push(mainObject.nodes.get(data.to).path[1])
+                }else if(mainObject.nodes.get(data.to).manuallyAdded === true){
+                    finalPlace[data.objectKey].push(mainObject.nodes.get(data.to).label)
+                    data.nodeID = mainObject.nodes.get(data.from).id + "/" + data.objectKey + "/" + finalPlace[data.objectKey].length-1
+                }else{
+                    data = null
+                    return data
+                }
+            }else{ // key is in context and is in finalPlace and is not an array 
+                if(mainObject.nodes.get(data.to).path.length === 2){
+                    finalPlace[data.objectKey] = [finalPlace[data.objectKey],mainObject.nodes.get(data.to).path[1]]
+                }else if(mainObject.nodes.get(data.to).manuallyAdded === true){
+                    finalPlace[data.objectKey] = [finalPlace[data.objectKey],mainObject.nodes.get(data.to).label]
+                    data.nodeID = mainObject.nodes.get(data.from).id + "/" + data.objectKey + "/" + finalPlace[data.objectKey].length-1
+                }else{
+                    data = null
+                    return data
+                }
+            }
+        }
+        
+    }else{//key is not in context
+
+        // key is not in context so it gets added as statements
+        // statements exists
+        if(finalPlace['statements']){
+            console.log(data)
+            if(mainObject.nodes.get(data.to).path.length === 2){
+                finalPlace['statements'].push({
+                    "uuid": utils.uuidv4(),
+                    "predicate": data.label,
+                    "object": mainObject.nodes.get(data.to).path[1]
+                })
+            }else if(mainObject.nodes.get(data.to).manuallyAdded === true){
+                finalPlace['statements'].push({
+                    "uuid": utils.uuidv4(),
+                    "predicate": data.label,
+                    "object": data.label
+                })
+
+               data.nodeID = mainObject.nodes.get(data.from).id + "/" + data.label + "/" + finalPlace["statements"].length-1
+            }else{
+                data = null
+                return data
+            }
+        }else{
+            // statements does not exist
+            finalPlace['statements'] = []
+            if(mainObject.nodes.get(data.to).path.length === 2){
+                finalPlace['statements'].push({
+                    "uuid": utils.uuidv4(),
+                    "predicate": data.label,
+                    "object": mainObject.nodes.get(data.to).path[1]
+                })
+            }else if(mainObject.nodes.get(data.to).manuallyAdded === true){
+                finalPlace['statements'].push({
+                    "uuid": utils.uuidv4(),
+                    "predicate": data.label,
+                    "object": data.label
+                })
+               data.nodeID = mainObject.nodes.get(data.from).id + "/" + data.label
+            }else{
+                data = null
+                return data
+            }
+
+        }
+
+    }
+
+    if(mainObject.nodes.get(data.to).incomingLabels){
+        let node = mainObject.nodes.get(data.to)
+
+        node.incomingLabels.push(data.label)
+
+    }
+
+
+    // inherit keys from edge to node
+    if(mainObject.nodes.get(data.to).key === undefined){
+
+
+        let node = mainObject.nodes.get(data.to)
+
+        node.key = data.objectKey
+        node.item = mainObject.nodes.get(data.from).item
+        let incomingLabels = [data.label]
+
+        mainObject.edges.forEach((edge) => {
+            if(edge.to === node.id){
+                incomingLabels.push(edge.label)
+            }
+        })
+
+        node.incomingLabels = incomingLabels
+
+        node.context = context
+
+        node.depth = mainObject.nodes.get(data.from).depth + 1
+
+        let item = mainObject.nodes.get(data.from).item
+        let depth = mainObject.nodes.get(data.from).depth + 1
+
+        node.depthObject = {}
+        node.depthObject[""+item] = depth
+
+        node.color = data.color
+
+        node.group = data.group
+
+        if(mainObject.nodes.get(data.to).path === ""){
+            node.path = mainObject.nodes.get(data.from).path
+        }
+    }
+
+    return data
 
 }
 
@@ -158,13 +392,14 @@ function clearNodePopUp() {
     document.getElementById("node-saveButton").onclick = null;
     document.getElementById("node-cancelButton").onclick = null;
     document.getElementById("node-popUp").style.display = "none";
+    document.getElementById("node_checkbox").checked = false
 }
+
 
 function saveNodeData(data, callback){
 
-    if(document.getElementById("node_checkbox").checked){
-        data = addItemToJSON(data, this)
-    }
+    
+    data = addItemToJSON(data, this)
 
     document.getElementById("node-label").value = ""
     document.getElementById("node-type").value = ""
@@ -177,18 +412,26 @@ function saveNodeData(data, callback){
 function addItemToJSON(data, mainObject){
 
     data.label = document.getElementById("node-label").value;
-    data.id = document.getElementById("node-label").value; // uuid?
-    data.type = document.getElementById("node-type").value;
     data.hidden = false;
     data.physics = false;
 
-    mainObject.dataFile.jsondata["Item:" + data.label.replace(' ', '')] = {
-        "type": [data.type],
-        "label": [{"text": data.label, "lang": "en"}]
+    if(document.getElementById("node_checkbox").checked){
+
+        let uuid = utils.uuidv4()
+
+        data.id = "jsondata/Item:" + uuid // + document.getElementById("node-label").value.replace(" ", ""); // uuid?
+        data.type = document.getElementById("node-type").value;
+        data.path = ["jsondata", "Item:" + uuid] //+ document.getElementById("node-label").value.replace(" ", "")]
+
+    mainObject.dataFile.jsondata["Item:" + uuid /*data.label.replace(' ', '')*/] = {
+            "type": [data.type],
+            "label": [{"text": data.label, "lang": "en"}]
+        }
+
+    }else{
+        data.manuallyAdded = true
     }
 
-
-    console.log(mainObject.dataFile.jsondata)
     return data
 
 }
@@ -292,7 +535,7 @@ function setManipulationOptions(data){
     }.bind(this)
 
     this.options.manipulation.addEdge =  function(data, callback) {
-        console.log(data)
+
         if (data.from == data.to) {
             var r = confirm("Do you want to connect the node to itself?");
             if (r != true) {
@@ -302,8 +545,10 @@ function setManipulationOptions(data){
         }
         document.getElementById("edge-operation").innerText = "Add Edge";
         dragElement(document.getElementById("edge-popUp"));
-        editEdgeWithoutDrag(data, callback);
-    }
+        editEdgeWithoutDrag(data, callback, this);
+        // this.createLegend()
+
+    }.bind(this)
 
 
 }

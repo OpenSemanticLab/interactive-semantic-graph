@@ -103,9 +103,16 @@ function saveEdgeData(data, callback) {
     }
     this.createLegend()
 
-    // let newId = data.nodeID
-    // this.nodes.get(data.to).id = newId
-    // this.edges.get(data.id).to = newId
+    let newId = data.nodeID
+    let oldNode = JSON.parse(JSON.stringify(this.nodes.get(data.to)))
+    oldNode.id = newId
+    this.nodes.remove(data.to)
+    this.nodes.update(oldNode)
+    let oldEdge = JSON.parse(JSON.stringify(this.edges.get(data.id)))
+    oldEdge.to = newId
+    this.edges.remove(data.id)
+    this.edges.update(oldEdge)
+
 
 }
 

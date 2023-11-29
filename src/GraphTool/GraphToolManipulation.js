@@ -194,7 +194,7 @@ function addPropertyToJSON(data, mainObject){
     let fromNode = mainObject.nodes.get(data.from)
     let finalPlace = mainObject.dataFile
 
-    if(mainObject.nodes.get(data.from).manuallyAdded === true || mainObject.network.getConnectedEdges(data.to).length > 0){
+    if(mainObject.nodes.get(data.from).manuallyAdded === true || mainObject.network.getConnectedEdges(data.to).length > 0 && mainObject.nodes.get(data.to).path.length > 2){
         data = null
         return data
     }

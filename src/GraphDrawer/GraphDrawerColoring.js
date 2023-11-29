@@ -1,5 +1,5 @@
 // Generates a random color
-let golden = 0.618033988749895
+const golden = 0.618033988749895
 let h = Math.random()
 
 function randomHSL () {

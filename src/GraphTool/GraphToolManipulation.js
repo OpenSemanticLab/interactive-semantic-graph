@@ -37,7 +37,7 @@ function editNode(data, cancelAction, callback, mainObject){
         callback
     )
     document.getElementById("node-cancelButton").onclick = cancelAction.bind(
-        this,
+        mainObject,
         callback
     )
     //document.getElementById("node-popUp")
@@ -86,7 +86,6 @@ function editEdgeWithoutDrag(data, callback, newThis){
         }
         newEdgeActive = false;
     });
-    console.log("here")
     //document.getElementById("edge-popUp").style.display = "block";
 }
 
@@ -102,16 +101,26 @@ function saveEdgeData(data, callback) {
         this.nodes.update(this.nodes.get(data.to))
     }
     this.createLegend()
+    if(data !== null){
+        if(this.nodes.get(data.to).manuallyAdded === true){
+            let newId = data.nodeID
+            let oldNode = JSON.parse(JSON.stringify(this.nodes.get(data.to)))
+            oldNode.id = newId
+            this.nodes.remove(data.to)
+            this.nodes.update(oldNode)
+            let oldEdge = JSON.parse(JSON.stringify(this.edges.get(data.id)))
+            oldEdge.to = newId
+            this.edges.remove(data.id)
+            this.edges.update(oldEdge)
+        }
+        delete data.nodeID
+    }
 
-    let newId = data.nodeID
-    let oldNode = JSON.parse(JSON.stringify(this.nodes.get(data.to)))
-    oldNode.id = newId
-    this.nodes.remove(data.to)
-    this.nodes.update(oldNode)
-    let oldEdge = JSON.parse(JSON.stringify(this.edges.get(data.id)))
-    oldEdge.to = newId
-    this.edges.remove(data.id)
-    this.edges.update(oldEdge)
+    // if((this.nodes.get(data.to).path.length === 2 && this.nodes.get(data.to).key === undefined) || this.nodes.get(data.to).manuallyAdded === true ){}
+
+    this.options.manipulation.enabled = !this.options.manipulation.enabled
+    this.options.manipulation.initiallyActive = !this.options.manipulation.initiallyActive
+    this.network.setOptions(this.options)
 
 
 }
@@ -185,12 +194,18 @@ function addPropertyToJSON(data, mainObject){
     let fromNode = mainObject.nodes.get(data.from)
     let finalPlace = mainObject.dataFile
 
+    if(mainObject.nodes.get(data.from).manuallyAdded === true || mainObject.network.getConnectedEdges(data.to).length > 0){
+        data = null
+        return data
+    }
+
+    
     // go down the "from" nodes path to add the new node to the correct place in the JSON
     for (let i = 0; i < fromNode.path.length; i++) {
         finalPlace = finalPlace[fromNode.path[i]]
       }
     
-    if (typeof finalPlace === 'string' && mainObject.dataFile[fromNode.path[fromNode.path.length - 1]] === undefined) {
+    if (typeof finalPlace === 'string' && mainObject.dataFile[fromNode.path[fromNode.path.length - 1]] === undefined || mainObject.nodes.get(data.from).manuallyAdded === true) {
         data = null
         return data
     }
@@ -242,7 +257,6 @@ function addPropertyToJSON(data, mainObject){
         // key is not in context so it gets added as statements
         // statements exists
         if(finalPlace['statements']){
-            console.log(data)
             if(mainObject.nodes.get(data.to).path.length === 2){
                 finalPlace['statements'].push({
                     "uuid": utils.uuidv4(),
@@ -253,7 +267,7 @@ function addPropertyToJSON(data, mainObject){
                 finalPlace['statements'].push({
                     "uuid": utils.uuidv4(),
                     "predicate": data.label,
-                    "object": data.label
+                    "object": mainObject.nodes.get(data.to).label
                 })
 
                data.nodeID = mainObject.nodes.get(data.from).id + "/" + data.label + "/" + finalPlace["statements"].length-1
@@ -274,7 +288,7 @@ function addPropertyToJSON(data, mainObject){
                 finalPlace['statements'].push({
                     "uuid": utils.uuidv4(),
                     "predicate": data.label,
-                    "object": data.label
+                    "object": mainObject.nodes.get(data.to).label
                 })
                data.nodeID = mainObject.nodes.get(data.from).id + "/" + data.label
             }else{
@@ -344,6 +358,9 @@ function clearEdgePopUp() {
 function cancelEdgeEdit(callback) {
     clearEdgePopUp();
     callback(null);
+    this.options.manipulation.enabled = !this.options.manipulation.enabled
+    this.options.manipulation.initiallyActive = !this.options.manipulation.initiallyActive
+    this.network.setOptions(this.options)
 }
 
 function initPopUpHTML() {
@@ -400,6 +417,11 @@ function clearNodePopUp() {
     document.getElementById("node-cancelButton").onclick = null;
     document.getElementById("node-popUp").style.display = "none";
     document.getElementById("node_checkbox").checked = false
+    if(this){
+        this.options.manipulation.enabled = !this.options.manipulation.enabled
+        this.options.manipulation.initiallyActive = !this.options.manipulation.initiallyActive
+        this.network.setOptions(this.options)
+    }
 }
 
 
@@ -412,6 +434,10 @@ function saveNodeData(data, callback){
     document.getElementById("node-type").value = ""
     clearNodePopUp()
     callback(data)
+
+    this.options.manipulation.enabled = !this.options.manipulation.enabled
+    this.options.manipulation.initiallyActive = !this.options.manipulation.initiallyActive
+    this.network.setOptions(this.options)
 
     //  this.network.addEdgeMode();
 }
@@ -589,6 +615,32 @@ function deleteSelectedNode(data, callback) {
     // // create_link();
 }
 
+function deleteInJson(data, obj){
+
+    for(let i = 0; i < data.edges.length; i++){
+        let finalPlace = this.dataFile
+        let fromNode = this.nodes.get(this.edges.get(data.edges[i]).from)
+
+        for (let i = 0; i < fromNode.path.length; i++) {
+            finalPlace = finalPlace[fromNode.path[i]]
+          }
+
+        let key = this.edges.get(data.edges[i]).objectKey
+
+        if(Array.isArray(finalPlace[key])){
+            finalPlace[key].splice(finalPlace[key].indexOf(this.edges.get(data.edges[i]).label), 1)
+            if(finalPlace[key].length === 0){
+                delete finalPlace[key]
+            }
+        }
+        if(!Array.isArray(finalPlace[key])){
+            delete finalPlace[key]
+        }
+
+    }
+
+}
+
 export{
     setManipulationOptions,
     deleteSelectedNode,
@@ -596,5 +648,6 @@ export{
     editNode,
     initPopUpHTML,
     saveNodeData,
-    addItemToJSON
+    addItemToJSON,
+    deleteInJson
 }

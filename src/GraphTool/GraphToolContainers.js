@@ -43,23 +43,127 @@ function initGraphContainers (divId) {
     // Bootstrap class for edit button
     const editContainer = document.createElement('fieldset')
     const editButton = document.createElement('button')
-    editButton.setAttribute('type', 'button')
-    editButton.setAttribute('class', 'btn btn-light')
-    editButton.style = 'margin: 0 0 8px 8px; width: 90px;'
-    editButton.innerHTML = "<i class='fa-regular fa-xl fa-pen-to-square me-1'></i> Edit"
-    editButton.addEventListener('click', () => {
+    const addNodeButton = document.createElement('button')
+    const addEdgeButton = document.createElement('button')
+    const deleteButton = document.createElement('button')
+
+    deleteButton.setAttribute('type', 'button')
+    deleteButton.setAttribute('class', 'btn btn-light')
+    deleteButton.setAttribute('id', this.prefix + 'deleteButton')
+    deleteButton.style = 'margin: 0 0 8px 8px; width: 90px;'
+    deleteButton.innerHTML = "<i class='fa-regular fa-xl fa-pen-to-square me-1'></i> Delete"
+    deleteButton.addEventListener('click', () => {
+
+      // this.options.manipulation.enabled = !this.options.manipulation.enabled
+      // this.options.manipulation.initiallyActive = !this.options.manipulation.initiallyActive
+      // this.network.setOptions(this.options)
+      if(this.nodes.get(this.network.getSelection().nodes[0]).group !== "root"){
+        if(this.network.getSelection().nodes.length > 0){
+          this.deleteInJson(this.network.getSelection(), "node")
+          this.options.manipulation.deleteNode(this.network.getSelection(), () => {})
+        }else{
+          this.deleteInJson(this.network.getSelection(), "edge")
+          this.options.manipulation.deleteEdge(this.network.getSelection(), () => {})
+        }
+      }
+
+            // Deselect all nodes
+      this.network.selectNodes([]);
+
+      // Deselect all edges
+      this.network.selectEdges([]);
+      
+
+    })
+
+    addNodeButton.setAttribute('type', 'button')
+    addNodeButton.setAttribute('class', 'btn btn-light')
+    addNodeButton.setAttribute('id', this.prefix + 'addNodeButton')
+    addNodeButton.style = 'margin: 0 0 8px 8px; width: 90px;'
+    addNodeButton.innerHTML = "<i class='fa-regular fa-xl fa-pen-to-square me-1'></i> Add Node"
+    addNodeButton.addEventListener('click', () => {
       this.options.manipulation.enabled = !this.options.manipulation.enabled
       this.options.manipulation.initiallyActive = !this.options.manipulation.initiallyActive
       this.network.setOptions(this.options)
+
+      this.network.addNodeMode()
+
+      for(let i = 0; i < document.getElementsByClassName('vis-button vis-back').length; i++) {
+
+        document.getElementsByClassName('vis-button vis-back')[i].addEventListener('pointerdown', () => {
+          this.options.manipulation.enabled = !this.options.manipulation.enabled
+          this.options.manipulation.initiallyActive = !this.options.manipulation.initiallyActive
+          this.network.setOptions(this.options)
+        });
+        document.getElementsByClassName('vis-button vis-back')[i].addEventListener('keyup', () => {
+          this.options.manipulation.enabled = !this.options.manipulation.enabled
+          this.options.manipulation.initiallyActive = !this.options.manipulation.initiallyActive
+          this.network.setOptions(this.options)
+        });
+      }
 
       if (this.options.manipulation.enabled) {
         document.getElementById(this.prefix + 'vis_container').querySelector('.vis-close').style = 'display: none;'
       }
     })
 
+    addEdgeButton.setAttribute('type', 'button')
+    addEdgeButton.setAttribute('class', 'btn btn-light')
+    addEdgeButton.setAttribute('id', this.prefix +  'addEdgeButton')
+    addEdgeButton.style = 'margin: 0 0 8px 8px; width: 90px;'
+    addEdgeButton.innerHTML = "<i class='fa-regular fa-xl fa-pen-to-square me-1'></i> Add Edge"
+    addEdgeButton.addEventListener('click', () => {
+      this.options.manipulation.enabled = !this.options.manipulation.enabled
+      this.options.manipulation.initiallyActive = !this.options.manipulation.initiallyActive
+      this.network.setOptions(this.options)
+
+      this.network.addEdgeMode()
+
+      for(let i = 0; i < document.getElementsByClassName('vis-button vis-back').length; i++) {
+
+        document.getElementsByClassName('vis-button vis-back')[i].addEventListener('pointerdown', () => {
+          this.options.manipulation.enabled = !this.options.manipulation.enabled
+          this.options.manipulation.initiallyActive = !this.options.manipulation.initiallyActive
+          this.network.setOptions(this.options)
+        });
+        document.getElementsByClassName('vis-button vis-back')[i].addEventListener('keyup', () => {
+          this.options.manipulation.enabled = !this.options.manipulation.enabled
+          this.options.manipulation.initiallyActive = !this.options.manipulation.initiallyActive
+          this.network.setOptions(this.options)
+        });
+      }
+
+      if (this.options.manipulation.enabled) {
+        document.getElementById(this.prefix + 'vis_container').querySelector('.vis-close').style = 'display: none;'
+      }
+    })
+
+
+    editButton.setAttribute('type', 'button')
+    editButton.setAttribute('class', 'btn btn-light')
+    editButton.setAttribute('id', this.prefix + 'editButton')
+    editButton.style = 'margin: 0 0 8px 8px; width: 90px;'
+    editButton.innerHTML = "<i class='fa-regular fa-xl fa-pen-to-square me-1'></i> Edit"
+
+
     let isEditMode = true
     editButton.addEventListener('click', () => {
       editButton.innerHTML = isEditMode ? "<i class='fa-regular fa-xl fa-circle-xmark'></i> Exit" : "<i class='fa-regular fa-xl fa-pen-to-square me-1'></i> Edit"
+      this.network.enableEditMode()
+      if(isEditMode) {
+
+        editButton.insertAdjacentElement("afterend", deleteButton)
+        editButton.insertAdjacentElement("afterend", addEdgeButton)
+        editButton.insertAdjacentElement("afterend", addNodeButton)
+
+        // this.tool_container.append(addNodeButton)
+        // this.tool_container.append(addEdgeButton)
+        // this.tool_container.append(deleteButton)
+      }else{
+        addNodeButton.remove()
+        addEdgeButton.remove()
+        deleteButton.remove()
+      }
       isEditMode = !isEditMode
     })
 

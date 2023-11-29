@@ -1,8 +1,11 @@
 // Generates a random color
+let golden = 0.618033988749895
+let h = Math.random()
+
 function randomHSL () {
-  this.h += this.golden
-  this.h %= 1
-  return 'hsla(' + (360 * this.h) + ',' +
+  h += golden
+  h %= 1
+  return 'hsla(' + (360 * h) + ',' +
         '70%,' +
         '80%,1)'
 }

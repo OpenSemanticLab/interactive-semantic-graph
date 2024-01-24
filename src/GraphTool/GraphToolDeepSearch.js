@@ -1,5 +1,9 @@
 const G = require('../Graph/Graph.js')
 
+/**
+ *
+ * @param {string} searchValue search value
+ */
 function searchFunctionality (data, searchValue) {
   document.getElementById(this.prefix + 'search_input').value = ''
 
@@ -7,6 +11,10 @@ function searchFunctionality (data, searchValue) {
 }
 
 // resets deep search if user accepts the search results to open further nodes
+/**
+ *
+ * @returns {boolean} true if user accepts, false if not
+ */
 function searchAlert () {
   if (this.deepSearchExpands.length > 0 || this.deepSearchExpandsFull.length > 0) {
     const result = confirm('Apply search results?')
@@ -25,7 +33,11 @@ function searchAlert () {
 
   return true
 }
-
+/**
+ *
+ * @param {string} nodeId visjs node id
+ * @param {JSON} fullGraph graph object
+ */
 function searchItem (nodeId, fullGraph) {
   // if node id is not in the current graph
   if (!this.itemExists(nodeId)) {
@@ -52,7 +64,11 @@ function searchItem (nodeId, fullGraph) {
 
   this.expandNodesCleanedUp({ nodes: [nodeId] })
 }
-
+/**
+ *
+ * @param {JSON} foundNode visjs node object
+ * @param {JSON} fullGraph graph object
+ */
 function deepSearchExpandNodes (foundNode, fullGraph) {
   const path = foundNode.path
   const firstPath = `${path[0]}/${path[1]}`
@@ -89,6 +105,9 @@ function deepSearchExpandNodes (foundNode, fullGraph) {
 }
 
 // collapses all nodes that were expanded during deep search
+/**
+ * @function collapseSearch collapses all nodes that were expanded during deep search
+ */
 function collapseSearch () {
   // if the checkbox is not checked, collapse all nodes that were expanded during deep search
   if (!document.getElementById(this.prefix + 'myCheckbox').checked) {
@@ -115,14 +134,20 @@ function collapseSearch () {
 }
 
 // colors the nodes and edges that were found during deep search
+/**
+ *
+ * @param {Array} foundNodes array of visjs node objects
+ */
 function deepSearchColorPath (foundNodes) {
   this.nodes.get().forEach(node => {
     // if the node is not expanded by deep search and is not in the found nodes, color it white
     if (!this.deepSearchExpands.includes(node.id) && !foundNodes.some(obj => obj.id === node.id) && !this.searchExpands.includes(node.id)) {
       if (node.group !== 'root') {
-        node.color = '#ffffff'
+        if (this.network.getConnectedNodes(node.id).length !== 0) {
+          node.color = '#ffffff'
 
-        this.nodes.update(node)
+          this.nodes.update(node)
+        }
       }
     }
   })
@@ -136,7 +161,10 @@ function deepSearchColorPath (foundNodes) {
     }
   })
 }
-
+/**
+ *
+ * @param {JSON} params JSON object with an array of one node id
+ */
 function expandNodesCleanedUp (params) {
   if (params.nodes.length > 0) {
     const node = this.nodes.get(params.nodes[0])
@@ -170,7 +198,10 @@ function expandNodesCleanedUp (params) {
     }
   }
 }
-
+/**
+ *
+ * @param {string} searchValue search value
+ */
 function deepSearch (searchValue) {
   if (this.handleCallbacks({ id: 'onBeforeDeepSearch', params: { graph: this, searchValue } })) {
     const fullGraph = this.fullGraph

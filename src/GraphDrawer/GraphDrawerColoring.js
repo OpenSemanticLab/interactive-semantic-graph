@@ -2,6 +2,10 @@
 const golden = 0.618033988749895
 let h = Math.random()
 
+/**
+ *
+ * @returns {string} random hsla color
+ */
 function randomHSL () {
   h += golden
   h %= 1
@@ -11,6 +15,11 @@ function randomHSL () {
 }
 
 // generates colors per property (per property, not per node! Todo: consider renaming: getColorByProperty)
+/**
+ *
+ * @param {string} property register a color for a property
+ * @returns
+ */
 function registerPropertyColor (property) {
   // maps a property to a color, generates the color by randomness if not existing
 

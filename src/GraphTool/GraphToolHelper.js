@@ -1,5 +1,10 @@
 const jsonpath = require('jsonpath')
-
+/**
+ *
+ * @param {JSON} data main JSON file
+ * @param {string} searchValue value to search for
+ * @returns {Array} array of paths to the search value
+ */
 function searchJSON (data, searchValue) {
   // const searchValue = '2022';
   // const jsonPathExpression = `$..[?(@=="${searchValue}")]`;
@@ -15,6 +20,12 @@ function searchJSON (data, searchValue) {
 }
 
 // Outputs all edges with given label
+/**
+ *
+ * @param {Array} edges array with visjs edge objects
+ * @param {string} label label to search for
+ * @returns {Array} array with visjs edge objects
+ */
 function getAllEdgesWithLabel (edges, label) {
   const tempArray = []
 
@@ -28,6 +39,13 @@ function getAllEdgesWithLabel (edges, label) {
 }
 
 // Removes object with a given ID from the given array
+/**
+ *
+ * @param {Array} arr array with visjs edge objects
+ * @param {string} id id to search for
+ * @param {JSON} edge visjs edge object
+ * @returns {Array} array with visjs edge objects
+ */
 function removeObjectWithId (arr, id, edge) {
   if (edge) {
     const objWithIdIndex = arr.findIndex((obj) => obj.from === edge.from && obj.to === edge.to)
@@ -47,6 +65,11 @@ function removeObjectWithId (arr, id, edge) {
 }
 
 // gets all groups that are set to hidden = true
+/**
+ *
+ * @param {JSON} options visjs options
+ * @returns {Array} array with group names
+ */
 function legendInvisibleGroups (options) {
   const invisibleGroups = []
 
@@ -76,17 +99,31 @@ function legendInvisibleGroups (options) {
   return invisibleGroups
 }
 
+/**
+ *
+ * @param {string} id id of the dropdown
+ * @param {string} valueToSelect value to select
+ */
 function changeColorDropdown (id, valueToSelect) {
   const element = document.querySelector('#' + id + ' select')
   element.value = valueToSelect
 }
-
+/**
+ *
+ * @param {string} id id of the dropdown
+ * @param {string} valueToSelect value to select
+ */
 function changeStartEndColorDropdown (id, valueToSelect) {
   const element = document.querySelector('#' + id)
   element.value = valueToSelect
 }
 
 // generates the values array for the color gradient
+/**
+ *
+ * @param {Array} paths array with paths
+ * @returns {Array} array with values
+ */
 function createValuesArray (paths) {
   const valueArray = []
 
@@ -97,6 +134,11 @@ function createValuesArray (paths) {
 }
 
 // creates an array with all start nodes that are in multiple paths
+/**
+ *
+ * @param {Array} paths array with paths
+ * @returns {Array} array with node ids that overlap on paths
+ */
 function createOverlapArray (paths) {
   const overlap = []
 
@@ -114,7 +156,11 @@ function createOverlapArray (paths) {
 
   return overlap
 }
-
+/**
+ *
+ * @param {Array} array array with values
+ * @returns {boolean} true if array contains only numbers
+ */
 function containsOnlyNumbers (array) {
   for (let i = 0; i < array.length; i++) {
     if (isNaN(array[i])) {
@@ -123,7 +169,9 @@ function containsOnlyNumbers (array) {
   }
   return true
 }
-
+/**
+ * @function updatePositions updates the positions of the nodes in the graph (redraw)
+ */
 function updatePositions () {
   this.nodes.forEach((node) => {
     // setting the current position is necessary to prevent snap-back to initial position
@@ -135,7 +183,11 @@ function updatePositions () {
     this.nodes.update(node)
   })
 }
-
+/**
+ *
+ * @param {string} node visjs node id
+ * @returns {boolean} true if node is last in path
+ */
 function isNodeLastInPath (node) {
   const edges = this.edges.get()
 
@@ -149,6 +201,11 @@ function isNodeLastInPath (node) {
 }
 
 // checks if the given node id exists in the current graph
+/**
+ *
+ * @param {string} nodeId visjs node id
+ * @returns {boolean} true if node exists
+ */
 function itemExists (nodeId) {
   if (this.nodes.get(nodeId)) {
     return true
@@ -157,6 +214,11 @@ function itemExists (nodeId) {
   return false
 }
 // checks if the given node is open/expanded
+/**
+ *
+ * @param {string} nodeId visjs node id
+ * @returns {boolean} true if node is open
+ */
 function isNodeOpen (nodeId) {
   const edges = this.edges.get()
 
@@ -170,6 +232,12 @@ function isNodeOpen (nodeId) {
 }
 
 // Removes the given value from the given array
+/**
+ *
+ * @param {Array} arr array with values
+ * @param {string} value value to remove
+ * @returns {Array} array with values removed
+ */
 function removeItem (arr, value) {
   const index = arr.indexOf(value)
   if (index > -1) {

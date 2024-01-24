@@ -2,7 +2,11 @@ const $ = require('jquery')
 const GDHelper = require('../GraphDrawer/GraphDrawerHelper.js')
 const GDColoring = require('../GraphDrawer/GraphDrawerColoring.js')
 const utils = require('../utils.js')
-
+/**
+ *
+ * @param {string} nodeID visjs node id
+ * @returns
+ */
 function multipleEdgesToSameNode (nodeID) {
   const edges = this.edges.get()
   let count = 0
@@ -21,6 +25,13 @@ function multipleEdgesToSameNode (nodeID) {
 }
 
 // Add Node popup
+/**
+ *
+ * @param {JSON} data visjs object
+ * @param {Function} cancelAction function to cancel the action
+ * @param {Function} callback visjs callback function
+ * @param {JSON} mainObject GraphTool object
+ */
 function editNode (data, cancelAction, callback, mainObject) {
   let newNodeActive = true
   document.getElementById('node_checkbox').addEventListener('click', function () {
@@ -58,6 +69,12 @@ function editNode (data, cancelAction, callback, mainObject) {
 }
 
 // addEdge popup
+/**
+ *
+ * @param {JSON} data visjs object
+ * @param {Function} callback visjs callback function
+ * @param {JSON} newThis GraphTool object
+ */
 function editEdgeWithoutDrag (data, callback, newThis) {
   let newEdgeActive = true
   // filling in the popup DOM elements
@@ -88,7 +105,11 @@ function editEdgeWithoutDrag (data, callback, newThis) {
   })
   // document.getElementById("edge-popUp").style.display = "block";
 }
-
+/**
+ *
+ * @param {JSON} data visjs object
+ * @param {Function} callback visjs callback function
+ */
 function saveEdgeData (data, callback) {
   data.label = document.getElementById('edge-label').value
   document.getElementById('edge-label').value = ''
@@ -122,7 +143,12 @@ function saveEdgeData (data, callback) {
   this.options.manipulation.initiallyActive = !this.options.manipulation.initiallyActive
   this.network.setOptions(this.options)
 }
-
+/**
+ *
+ * @param {JSON} data visjs object
+ * @param {JSON} mainObject GraphTool object
+ * @returns
+ */
 function setEdgeColor (data, mainObject) {
   if (mainObject.drawer.colorObj[data.label] !== undefined) {
     data.group = data.label
@@ -137,7 +163,13 @@ function setEdgeColor (data, mainObject) {
 
   return data
 }
-
+/**
+ *
+ * @param {JSOn} data visjs object
+ * @param {JSON} mainObject GraphTool object
+ * @param {Array} combine array of context objects
+ * @returns {JSON} data visjs object with context and objectKey
+ */
 function createFullContextAndSetEdgeKey (data, mainObject, combine) {
   for (const key in mainObject.dataFile.jsonschema) {
     const context = GDHelper.getSchemaContextRecursive(mainObject.dataFile, key, [])
@@ -159,7 +191,12 @@ function createFullContextAndSetEdgeKey (data, mainObject, combine) {
   data.context = combine
   return data
 }
-
+/**
+ *
+ * @param {JSON} data visjs object
+ * @param {JSON} mainObject GraphTool object
+ * @returns {JSON} edited data object
+ */
 function addPropertyToJSON (data, mainObject) {
   // set edge id
   data.id = data.from + '=' + data.label + '=>' + data.to
@@ -326,13 +363,18 @@ function addPropertyToJSON (data, mainObject) {
 
   return data
 }
-
+/**
+ * @function clearEdgePopUp clears the edge popup
+ */
 function clearEdgePopUp () {
   document.getElementById('edge-saveButton').onclick = null
   document.getElementById('edge-cancelButton').onclick = null
   document.getElementById('edge-popUp').style.display = 'none'
 }
-
+/**
+ *
+ * @param {Function} callback visjs callback function
+ */
 function cancelEdgeEdit (callback) {
   clearEdgePopUp()
   callback(null)
@@ -340,7 +382,9 @@ function cancelEdgeEdit (callback) {
   this.options.manipulation.initiallyActive = !this.options.manipulation.initiallyActive
   this.network.setOptions(this.options)
 }
-
+/**
+ * @function initPopUpHTML creates the HTML for the manipulation popups
+ */
 function initPopUpHTML () {
   // HTML for the manipulation popups
   const editHtml = '' +
@@ -389,7 +433,9 @@ function initPopUpHTML () {
   editHtmlDiv.innerHTML = editHtml
   document.body.appendChild(editHtmlDiv)
 }
-
+/**
+ * @function clearNodePopUp clears the node popup
+ */
 function clearNodePopUp () {
   document.getElementById('node-saveButton').onclick = null
   document.getElementById('node-cancelButton').onclick = null
@@ -401,7 +447,11 @@ function clearNodePopUp () {
     this.network.setOptions(this.options)
   }
 }
-
+/**
+ *
+ * @param {JSON} data visjs object
+ * @param {Function} callback visjs callback function
+ */
 function saveNodeData (data, callback) {
   data = addItemToJSON(data, this)
 
@@ -416,7 +466,12 @@ function saveNodeData (data, callback) {
 
   //  this.network.addEdgeMode();
 }
-
+/**
+ *
+ * @param {JSON} data visjs object
+ * @param {JSOn} mainObject GraphTool object
+ * @returns {JSON} data visjs object with added properties
+ */
 function addItemToJSON (data, mainObject) {
   data.label = document.getElementById('node-label').value
   data.hidden = false
@@ -441,6 +496,10 @@ function addItemToJSON (data, mainObject) {
 }
 
 // function to make the manipulation popups draggable
+/**
+ *
+ * @param {JSON} elmnt object with id of the element to be dragged
+ */
 function dragElement (elmnt) {
   let pos1 = 0
   let pos2 = 0
@@ -455,6 +514,10 @@ function dragElement (elmnt) {
     elmnt.onmousedown = dragMouseDown
   }
 
+  /**
+   *
+   * @param {*} e event
+   */
   function dragMouseDown (e) {
     e = e || window.event
     e.preventDefault()
@@ -466,6 +529,10 @@ function dragElement (elmnt) {
     document.onmousemove = elementDrag
   }
 
+  /**
+   *
+   * @param {*} e event
+   */
   function elementDrag (e) {
     e = e || window.event
     e.preventDefault()
@@ -479,13 +546,19 @@ function dragElement (elmnt) {
     elmnt.style.left = (elmnt.offsetLeft - pos1) + 'px'
   }
 
+  /**
+   * @function closeDragElement stop moving when mouse button is released
+   */
   function closeDragElement () {
     // stop moving when mouse button is released:
     document.onmouseup = null
     document.onmousemove = null
   }
 }
-
+/**
+ *
+ * @function setManipulationOptions sets the manipulation options for visjs
+ */
 function setManipulationOptions (data) {
   this.options.manipulation.deleteNode = function (data, callback) {
     data.edges.forEach((edge) => {
@@ -548,7 +621,11 @@ function setManipulationOptions (data) {
     // this.createLegend()
   }.bind(this)
 }
-
+/**
+ *
+ * @param {JSON} data visjs object
+ * @param {Function} callback visjs callback function
+ */
 function deleteSelectedNode (data, callback) {
   this.deleteNodesChildren(data.nodes[0])
   this.nodes.remove(data.nodes[0])
@@ -577,7 +654,10 @@ function deleteSelectedNode (data, callback) {
   // delete editNodes["" + data.nodes[0]];
   // // create_link();
 }
-
+/**
+ *
+ * @param {JSON} data visjs object
+ */
 function deleteInJson (data, obj) {
   for (let i = 0; i < data.edges.length; i++) {
     let finalPlace = this.dataFile

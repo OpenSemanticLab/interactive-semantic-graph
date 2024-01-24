@@ -5,6 +5,13 @@ const GDCallback = require('./GraphDrawerCallback.js')
 const GDAlternative = require('./GraphDrawerAlternative.js')
 const GDColoring = require('./GraphDrawerColoring.js')
 
+/**
+ * @class GraphDrawer
+ * @classdesc This class class is used to recursive generate nodes and edges for the graph.
+ * @param {JSON} config class config
+ * @param {JSON} args Recursion config(keys of args: file, lastId, item, relPath, oldContext, lastDepth, givenDepth, mode)
+ */
+
 class GraphDrawer {
   constructor (config, args) {
     if ((config || args) === undefined) {
@@ -91,11 +98,23 @@ class GraphDrawer {
     this.createGraphNodesEdges(this.createArgs)
   }
 
+  /**
+   * @function BindToClass
+   * @description This function binds all functions of a file to the class object.
+   * @param {JSON} functionsObject Object with functions
+   * @param {JSON} thisClass class object
+  */
+
   BindToClass (functionsObject, thisClass) {
     for (const [functionKey, functionValue] of Object.entries(functionsObject)) {
       thisClass[functionKey] = functionValue.bind(thisClass)
     }
   }
+
+  /**
+   *
+   * @param {JSON} args Recursion config(keys of args: file, lastId, item, relPath, oldContext, lastDepth, givenDepth, mode)
+   */
 
   createGraphNodesEdges (args) {
     // keys of args: file, lastId, item, relPath, oldContext, lastDepth, givenDepth, mode

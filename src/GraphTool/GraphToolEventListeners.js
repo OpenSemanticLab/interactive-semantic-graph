@@ -1,10 +1,16 @@
+/**
+ *
+ * @param {*} event keyup event
+ */
 function keyUpEvent (event) {
   const index = this.pressed_keys.indexOf(event.key)
   if (index > -1) { // only splice array when item is found
     this.pressed_keys.splice(index, 1) // 2nd parameter means remove one item only
   }
 }
-
+/**
+ * @function addKeyEventListeners adds keyup and keydown event listeners to the document
+ */
 function addKeyEventListeners () {
   document.addEventListener('keyup', (event) => {
     this.keyUpEvent(event)
@@ -31,7 +37,10 @@ function addKeyEventListeners () {
     }
   }, false)
 }
-
+/**
+ *
+ * @param {*} container graph container
+ */
 function addContainerEventListeners (container) {
   container.addEventListener('dragenter', function (e) {
     e.preventDefault()

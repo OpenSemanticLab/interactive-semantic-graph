@@ -81,10 +81,10 @@ let new_json = {"jsonschema": {
   //     "label": [{"text": "Max Mustermann", "lang": "en"}],
   //     "some_property": "Item:MyOtherItem"
   // },
-  // "Property:HasMember": {
-  //     "type": ["Category:Property"],
-  //     "label": [{"text": "Has Member", "lang": "en"}]
-  // },
+  "Property:HasMember": {
+      "type": ["Category:Property"],
+      "label": [{"text": "Has Member", "lang": "en"}]
+  },
   // "Item:MyOtherItem": {
   //   "type": ["Category:Item"],
   //   "label": [{"text": "My Other", "lang": "en"}],

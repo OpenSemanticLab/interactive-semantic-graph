@@ -1,3 +1,8 @@
+/**
+ *
+ * @param {Array} labelArray
+ * @returns {string} label in correct language
+ */
 function getLabelFromLabelArray (labelArray) {
   let label
   for (const key in labelArray) {
@@ -7,6 +12,12 @@ function getLabelFromLabelArray (labelArray) {
     }
   }
 }
+
+/**
+ *
+ * @param {Array} pathArray Array of path elements
+ * @returns {string} id of the item
+ */
 
 function getIdFromPathArray (pathArray) {
   let idString
@@ -21,6 +32,13 @@ function getIdFromPathArray (pathArray) {
 }
 
 // Creates Array of arrays Array of all contexts
+/**
+ *
+ * @param {JSON} file Main file with JSON data
+ * @param {JSON} schema Schema of the item
+ * @param {Array} fullContext empty array
+ * @returns {Array} Array of item context
+ */
 function getSchemaContextRecursive (file, schema, fullContext = []) {
   // fullContext = fullContext
 
@@ -44,6 +62,11 @@ function getSchemaContextRecursive (file, schema, fullContext = []) {
   return fullContext
 }
 
+/**
+ *
+ * @param {Array} pathArray Array of path elements
+ * @returns {string} current json key
+ */
 function getCurrentJSONKey (pathArray) {
   let jsonKey
 
@@ -56,6 +79,12 @@ function getCurrentJSONKey (pathArray) {
   return jsonKey
 }
 
+/**
+ *
+ * @param {JSON} context Context of the item
+ * @param {string} key Key of the item
+ * @returns {string} label of the item
+ */
 function getLabelFromContext (context, key) {
   // get property string of shape: Property:PropertyLabel
   let propertyFullName = key
@@ -75,10 +104,20 @@ function getLabelFromContext (context, key) {
   return (propertyFullName)
 }
 
+/**
+ *
+ * @param {JSON} file Main file with JSON data
+ * @returns {JSON} start item
+ */
 function getStartItem (file) {
   return (this.rootItem)
 }
 
+/**
+ *
+ * @param {string} item Item name
+ * @returns {Array} path array of the item
+ */
 function getItemPathArray (item) {
   for (const key in this.file.jsondata) {
     if (key === item) {
@@ -88,6 +127,12 @@ function getItemPathArray (item) {
 }
 
 // Creates a context object out of the multidimensional array created by the recursive context function
+/**
+ *
+ * @param {JSON} file Main file with JSON data
+ * @param {string} item Item name
+ * @returns {JSON} context of the item
+ */
 function getItemContextDefault (file, item) {
   const itemSchema = this.file.jsondata[item].type[0]
   const contextArrayOfObjects = this.getSchemaContextRecursive(file, itemSchema)
@@ -112,6 +157,11 @@ function getItemContextDefault (file, item) {
   }
 }
 
+/**
+ *
+ * @param {string} property Property name
+ * @returns {number} angle of the property
+ */
 function getAngleFromProperty (property) {
   const hsla = this.colorObj[property]
   let angle = hsla.split(',')[0].split('(')[1]
@@ -119,6 +169,12 @@ function getAngleFromProperty (property) {
   return angle
 }
 
+/**
+ *
+ * @param {string} item Item name
+ * @param {string} relativePath  empty string
+ * @returns {string} label of the item
+ */
 function getLabelFromItem (item, relativePath = '') {
   // check language for root node and set label according to this.lang
 
@@ -130,6 +186,11 @@ function getLabelFromItem (item, relativePath = '') {
   return ('Itemlabel, ' + label)
 }
 
+/**
+ *
+ * @param {Array} pathArr Array of path elements
+ * @returns {Array} value of the item in the file
+ */
 function getValueFromPathArray (pathArr) {
   let object = this.file
 
@@ -140,6 +201,11 @@ function getValueFromPathArray (pathArr) {
   return (object)
 }
 
+/**
+ *
+ * @param {Array} pathArr Array of path elements
+ * @returns {string} label of the node
+ */
 function getNodeLabelFromPathArray (pathArr) {
   const value = this.getValueFromPathArray(pathArr)
 
@@ -165,6 +231,12 @@ function getNodeLabelFromPathArray (pathArr) {
   return (pathArr[pathArr.length - 2])// + "[" + pathArr[pathArr.length - 1] + "]")
 }
 
+/**
+ *
+ * @param {JSON} file Main file with JSON data
+ * @param {string} objectName Name of the object
+ * @param {string} separator Separator
+ */
 function loadItemToFile (file, objectName, separator) {
   // if (this.handleCallbacks({ id: 'onBeforeLoadItemToFile', params: { graph: this, file, objectName } })) {
   let item
@@ -180,6 +252,11 @@ function loadItemToFile (file, objectName, separator) {
   // }
 }
 
+/**
+ *
+ * @param {string} itemName Name of the item
+ * @returns {JSON} extended main file with JSON data
+ */
 function getItem (itemName) {
   // if (this.handleCallbacks({ id: 'onBeforeGetItem', params: { graph: this, itemName } })) {
   const fullFile = {

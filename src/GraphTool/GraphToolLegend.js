@@ -1,4 +1,9 @@
 // repeats the invisibility of properties that are set invisible in the legend
+/**
+ *
+ * @param {JSON} options visjs options
+ * @returns {JSON} object with repeat property
+ */
 function repeatInvisibility (options) {
   let objectToRepeat = {}
   for (const [key, value] of Object.entries(options.groups)) {
@@ -36,6 +41,10 @@ function repeatInvisibility (options) {
 }
 
 // sets the color of the legend white if the group is set to hidden = true
+/**
+ *
+ * @param {Array} invisibleGroups array of invisible groups
+ */
 function setInvisibleLegendGroupsWhite (invisibleGroups) {
   const legend = document.getElementById(this.prefix + 'legendContainer')
   const children = Array.from(legend.children)
@@ -48,6 +57,9 @@ function setInvisibleLegendGroupsWhite (invisibleGroups) {
 }
 
 // resets nodes and edges visibility
+/**
+ * @function resetNodesAndEdgesVisibility resets nodes and edges visibility
+ */
 function resetNodesAndEdgesVisibility () {
   this.nodes.forEach((node) => {
     node.hidden = false
@@ -64,6 +76,9 @@ function resetNodesAndEdgesVisibility () {
 }
 
 // generates the legend for the graph
+/**
+ * @function createLegend generates the legend for the graph
+ */
 function createLegend () {
   if (this.handleCallbacks({ id: 'onBeforeCreateLegend', params: { graph: this } })) {
     let invisibleGroups = []
@@ -136,6 +151,12 @@ function createLegend () {
 }
 
 // function to set nodes and edges hidden when legend is clicked
+/**
+ *
+ * @param {string} nodeId visjs node id
+ * @param {string} rootNodeId visjs root node id
+ * @returns {boolean}
+ */
 function setNodeVisibilityByVisiblePath (nodeId, rootNodeId) {
   for (let i = 0; i < this.configFile.root_node_objects.length; i++) {
     if (nodeId === 'jsondata/' + this.configFile.root_node_objects[i].node_id) {
@@ -166,6 +187,11 @@ function setNodeVisibilityByVisiblePath (nodeId, rootNodeId) {
 }
 
 // turns clicked properties of the legend invisible or back to visible
+/**
+ *
+ * @param {*} e event
+ * @returns {JSON} object with visibility by visible path
+ */
 function legendFunctionality (e) {
   if (this.handleCallbacks({ id: 'onBeforeLegendFunctionality', params: { graph: this, e } })) {
     let legendGroup

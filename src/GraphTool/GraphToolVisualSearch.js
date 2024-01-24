@@ -1,3 +1,7 @@
+/**
+ *
+ * @param {*} container DOM element where the search UI is created
+ */
 function createSearchUI (container) {
   if (this.handleCallbacks({ id: 'onBeforeCreateSearchUI', params: { graph: this, container } })) {
     // create the container if not defined
@@ -79,6 +83,9 @@ function createSearchUI (container) {
 }
 
 // saves colors of nodes and edges before visual search
+/**
+ * @function saveGraphColorsVisualSearch saves the colors of nodes and edges before visual search
+ */
 function saveGraphColorsVisualSearch () {
   for (let i = 0; i < this.nodes.get().length; i++) {
     const node = this.nodes.get()[i]
@@ -98,6 +105,9 @@ function saveGraphColorsVisualSearch () {
 }
 
 // loads colors of nodes and edges after visual search
+/**
+ * @function loadGraphColorsVisualSearch loads the colors of nodes and edges after visual search
+ */
 function loadGraphColorsVisualSearch () {
   for (let i = 0; i < this.nodes.get().length; i++) {
     const node = this.nodes.get()[i]
@@ -121,6 +131,11 @@ function loadGraphColorsVisualSearch () {
 }
 
 // visual search for nodes and edges
+/**
+ *
+ * @param {string} searchString search value
+ * @returns {array} searchExpands array of expanded nodes
+ */
 function searchNodes (searchString) {
   // this.updatePositions()
 

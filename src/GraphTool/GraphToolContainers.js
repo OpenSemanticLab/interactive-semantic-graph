@@ -1,3 +1,7 @@
+/**
+ *
+ * @param {string} divId id of the div where the graph should be placed
+ */
 function initGraphContainers (divId) {
   if (this.handleCallbacks({ id: 'onBeforeInitGraphContainers', params: { graph: this, divId } })) {
     // create all necessary elements/divs and set them up
@@ -184,6 +188,11 @@ function initGraphContainers (divId) {
 }
 
 // creates the color by value ui
+/**
+ *
+ * @param {JSON} graph visjs graph object
+ * @param {*} container DOM element where the color picker should be placed
+ */
 function colorPicker (graph, container) {
   const colorPickerArgs = { graph, container }
   if (this.handleCallbacks({ id: 'onBeforeColorPicker', params: { graph: this, colorPickerArgs } })) {
@@ -310,6 +319,10 @@ function colorPicker (graph, container) {
   }
 }
 
+/**
+ *
+ * @param {*} container DOM element where the deep search should be placed
+ */
 function initDeepSearch (container) {
   // create container if not defined
   if (!container) container = document.createElement('div')

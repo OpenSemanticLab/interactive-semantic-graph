@@ -1,4 +1,11 @@
 // gets all nodes that are reachable from the given node ID
+/**
+ *
+ * @param {string} nodeId visjs node id
+ * @param {Array} excludeIds array of visjs node ids to exclude or empty array
+ * @param {Array} reachableNodes array of visjs node ids that are reachable or empty array
+ * @returns {Array} array of visjs node ids that are reachable
+ */
 function getAllReachableNodesTo (nodeId, excludeIds, reachableNodes) {
   if (reachableNodes.includes(nodeId) || excludeIds.includes(nodeId)) {
     return []
@@ -15,6 +22,11 @@ function getAllReachableNodesTo (nodeId, excludeIds, reachableNodes) {
 }
 
 // deletes the reachable nodes from the given node ID
+/**
+ *
+ * @param {string} nodeId visjs node id
+ * @returns {Array} array of visjs node ids that were deleted
+ */
 function deleteNodesChildren (nodeId, deleteEdge, clickedNode) {
   const excludedIds = []
   if (deleteEdge === true) { // eslint-disable-line no-empty
@@ -53,6 +65,10 @@ function deleteNodesChildren (nodeId, deleteEdge, clickedNode) {
   return nodesToDelete
 }
 
+/**
+ *
+ * @param {string} group visjs manipulation group name
+ */
 function deleteOptionsGroup (group) {
   let noNodesInGroup = true
 
@@ -68,6 +84,10 @@ function deleteOptionsGroup (group) {
 }
 
 // deletes edges that are connected to the given node ID
+/**
+ *
+ * @param {string} nodeID visjs node id
+ */
 function deleteEdges (nodeID) {
   const fromEdges = this.edges.get({
     filter: function (item) {
@@ -103,6 +123,12 @@ function deleteEdges (nodeID) {
 // }
 
 // Returns all paths between startNode and endNode (main function)
+/**
+ *
+ * @param {string} startNode visjs node id
+ * @param {string} endNode visjs node id
+ * @returns {Array} array of paths
+ */
 function findAllPaths (startNode, endNode) {
   const visitedNodes = []
   const currentPath = []
@@ -112,6 +138,15 @@ function findAllPaths (startNode, endNode) {
 }
 
 // Algorithm to search for all paths between two nodes
+/**
+ *
+ * @param {string} start visjs node id
+ * @param {string} end visjs node id
+ * @param {Array} currentPath empty array
+ * @param {Array} allPaths empty array
+ * @param {Array} visitedNodes empty array
+ * @returns
+ */
 function dfs (start, end, currentPath, allPaths, visitedNodes) {
   if (visitedNodes.includes(start)) return
   visitedNodes.push(start)
@@ -133,6 +168,11 @@ function dfs (start, end, currentPath, allPaths, visitedNodes) {
 }
 
 // Gets Path array with nodes, returns all possible edge paths
+/**
+ *
+ * @param {Array} path array of paths
+ * @returns {Array} array of paths
+ */
 function getEdgeLabelStringsForPath (path) {
   const allEdgePaths = this.getEdgePathsForPath(path)
   const allStrings = new Array(allEdgePaths.length)
@@ -158,6 +198,11 @@ function getEdgeLabelStringsForPath (path) {
 }
 
 // Gets Path arrays with nodes, returns all possible edge paths (main function)
+/**
+ *
+ * @param {Array} paths array of paths
+ * @returns {Array} array of paths
+ */
 function getAllStringsForAllPaths (paths) {
   const arrayOfAllStrings = []
   for (let i = 0; i < paths.length; i++) {
@@ -169,6 +214,11 @@ function getAllStringsForAllPaths (paths) {
 }
 
 // Gets Path array with nodes, returns Cartesian Product  of edges
+/**
+ *
+ * @param {Array} path array of paths
+ * @returns {Array} array of paths
+ */
 function getEdgePathsForPath (path) {
   const arraysOfEdgesForNodeInPath = []
   for (let i = 1; i < path.length; i++) {
@@ -182,6 +232,11 @@ function getEdgePathsForPath (path) {
 }
 
 // Given Label is reversed with "-" or "-" is removed
+/**
+ *
+ * @param {string} label
+ * @returns {string} reversed label
+ */
 function reverseLabel (label) {
   if (label[0] == '-') { // eslint-disable-line eqeqeq
     return label.substring(1)
@@ -191,6 +246,12 @@ function reverseLabel (label) {
 }
 
 // The function getAllEdgesBetween() returns all edges between two nodes
+/**
+ *
+ * @param {string} node1 visjs node id
+ * @param {string} node2 visjs node id
+ * @returns {Array} array of edges
+ */
 function getAllEdgesBetween (node1, node2) {
   return this.edges.get().filter(function (edge) {
     return (edge.from == node1 && edge.to == node2) || (edge.from == node2 && edge.to == node1) // eslint-disable-line eqeqeq
@@ -198,6 +259,11 @@ function getAllEdgesBetween (node1, node2) {
 }
 
 // Cartesian Product of arrays
+/**
+ *
+ * @param {Array} arr array of arrays
+ * @returns {Array} cartesian product of arrays
+ */
 function cartesianProduct (arr) {
   return arr.reduce(function (a, b) {
     return a.map(function (x) {
@@ -209,13 +275,22 @@ function cartesianProduct (arr) {
 }
 
 // Cartesian Product of given arrays
+/**
+ *
+ * @param {Array} arrays array of arrays
+ * @returns {Array} cartesian product of arrays
+ */
 function getAllCombs (arrays) {
   const allCombs = this.cartesianProduct(arrays)
   return allCombs
 }
 
 // Gets all start nodes and end nodes for the given path
-
+/**
+ *
+ * @param {Array} path array of paths
+ * @returns {JSON} JSON object with start and end nodes
+ */
 function getStartAndEndNodesForPath (path) {
   const startNodes = []
   const endNodes = []
@@ -247,6 +322,13 @@ function getStartAndEndNodesForPath (path) {
   return { startNodes, endNodes }
 }
 // Compares the given path with the current paths and outputs the path nodes if they are equal
+/**
+ *
+ * @param {Array} path array with a path
+ * @param {Array} currentPaths array of paths
+ * @param {Array} pathNodes array of nodes
+ * @returns {Array} array of nodes if the paths are equal, false otherwise
+ */
 function comparePaths (path, currentPaths, pathNodes) {
   for (let i = 0; i < currentPaths.length; i++) {
     if (path.join('.') == currentPaths[i]) { // eslint-disable-line eqeqeq

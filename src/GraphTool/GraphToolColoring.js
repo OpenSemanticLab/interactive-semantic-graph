@@ -2,6 +2,9 @@ const chroma = require('chroma-js')
 
 // recolors all nodes and edges
 
+/**
+ * @function recolorByProperty - Recolors all nodes and edges by saved property color
+ */
 function recolorByProperty () {
   if (this.handleCallbacks({ id: 'onBeforeRecolorByProperty', params: { graph: this } })) {
     // this.updatePositions()
@@ -31,6 +34,13 @@ function recolorByProperty () {
 // colorbyvalue
 
 // gets the edge by the given node ids and label
+/**
+ *
+ * @param {string} fromNodeID visjs node id
+ * @param {string} toNodeID visjs node id
+ * @param {string} label edge label
+ * @returns {JSON} visjs edge
+ */
 function getEdgeByIDsAndLabel (fromNodeID, toNodeID, label) {
   const edges = this.edges.get()
 
@@ -42,6 +52,12 @@ function getEdgeByIDsAndLabel (fromNodeID, toNodeID, label) {
 }
 
 // Builds the full path (nodes and edges) out of the given path of nodes
+/**
+ *
+ * @param {Array} path array with label
+ * @param {Array} currentNodePath array with visjs node ids
+ * @returns {Array} array with visjs nodes and edges
+ */
 function buildFullPath (path, currentNodePath) {
   const fullPath = []
 
@@ -59,6 +75,12 @@ function buildFullPath (path, currentNodePath) {
 }
 
 // removes duplicates from multidimensional array
+/**
+ *
+ * @param {Array} arr array
+ * @param {Array} multidimensionalArr multidimensional array
+ * @returns {boolean} true if array exists in multidimensional array
+ */
 function arrayExistsInMultidimensionalArray (arr, multidimensionalArr) {
   return multidimensionalArr.some((element) => {
     return JSON.stringify(element) === JSON.stringify(arr)
@@ -66,6 +88,13 @@ function arrayExistsInMultidimensionalArray (arr, multidimensionalArr) {
 }
 
 // Gets all paths between start and end nodes, that match the given path
+/**
+ *
+ * @param {Array} path array with path
+ * @param {Array} startNodes array with visjs node ids
+ * @param {Array} endNodes array with visjs node ids
+ * @returns {Array} array with paths
+ */
 function getRightPathsBetweenNodes (path, startNodes, endNodes) {
   const rightPaths = []
 
@@ -99,6 +128,12 @@ function getRightPathsBetweenNodes (path, startNodes, endNodes) {
   return rightPaths
 }
 
+/**
+ *
+ * @param {Array} nodes array with visjs nodes
+ * @param {Array} edges array with visjs edges
+ */
+
 function setGraphColorsBlackAndWhite (nodes, edges) {
   // sets all nodes to white
   for (let i = 0; i < nodes.length; i++) {
@@ -114,6 +149,12 @@ function setGraphColorsBlackAndWhite (nodes, edges) {
 }
 
 // colors the paths with the given color array
+/**
+ *
+ * @param {Array} paths array with paths
+ * @param {Array} colorArray array with colors
+ * @param {Array} valueArray array with values
+ */
 function colorPaths (paths, colorArray, valueArray) {
   // creates an array with all start nodes that are in multiple paths
   const overlap = this.createOverlapArray(paths)
@@ -155,6 +196,13 @@ function colorPaths (paths, colorArray, valueArray) {
 }
 
 // creates the color array for the color gradient
+/**
+ *
+ * @param {string} startColor color
+ * @param {string} endColor color
+ * @param {Array} valueArray array with values
+ * @returns
+ */
 function createColorArray (startColor, endColor, valueArray) {
   if (this.containsOnlyNumbers(valueArray)) {
     return chroma.scale([startColor, endColor]).mode('hsl').colors(valueArray.length)
@@ -169,6 +217,15 @@ function createColorArray (startColor, endColor, valueArray) {
 }
 
 // Colors all nodes and edges connected by the given path. The colors are a gradient between the given colors.
+
+/**
+ *
+ * @param {Array} path array with path
+ * @param {Array} nodes array with visjs nodes
+ * @param {Array} edges array with visjs edges
+ * @param {Array} startColor color
+ * @param {Array} endColor color
+ */
 function colorByValue (path, nodes, edges, startColor, endColor) {
   const colorByValueArgs = { path, nodes, edges, startColor, endColor }
   if (this.handleCallbacks({ id: 'onBeforeColorByValue', params: { graph: this, colorByValueArgs } })) {

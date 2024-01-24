@@ -5,6 +5,13 @@ const vis = require('vis-network/standalone/esm/index.js')
 const GD = require('../GraphDrawer/GraphDrawer.js')
 const GT = require('../GraphTool/GraphTool.js')
 
+/**
+ * @class Graph
+ * @classdesc This class is used to create a graph.
+ * @param {JSON} file Main file with JSON data
+ * @param {JSON} configFile JSON config file
+ */
+
 class Graph {
   constructor (file, configFile, onlyData) {
     if ((file || configFile) === undefined) {
@@ -21,6 +28,12 @@ class Graph {
     this.drawer // eslint-disable-line no-unused-expressions
   }
 
+  /**
+   *
+   * @param {string} node visjs node id
+   * @returns {boolean} true if node is expanded, false if not
+   */
+
   isNodeLastInPath (node) {
     const edges = this.graphtool.edges.get()
 
@@ -33,6 +46,10 @@ class Graph {
     return true
   }
 
+  /**
+   * @param {JSON} file Main file with JSON data
+   * @param {JSON} configFile JSON config file
+   */
   createGraphByConfig (file, configFile, onlyData) {
     // "positioning_function_object" / maybe given and/or will be saved in the config
 

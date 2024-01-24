@@ -1,4 +1,8 @@
 // loads or saves the graph to a .txt file
+/**
+ *
+ * @param {*} element DOM element
+ */
 function loadFunctionality (element) {
   // Todo: replace global ids with prefixed ids or class members to allow multiple instances on one page
   element.setAttribute('id', this.prefix + 'load')
@@ -6,7 +10,10 @@ function loadFunctionality (element) {
     this.createLoadStateFunctionality()
   })
 }
-
+/**
+ *
+ * @param {*} element DOM element
+ */
 function saveFunctionality (element) {
   // Todo: replace global ids with prefixed ids or class members to allow multiple instances on one page
   element.setAttribute('id', this.prefix + 'save')
@@ -14,7 +21,10 @@ function saveFunctionality (element) {
     this.createSaveStateFunctionality()
   })
 }
-
+/**
+ *
+ * @returns {Array} objectKeys
+ */
 function createSaveStateFunctionality () {
   if (this.handleCallbacks({ id: 'onBeforeCreateSaveStateFunctionality', params: { graph: this } })) {
     const coloringDiv = document.getElementById(this.prefix + 'myDropdown')
@@ -104,6 +114,9 @@ function createSaveStateFunctionality () {
   }
 }
 
+/**
+ * @function createLoadStateFunctionality - creates a file input element and triggers the loadState function
+ */
 function createLoadStateFunctionality () {
   if (this.handleCallbacks({ id: 'onBeforeCreateLoadStateFunctionality', params: { graph: this } })) {
     const input = document.createElement('input')
@@ -116,7 +129,10 @@ function createLoadStateFunctionality () {
     input.click()
   }
 }
-
+/**
+ *
+ * @param {JSON} input JSON object with file data
+ */
 function loadStateDefault (input) {
   document.getElementById(this.graphContainerId).innerHTML = ''
 

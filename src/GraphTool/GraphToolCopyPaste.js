@@ -1,5 +1,8 @@
 const utils = require('../utils.js')
 
+/**
+ * @function copyNodesEdges - Copies the selected nodes and edges
+ */
 function copyNodesEdges () {
   if (this.handleCallbacks({ id: 'onBeforeCopyNodesEdges', params: { graph: this } })) {
     this.copiedNodes = this.network.getSelectedNodes()
@@ -8,6 +11,13 @@ function copyNodesEdges () {
 }
 
 // creates an ID for a new node that is to be created by copying an existing one
+/**
+ *
+ * @param {JSON} node visjs node that is to be copied
+ * @param {JSON} receivingNode visjs node that is to receive the copied node
+ * @param {Array} copiedEdges array of copied edges
+ * @returns {string} id of the new node
+ */
 function createIDForNewNode (node, receivingNode, copiedEdges) {
   // id when pasted into empty space
   if (receivingNode === false) {
@@ -85,6 +95,13 @@ function createIDForNewNode (node, receivingNode, copiedEdges) {
   return id
 }
 
+/**
+ *
+ * @param {Array} copiedNodes array of copied nodes ids
+ * @param {Arrary} copiedEdges array of copied edges ids
+ * @param {JSON} receivingNode visjs node that is to receive the copied node
+ * @returns
+ */
 function createNewNodesFromCopiedNodes (copiedNodes, copiedEdges, receivingNode) {
   const node = this.nodes.get(copiedNodes[0])
 
@@ -101,7 +118,11 @@ function createNewNodesFromCopiedNodes (copiedNodes, copiedEdges, receivingNode)
 
   return newNode
 }
-
+/**
+ *
+ * @param {JSON} newNode visjs node
+ * @returns {JSON} visjs edge
+ */
 function createNewEdgeForNewNode (newNode) {
   const newEdge = {
     id: '' + this.network.getSelectedNodes()[0] + '=' + this.edges.get(this.copiedEdges[0]).label + '=>' + newNode.id,
@@ -115,7 +136,11 @@ function createNewEdgeForNewNode (newNode) {
 
   return newEdge
 }
-
+/**
+ *
+ * @param {Array} copiedNodes array of copied nodes ids
+ * @param {Array} copiedEdges array of copied edges ids
+ */
 function pasteNodeEdges (copiedNodes, copiedEdges) {
   if (this.handleCallbacks({ id: 'onBeforePasteNodesEdges', params: { graph: this, copiedNodes, copiedEdges } })) {
     const xy = this.network.DOMtoCanvas({
@@ -192,6 +217,11 @@ function pasteNodeEdges (copiedNodes, copiedEdges) {
 }
 
 // adds copied nodes to the json file
+/**
+ *
+ * @param {JSON} newNode visjs node
+ * @param {JSON} receivingNode visjs node that is to receive the copied node
+ */
 function addToJSON (newNode, newEdge, receivingNode) {
   // finalPlace is the place where the new node will be added
   let finalPlace = this.drawer.file
@@ -238,6 +268,11 @@ function addToJSON (newNode, newEdge, receivingNode) {
 }
 
 // creates a copy of a given node
+/**
+ *
+ * @param {JSON} node visjs node
+ * @returns {JSON} copy of the visjs node
+ */
 function duplicateNode (node) {
   let newNode = {}
   if (Object.getOwnPropertyNames(node).includes('typeString')) {

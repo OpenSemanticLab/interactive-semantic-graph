@@ -18,6 +18,13 @@ const GTLegend = require('./GraphToolLegend.js')
 const GTLoadSave = require('./GraphToolLoadSave.js')
 const GTManipulation = require('./GraphToolManipulation.js')
 
+/**
+ * @class GraphTool
+ * @classdesc This class is used to create a graph into the given div while using visjs.
+ * @param {JSON} file Main file with JSON data
+ * @param {JSON} config JSON config for the graph
+ * @param {JSON} callbackConfig JSON config file for callbacks
+ */
 class GraphTool {
   static instanceCount = 0
 
@@ -185,14 +192,25 @@ class GraphTool {
     this.visibilityByVisiblePath = {}
 
     this.initPopUpHTML()
+    this.expandNodes = this.expandNodes.bind(this)
   }
 
+  /**
+   *
+   * @param {JSON} functionsObject  Object containing functions to bind to thisClass
+   * @param {JSON} thisClass Class to bind functions to
+   */
   BindToClass (functionsObject, thisClass) {
     for (const [functionKey, functionValue] of Object.entries(functionsObject)) {
       thisClass[functionKey] = functionValue.bind(thisClass)
     }
   }
 
+  /**
+ *
+ * @param {JSON} params params.id: id of the callback, params.params: params for the callback function
+ * @returns {boolean} true if all callbacks return true, false if not
+ */
   handleCallbacks (params) {
     let result = true
     if (!this.config.callbacks[params.id]) return true
@@ -235,7 +253,56 @@ class GraphTool {
   //         .filter( key => predicate(obj[key]) )
   //         .reduce( (res, key) => (res[key] = obj[key], res), {} );
 
+  isNodeToOpenWithContext (node) {
+    let openNodesCount = 0
+
+    this.edges.get().forEach((edge) => {
+      if (edge.from === node.id) {
+        openNodesCount += 1
+      }
+    })
+
+    let finalPlace = this.drawer.file
+
+    for (let i = 0; i < node.path.length; i++) {
+      finalPlace = finalPlace[node.path[i]]
+    }
+
+    if (typeof finalPlace === 'object' && finalPlace !== null) {
+      const _finalPlace = { ...finalPlace }
+
+      delete _finalPlace.type
+      delete _finalPlace.label
+
+      const numberOfKeys = Object.keys(_finalPlace).length
+
+      if (numberOfKeys === openNodesCount) {
+        return false
+      }
+      if (numberOfKeys > openNodesCount) {
+        return true
+      }
+    }
+
+    if (Array.isArray(finalPlace)) {
+      if (finalPlace.length > openNodesCount) {
+        return true
+      }
+      if (finalPlace.length === openNodesCount) {
+        return false
+      }
+    }
+
+    if ((typeof finalPlace === 'string') && (openNodesCount > 0)) {
+      return false
+    }
+  }
+
   // expands the object that is saved inside a node and on second doubleclick deletes nodes and edges that go out of the clicked node
+  /**
+   *
+   * @param {JSON} params params.nodes: array with visjs node id
+   */
   expandNodes (params) {
     if (!this.searchAlert()) {
       return
@@ -252,8 +319,25 @@ class GraphTool {
 
     if (params.nodes.length > 0) {
       const node = this.nodes.get(params.nodes[0])
+      let manuallyCreatedExits = false
 
-      if ('item' in node && (this.clicked[params.nodes[0]] === false || !('' + params.nodes[0] in this.clicked)) && (this.network.getConnectedNodes(params.nodes[0], 'to').length === 0)) {
+      this.network.getConnectedNodes(params.nodes[0]).forEach((nodeId) => {
+        if (this.nodes.get(nodeId).manuallyCreated) {
+          manuallyCreatedExits = this.isNodeToOpenWithContext(node)
+          if (manuallyCreatedExits === false) {
+            this.clicked[params.nodes[0]] = true
+          }
+        }
+      })
+
+      this.edges.get().forEach((edge) => {
+        if ((edge.from === params.nodes[0] || edge.to === params.nodes[0]) && edge.manuallyCreated) {
+          this.edges.remove(edge.id)
+        }
+      })
+
+      console.log(manuallyCreatedExits)
+      if ('item' in node && (this.clicked[params.nodes[0]] === false || !('' + params.nodes[0] in this.clicked)) && (this.network.getConnectedNodes(params.nodes[0], 'to').length === 0 || manuallyCreatedExits === true)) {
         // expand node
 
         const args = {

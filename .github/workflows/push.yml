@@ -20,7 +20,7 @@ jobs:
       repository_default_branch: ${{ steps.metadata.outputs.repository_default_branch }}
 
     steps:
-      - uses: actions/checkout@v3.2.0
+      - uses: actions/checkout@v3.5.3
 
       - id: metadata
         uses: ahmadnassri/action-metadata@v2.1.2
@@ -31,7 +31,7 @@ jobs:
   #   runs-on: ubuntu-latest
 
   #   steps:
-  #     - uses: actions/checkout@v3.2.0
+  #     - uses: actions/checkout@v3.5.3
 
   #     - uses: ahmadnassri/action-commit-lint@v2.0.9
   #       with:
@@ -43,9 +43,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3.2.0
+      - uses: actions/checkout@v3.5.3
 
-      - uses: oxsecurity/megalinter/flavors/javascript@v6.17.0
+      - uses: oxsecurity/megalinter/flavors/javascript@v7.1.0
         env:
           GITHUB_TOKEN: ${{ github.token }}
           MEGALINTER_CONFIG: .github/linters/.mega-linter.yml
@@ -66,9 +66,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3.2.0
+      - uses: actions/checkout@v3.5.3
 
-      - uses: actions/setup-node@v3.6.0
+      - uses: actions/setup-node@v3.7.0
         with:
           node-version: latest
 
@@ -83,7 +83,7 @@ jobs:
       matrix: ${{ steps.parse.outputs.matrix }}
 
     steps:
-      - uses: actions/checkout@v3.2.0
+      - uses: actions/checkout@v3.5.3
       - id: parse
         run: echo "matrix=$(jq -c . < .github/test-matrix.json)" >> "$GITHUB_OUTPUT"
 
@@ -102,11 +102,11 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-      - uses: actions/checkout@v3.2.0
+      - uses: actions/checkout@v3.5.3
         with:
           submodules: true
 
-      - uses: actions/setup-node@v3.6.0
+      - uses: actions/setup-node@v3.7.0
         with:
           registry-url: https://npm.pkg.github.com
           node-version: ${{ matrix.node-version }}
@@ -146,7 +146,7 @@ jobs:
       version-minor: ${{ steps.release.outputs.release-version-minor }}
 
     steps:
-      - uses: actions/checkout@v3.2.0
+      - uses: actions/checkout@v3.5.3
         with:
           submodules: true
 
@@ -154,7 +154,7 @@ jobs:
       - run: npm run build
 
       - id: release
-        uses: ahmadnassri/action-semantic-release@v2.2.0
+        uses: ahmadnassri/action-semantic-release@v2.2.3
         with:
           config: ${{ github.workspace }}/.semantic.json
         env:
@@ -171,11 +171,11 @@ jobs:
     if: ${{ needs.release.outputs.published == 'true' }}
 
     steps:
-      - uses: actions/checkout@v3.2.0
+      - uses: actions/checkout@v3.5.3
         with:
           submodules: true
 
-      - uses: actions/setup-node@v3.6.0
+      - uses: actions/setup-node@v3.7.0
         with:
           registry-url: https://npm.pkg.github.com
           node-version: latest

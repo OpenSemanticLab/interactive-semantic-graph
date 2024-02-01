@@ -2,6 +2,9 @@
 
 Interactive semantic graph tool based on vis.js
 
+JavaScript app that relies only on JSON-SCHEMA + JSON-LD which can be build from SMW / OpenSemanticLab but also from any other linked data source. We aim to provided "advanced" capabilities like collapse subgrahs, edit multiple entities in parallel, copy-past nodes or subgraphs, etc. Successor of the legancy [Extension:InteractiveSemanticGraph](https://github.com/OpenSemanticLab/mediawiki-extensions-InteractiveSemanticGraph)
+
+
 [![license][license-img]][license-url]
 [![release][release-img]][release-url]
 [![semantic][semantic-img]][semantic-url]
@@ -57,6 +60,15 @@ npx webpack
 ### Build
 ```bash
 npm run test
+```
+
+### ESLint
+```bash
+npx eslint file.js
+
+#or 
+
+npx eslint folder
 ```
 
 ## Local Automation

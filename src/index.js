@@ -1,70 +1,60 @@
-const $ = require("jquery")
-// const GD = require("./GraphDrawer.js");
-// const GT = require("./GraphTool.js");
-const Graph = require("./Graph/Graph.js");
+const $ = require('jquery')
+const Graph = require('./Graph/Graph.js')
+const GD = require('./GraphDrawer/GraphDrawer.js')
+const GT = require('./GraphTool/GraphTool.js')
 
-
-
-//let clicked = {};
+// let clicked = {};
 $(document).ready(function () {
 
+  // console.log(graphtool.getAllStringsForAllPaths(graphtool.findAllPaths("jsondata/Item:MyProject/budget/1/value","jsondata/Item:MyProject")))
 
-//console.log(graphtool.getAllStringsForAllPaths(graphtool.findAllPaths("jsondata/Item:MyProject/budget/1/value","jsondata/Item:MyProject")))
+  // let result = jsonpath.query(draw.file, '$..[?(@=="2000")]');
 
+  // function pathIsObjectInObject(paths) {
 
-//let result = jsonpath.query(draw.file, '$..[?(@=="2000")]');
+  //   for (let i = 0; i < paths.length; i++) {
 
-// function pathIsObjectInObject(paths) {
+  //     let path = paths[i].split(".");
 
-//   for (let i = 0; i < paths.length; i++) {
+  //     if (Array.isArray(data[path[1]][path[2]]) && typeof data[path[1]][path[2]][0] == 'object' && data[path[1]][path[2]][0] != null) {
 
-//     let path = paths[i].split(".");
+  //       let startId = 0;
 
-//     if (Array.isArray(data[path[1]][path[2]]) && typeof data[path[1]][path[2]][0] === 'object' && data[path[1]][path[2]][0] !== null) {
+  //       for (let i = 2; i < path.length; i += 2) {
 
-//       let startId = 0;
+  //         if (!(path[i + 1] == undefined)) {
+  //           const connectedNodeIds = graphtool.network.getConnectedNodes(startId, "to");
 
-//       for (let i = 2; i < path.length; i += 2) {
+  //           const connectedNodes = graphtool.nodes.get(connectedNodeIds);
 
-//         if (!(path[i + 1] == undefined)) {
-//           const connectedNodeIds = graphtool.network.getConnectedNodes(startId, "to");
+  //           const filteredNodes = connectedNodes.filter(node => node.label == path[i]);
 
-//           const connectedNodes = graphtool.nodes.get(connectedNodeIds);
+  //           const filteredNodeIds = filteredNodes.map(node => node.id);
 
-//           const filteredNodes = connectedNodes.filter(node => node.label === path[i]);
+  //           let params = {
+  //             nodes: [filteredNodeIds[path[i + 1]]]
+  //           }
 
-//           const filteredNodeIds = filteredNodes.map(node => node.id);
+  //           graphtool.expandNodes(params);
 
-//           let params = {
-//             nodes: [filteredNodeIds[path[i + 1]]]
-//           }
+  //           startId = filteredNodeIds[path[i + 1]];
 
-//           graphtool.expandNodes(params);
+  //         }
 
-//           startId = filteredNodeIds[path[i + 1]];
+  //       }
 
-//         }
+  //     } else {
 
-//       }
+  //     }
+  //   }
+  // }
 
-
-//     } else {
-
-//     }
-//   }
-// }
-
-
-
-
-
-});
-
+})
 
 export {
 
-  Graph,
-  // GT,
-  // GD
+  GT,
+  GD,
+  Graph
 
 }

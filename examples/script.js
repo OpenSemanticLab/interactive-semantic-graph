@@ -76,39 +76,39 @@ let new_json = {"jsonschema": {
     "value": ["40000","50000"]
 }]
   },
-  "Item:SomePerson": {
-      "type": ["Category:Item"],
-      "label": [{"text": "Max Mustermann", "lang": "en"}],
-      "some_property": "Item:MyOtherItem"
-  },
-  "Property:HasMember": {
-      "type": ["Category:Property"],
-      "label": [{"text": "Has Member", "lang": "en"}]
-  },
-  "Item:MyOtherItem": {
-    "type": ["Category:Item"],
-    "label": [{"text": "My Other", "lang": "en"}],
-    "member": ["Item:MyNewItem"],
-    "some_literal": "Some string",
-    "not_in_context": "Not in Context",
-    "budget":[{
-            "year": "2022",
-            "value": "10"}, {
-              "year": "2022",
-              "value": "20"}]
+  // "Item:SomePerson": {
+  //     "type": ["Category:Item"],
+  //     "label": [{"text": "Max Mustermann", "lang": "en"}],
+  //     "some_property": "Item:MyOtherItem"
+  // },
+  // "Property:HasMember": {
+  //     "type": ["Category:Property"],
+  //     "label": [{"text": "Has Member", "lang": "en"}]
+  // },
+  // "Item:MyOtherItem": {
+  //   "type": ["Category:Item"],
+  //   "label": [{"text": "My Other", "lang": "en"}],
+  //   "member": ["Item:MyNewItem"],
+  //   "some_literal": "Some string",
+  //   "not_in_context": "Not in Context",
+  //   "budget":[{
+  //           "year": "2022",
+  //           "value": "10"}, {
+  //             "year": "2022",
+  //             "value": "20"}]
 
-  },
-  "Item:MyNewItem": {
-    "type": ["Category:Item"],
-    "label": [{"text": "My New Other", "lang": "en"}],
-    "other":["Item:MySecondItem"]
+  // },
+  // "Item:MyNewItem": {
+  //   "type": ["Category:Item"],
+  //   "label": [{"text": "My New Other", "lang": "en"}],
+  //   "other":["Item:MySecondItem"]
 
-  },
-  "Item:MySecondItem": {
-    "type": ["Category:Item"],
-    "label": [{"text": "My Second Other", "lang": "en"}]
+  // },
+  // "Item:MySecondItem": {
+  //   "type": ["Category:Item"],
+  //   "label": [{"text": "My Second Other", "lang": "en"}]
 
-  },
+  // },
 
 }};
 
@@ -332,6 +332,7 @@ let configFile =
     "dataset_schema": [
       "schema"
     ],
+    "item_prefix_separator":":",
     "name": "Config1"
   }
 

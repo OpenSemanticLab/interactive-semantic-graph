@@ -1,10 +1,18 @@
-# Requirements
+# Examples
+
+<!-- markdownlint-disable-next-line MD036 -->
+**Table of Content**
+
+- [Examples](#examples)
+  - [Bootstrap](#bootstrap)
+  - [Fontawesome](#fontawesome)
+  - [Nodemon](#nodemon)
 
 ## Bootstrap
 
 There are different ways to use bootstrap, see [Bootstrap Docs](https://getbootstrap.com/) for more information.
 
-1.  Using CDN import for direct integration
+1. Using CDN import for direct integration
 
     ```html
     <link
@@ -15,7 +23,7 @@ There are different ways to use bootstrap, see [Bootstrap Docs](https://getboots
     />
     ```
 
-2.  Install via npm
+2. Install via `npm`:
 
     ```bash
     npm i bootstrap@5.3.1
@@ -35,24 +43,20 @@ A icon library and toolkit. Take a look at [Font Awesome](https://fontawesome.co
 />
 ```
 
-# Optional
-
 ## Nodemon
 
 To avoid having to run the **npm run build** command to display changes made to the webpage - run nodemon
 
-### Install
+1. To install nodemon globally:
 
-```bash
-npm install -g nodemon
-```
+    ```bash
+    npm install -g nodemon
+    ```
 
-### Run
+2. To execute `nodemon` using custom command:
 
-```bash
-nodemon --exrc "npm run build"
-```
+    ```bash
+    nodemon --exec "npm run build"
+    ```
 
-### When done - cancel command
-
-    Ctrl + C
+    To stop the process, press `Ctrl + C`.

@@ -366,43 +366,49 @@ function cancelEdgeEdit(callback) {
 function initPopUpHTML() {
                     //HTML for the manipulation popups
                 var editHtml = '' +
-                    '<div id="node-popUp" style="display:none;">' +
-                    '  <span id="node-operation" style="cursor: move;">node</span> <br />' +
+                    '<div id="node-popUp" style="background-color: #fff; padding: 0.5rem; border: 1px solid lightgrey; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);">' +
+                    '  <span id="node-operation" style="cursor: move; font-weight: bold;">node</span> <br />' +
                     '  <table style="margin: auto">' +
                     '    <tbody>' +
                     '      <tr>' +
-                    '        <td>label</td>' +
+                    '        <td>Label</td>' +
                     '      </tr>' +
                     '      <tr>' +
                     '        <td><input id="node-label" value="" /></td>' +
                     '      </tr>' +
                     '      <tr>' +
-                    '        <td><input type="checkbox" id="node_checkbox"><label>Object</label></td>'+
+                    '        <td><input type="checkbox" style="margin: 8px 4px 8px 0" id="node_checkbox"><label>Object</label></td>'+
                     '      </tr>' +
                     '      <tr>' +
-                    '        <td>type</td>' +
+                    '        <td>Type</td>' +
                     '      </tr>' +
                     '      <tr>' +
                     '        <td><input id="node-type" value="" /></td>' +
                     '      </tr>' +
                     '    </tbody>' +
                     '  </table>' +
-                    '  <input type="button" value="save" id="node-saveButton" />' +
-                    '  <input type="button" value="cancel" id="node-cancelButton" />' +
+                    '<div style="display:flex; justify-content:flex-end; margin-top: 1rem;">' +
+                    '  <input type="button" style="background-color: #3366cc; color: #fff; border: none; border-radius: 4px; padding: 0 8px 0 8px; margin-right: 8px;" value="OK" id="node-saveButton" />' +
+                    '  <input type="button" value="Cancel" id="node-cancelButton" />' +
+                    '</div>' +
                     '</div>' +
                     '' +
-                    '<div id="edge-popUp" style="display:none;">' +
-                    '  <span id="edge-operation" style="cursor: move;">edge</span> <br />' +
+                    '<div id="edge-popUp" style="background-color: #fff; padding: 0.5rem; border: 1px solid lightgrey; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);">' +
+                    '  <span id="edge-operation" style="cursor: move; font-weight: bold;">edge</span> <br />' +
                     '  <table style="margin: auto">' +
                     '    <tbody>' +
                     '      <tr>' +
-                    '        <td>label</td>' +
+                    '        <td>Label</td>' +
+                    '       </tr>' +
+                    '       <tr>' +
                     '        <td><input id="edge-label" value="" /></td>' +
                     '      </tr>' +
                     '    </tbody>' +
                     '  </table>' +
-                    '  <input type="button" value="save" id="edge-saveButton" />' +
-                    '  <input type="button" value="cancel" id="edge-cancelButton" />' +
+                    '<div style="display:flex; justify-content:flex-end; margin-top: 1rem;">' +
+                    '  <input type="button" style="background-color: #3366cc; color: #fff; border: none; border-radius: 4px; padding: 0 8px 0 8px; margin-right: 8px;" value="OK" id="edge-saveButton" />' +
+                    '  <input type="button" value="Cancel" id="edge-cancelButton" />' +
+                    '</div>' +
                     '</div>' +
                     '';
                 var editHtmlDiv = document.createElement("div")

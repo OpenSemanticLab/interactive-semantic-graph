@@ -13,7 +13,7 @@ function initGraphContainers (divId) {
     this.options_container.style = 'margin-left: 68%; width: 30%; height: 800px; border: 1px solid lightgray;'
 
     this.tool_container = document.createElement('div')
-    this.tool_container.style = 'display: flex; justify-content: start; padding: 16px 16px 8px 16px; margin: 24px 0; border-radius: 8px; background: rgb(0, 91, 127);'
+    this.tool_container.style = 'display: flex; justify-content: start; padding: 16px 16px 8px 16px; margin: 24px 0; background: rgb(220, 236, 251);'
     this.tool_container.setAttribute('class', 'navbar')
     this.container.append(this.tool_container)
 
@@ -22,7 +22,7 @@ function initGraphContainers (divId) {
     const openContainer = document.createElement('fieldset')
     const openButton = document.createElement('button')
     openButton.setAttribute('type', 'button')
-    openButton.setAttribute('class', 'btn btn-outline-light')
+    openButton.setAttribute('class', 'btn btn-outline-secondary')
     openButton.style = 'margin: 0 8px 8px 0;'
     openButton.innerHTML = "<i class='fa-regular fa-xl fa-folder-open me-1'></i> Open"
     openContainer.append(openButton)
@@ -33,7 +33,7 @@ function initGraphContainers (divId) {
     const saveContainer = document.createElement('fieldset')
     const saveButton = document.createElement('button')
     saveButton.setAttribute('type', 'button')
-    saveButton.setAttribute('class', 'btn btn-outline-light')
+    saveButton.setAttribute('class', 'btn btn-outline-secondary')
     saveButton.style = 'margin: 0 8px 8px 8px;'
     saveButton.innerHTML = "<i class='fa-regular fa-xl fa-floppy-disk me-1'></i> Save"
     saveContainer.append(saveButton)
@@ -48,10 +48,10 @@ function initGraphContainers (divId) {
     const deleteButton = document.createElement('button')
 
     deleteButton.setAttribute('type', 'button')
-    deleteButton.setAttribute('class', 'btn btn-light')
+    deleteButton.setAttribute('class', 'btn btn-outline-danger btn-sm')
     deleteButton.setAttribute('id', this.prefix + 'deleteButton')
     deleteButton.style = 'margin: 0 0 8px 8px; width: 90px;'
-    deleteButton.innerHTML = "<i class='fa-regular fa-xl fa-pen-to-square me-1'></i> Delete"
+    deleteButton.innerHTML = "<i class='fa-regular fa-trash-can me-1'></i> Delete"
     deleteButton.addEventListener('click', () => {
       // this.options.manipulation.enabled = !this.options.manipulation.enabled
       // this.options.manipulation.initiallyActive = !this.options.manipulation.initiallyActive
@@ -74,10 +74,10 @@ function initGraphContainers (divId) {
     })
 
     addNodeButton.setAttribute('type', 'button')
-    addNodeButton.setAttribute('class', 'btn btn-light')
+    addNodeButton.setAttribute('class', 'btn btn-outline-dark btn-sm')
     addNodeButton.setAttribute('id', this.prefix + 'addNodeButton')
     addNodeButton.style = 'margin: 0 0 8px 8px; width: 90px;'
-    addNodeButton.innerHTML = "<i class='fa-regular fa-xl fa-pen-to-square me-1'></i> Add Node"
+    addNodeButton.innerHTML = "<i class='fa-regular fa-square-plus me-1'></i> Node"
     addNodeButton.addEventListener('click', () => {
       this.options.manipulation.enabled = !this.options.manipulation.enabled
       this.options.manipulation.initiallyActive = !this.options.manipulation.initiallyActive
@@ -104,10 +104,10 @@ function initGraphContainers (divId) {
     })
 
     addEdgeButton.setAttribute('type', 'button')
-    addEdgeButton.setAttribute('class', 'btn btn-light')
+    addEdgeButton.setAttribute('class', 'btn btn-outline-dark btn-sm')
     addEdgeButton.setAttribute('id', this.prefix + 'addEdgeButton')
     addEdgeButton.style = 'margin: 0 0 8px 8px; width: 90px;'
-    addEdgeButton.innerHTML = "<i class='fa-regular fa-xl fa-pen-to-square me-1'></i> Add Edge"
+    addEdgeButton.innerHTML = "<i class='fa-regular fa-square-plus me-1'></i> Edge"
     addEdgeButton.addEventListener('click', () => {
       this.options.manipulation.enabled = !this.options.manipulation.enabled
       this.options.manipulation.initiallyActive = !this.options.manipulation.initiallyActive
@@ -134,16 +134,20 @@ function initGraphContainers (divId) {
     })
 
     editButton.setAttribute('type', 'button')
-    editButton.setAttribute('class', 'btn btn-light')
+    editButton.setAttribute('class', 'btn btn-outline-primary')
     editButton.setAttribute('id', this.prefix + 'editButton')
     editButton.style = 'margin: 0 0 8px 8px; width: 90px;'
     editButton.innerHTML = "<i class='fa-regular fa-xl fa-pen-to-square me-1'></i> Edit"
 
     let isEditMode = true
     editButton.addEventListener('click', () => {
-      editButton.innerHTML = isEditMode ? "<i class='fa-regular fa-xl fa-circle-xmark'></i> Exit" : "<i class='fa-regular fa-xl fa-pen-to-square me-1'></i> Edit"
+      // editButton.innerHTML = isEditMode ? 'btn btn-outline-primary' : 'btn btn-outline-secondary'
+      // editButton.innerHTML = isEditMode ? "<i class='fa-regular fa-xl fa-circle-xmark'></i> Exit" : "<i class='fa-regular fa-xl fa-pen-to-square me-1'></i> Edit"
       this.network.enableEditMode()
       if (isEditMode) {
+        editButton.classList.remove('btn-outline-primary')
+        editButton.classList.add('btn-outline-secondary')
+        editButton.innerHTML = "<i class='fa-regular fa-xl fa-circle-xmark me-1'></i> Exit"
         editButton.insertAdjacentElement('afterend', deleteButton)
         editButton.insertAdjacentElement('afterend', addEdgeButton)
         editButton.insertAdjacentElement('afterend', addNodeButton)
@@ -152,6 +156,9 @@ function initGraphContainers (divId) {
         // this.tool_container.append(addEdgeButton)
         // this.tool_container.append(deleteButton)
       } else {
+        editButton.classList.remove('btn-outline-secondary')
+        editButton.classList.add('btn-outline-primary')
+        editButton.innerHTML = "<i class='fa-regular fa-xl fa-pen-to-square me-1'></i> Edit"
         addNodeButton.remove()
         addEdgeButton.remove()
         deleteButton.remove()
@@ -164,12 +171,12 @@ function initGraphContainers (divId) {
 
     // visual filter
     const searchContainer = document.createElement('fieldset')
-    searchContainer.style = 'padding: 0 8px; margin: 0 8px 8px 8px; border-left: 2px dotted lightgrey; border-right: 2px dotted lightgrey;'
+    searchContainer.style = 'padding: 0 8px 0 16px; margin: 0 8px 8px 8px; border-left: 1px solid grey; border-right: 1px solid grey;'
     this.tool_container.append(searchContainer)
     this.createSearchUI(searchContainer)
 
     const deepSearchContainer = document.createElement('fieldset')
-    deepSearchContainer.style = 'padding: 0 8px 0 0; margin: 0 8px 8px 0; border-right: 2px dotted lightgrey; '
+    deepSearchContainer.style = 'padding: 0 16px 0 0; margin: 0 8px 8px 0; border-right: 1px solid grey; '
     this.tool_container.append(deepSearchContainer)
     this.initDeepSearch(deepSearchContainer)
 

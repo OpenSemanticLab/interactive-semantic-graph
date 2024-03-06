@@ -344,21 +344,21 @@ function cancelEdgeEdit (callback) {
 function initPopUpHTML () {
   // HTML for the manipulation popups
   var editHtml = '' +
-                    '<div id="node-popUp" style="background-color: #fff; padding: 0.5rem; border: 1px solid lightgrey; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);">' +
-                    '  <span id="node-operation" style="cursor: move; font-weight: bold;">node</span> <br />' +
+                    '<div id="node-popUp" style="background-color: #fff; border: 1px solid lightgrey; padding: 0 0.75rem 0.75rem 0.5rem; border-radius: 0.375rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);">' +
+                    '  <div id="node-operation" style="cursor: move; font-weight: bold; margin: 0 -0.75rem 0.75rem -0.5rem; padding: 0.5rem; background: rgb(220, 236, 251)">node</div>' +
                     '  <table style="margin: auto">' +
                     '    <tbody>' +
                     '      <tr>' +
-                    '        <td>Label</td>' +
+                    '        <td style="font-weight: bold;">Label</td>' +
                     '      </tr>' +
                     '      <tr>' +
                     '        <td><input id="node-label" value="" /></td>' +
                     '      </tr>' +
                     '      <tr>' +
-                    '        <td><input type="checkbox" style="margin: 8px 4px 8px 0" id="node_checkbox"><label>Object</label></td>'+
+                    '        <td><input type="checkbox" style="margin: 8px 4px 8px 0;" id="node_checkbox"><label>Object</label></td>'+
                     '      </tr>' +
                     '      <tr>' +
-                    '        <td>Type</td>' +
+                    '        <td style="font-weight: bold;">Type</td>' +
                     '      </tr>' +
                     '      <tr>' +
                     '        <td><input id="node-type" value="" /></td>' +
@@ -385,7 +385,7 @@ function initPopUpHTML () {
                     '  </table>' +
                     '<div style="display:flex; justify-content:flex-end; margin-top: 1rem;">' +
                     '  <input type="button" style="background-color: #3366cc; color: #fff; border: none; border-radius: 4px; padding: 0 8px 0 8px; margin-right: 8px;" value="OK" id="edge-saveButton" />' +
-                    '  <input type="button" value="Cancel" id="edge-cancelButton" />' +
+                    '  <input type="button" style="margin-right: 0.5rem;" value="Cancel" id="edge-cancelButton" />' +
                     '</div>' +
                     '</div>' +
                     ''

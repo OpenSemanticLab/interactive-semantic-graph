@@ -13,7 +13,7 @@ function initGraphContainers (divId) {
     this.options_container.style = 'margin-left: 68%; width: 30%; height: 800px; border: 1px solid lightgray;'
 
     this.tool_container = document.createElement('div')
-    this.tool_container.style = 'display: flex; justify-content: start; padding: 16px 16px 8px 16px; margin: 24px 0; background: rgb(220, 236, 251);'
+    this.tool_container.style = 'display: flex; justify-content: start; align-items: center; padding: 16px 16px 8px 16px; margin: 24px 0; background: rgb(220, 236, 251);'
     this.tool_container.setAttribute('class', 'navbar')
     this.container.append(this.tool_container)
 
@@ -22,9 +22,9 @@ function initGraphContainers (divId) {
     const openContainer = document.createElement('fieldset')
     const openButton = document.createElement('button')
     openButton.setAttribute('type', 'button')
-    openButton.setAttribute('class', 'btn btn-outline-secondary')
+    openButton.setAttribute('class', 'btn btn-outline-secondary btn-sm')
     openButton.style = 'margin: 0 8px 8px 0;'
-    openButton.innerHTML = "<i class='fa-regular fa-xl fa-folder-open me-1'></i> Open"
+    openButton.innerHTML = "<i class='fa-regular fa-lg fa-folder-open me-1'></i> Open"
     openContainer.append(openButton)
     this.tool_container.append(openContainer)
     this.loadFunctionality(openButton)
@@ -33,9 +33,9 @@ function initGraphContainers (divId) {
     const saveContainer = document.createElement('fieldset')
     const saveButton = document.createElement('button')
     saveButton.setAttribute('type', 'button')
-    saveButton.setAttribute('class', 'btn btn-outline-secondary')
+    saveButton.setAttribute('class', 'btn btn-outline-secondary btn-sm')
     saveButton.style = 'margin: 0 8px 8px 8px;'
-    saveButton.innerHTML = "<i class='fa-regular fa-xl fa-floppy-disk me-1'></i> Save"
+    saveButton.innerHTML = "<i class='fa-regular fa-lg fa-floppy-disk me-1'></i> Save"
     saveContainer.append(saveButton)
     this.tool_container.append(saveContainer)
     this.saveFunctionality(saveButton)
@@ -50,7 +50,7 @@ function initGraphContainers (divId) {
     deleteButton.setAttribute('type', 'button')
     deleteButton.setAttribute('class', 'btn btn-outline-danger btn-sm')
     deleteButton.setAttribute('id', this.prefix + 'deleteButton')
-    deleteButton.style = 'margin: 0 0 8px 8px; width: 90px;'
+    deleteButton.style = 'margin: 0 0 8px 8px;'
     deleteButton.innerHTML = "<i class='fa-regular fa-trash-can me-1'></i> Delete"
     deleteButton.addEventListener('click', () => {
       // this.options.manipulation.enabled = !this.options.manipulation.enabled
@@ -76,7 +76,7 @@ function initGraphContainers (divId) {
     addNodeButton.setAttribute('type', 'button')
     addNodeButton.setAttribute('class', 'btn btn-outline-dark btn-sm')
     addNodeButton.setAttribute('id', this.prefix + 'addNodeButton')
-    addNodeButton.style = 'margin: 0 0 8px 8px; width: 90px;'
+    addNodeButton.style = 'margin: 0 0 8px 8px;'
     addNodeButton.innerHTML = "<i class='fa-regular fa-square-plus me-1'></i> Node"
     addNodeButton.addEventListener('click', () => {
       this.options.manipulation.enabled = !this.options.manipulation.enabled
@@ -106,7 +106,7 @@ function initGraphContainers (divId) {
     addEdgeButton.setAttribute('type', 'button')
     addEdgeButton.setAttribute('class', 'btn btn-outline-dark btn-sm')
     addEdgeButton.setAttribute('id', this.prefix + 'addEdgeButton')
-    addEdgeButton.style = 'margin: 0 0 8px 8px; width: 90px;'
+    addEdgeButton.style = 'margin: 0 0 8px 8px;'
     addEdgeButton.innerHTML = "<i class='fa-regular fa-square-plus me-1'></i> Edge"
     addEdgeButton.addEventListener('click', () => {
       this.options.manipulation.enabled = !this.options.manipulation.enabled
@@ -134,10 +134,10 @@ function initGraphContainers (divId) {
     })
 
     editButton.setAttribute('type', 'button')
-    editButton.setAttribute('class', 'btn btn-outline-primary')
+    editButton.setAttribute('class', 'btn btn-outline-primary btn-sm')
     editButton.setAttribute('id', this.prefix + 'editButton')
-    editButton.style = 'margin: 0 0 8px 8px; width: 90px;'
-    editButton.innerHTML = "<i class='fa-regular fa-xl fa-pen-to-square me-1'></i> Edit"
+    editButton.style = 'margin: 0 0 8px 8px;'
+    editButton.innerHTML = "<i class='fa-regular fa-lg fa-pen-to-square me-1'></i> Edit"
 
     let isEditMode = true
     editButton.addEventListener('click', () => {
@@ -147,7 +147,7 @@ function initGraphContainers (divId) {
       if (isEditMode) {
         editButton.classList.remove('btn-outline-primary')
         editButton.classList.add('btn-outline-secondary')
-        editButton.innerHTML = "<i class='fa-regular fa-xl fa-circle-xmark me-1'></i> Exit"
+        editButton.innerHTML = "<i class='fa-regular fa-lg fa-circle-xmark me-1'></i> Exit"
         editButton.insertAdjacentElement('afterend', deleteButton)
         editButton.insertAdjacentElement('afterend', addEdgeButton)
         editButton.insertAdjacentElement('afterend', addNodeButton)
@@ -171,12 +171,12 @@ function initGraphContainers (divId) {
 
     // visual filter
     const searchContainer = document.createElement('fieldset')
-    searchContainer.style = 'padding: 0 8px 0 16px; margin: 0 8px 8px 8px; border-left: 1px solid grey; border-right: 1px solid grey;'
+    searchContainer.style = 'padding: 0 8px; margin-left: 8px; border-left: 1px solid grey; border-right: 1px solid grey;'
     this.tool_container.append(searchContainer)
     this.createSearchUI(searchContainer)
 
     const deepSearchContainer = document.createElement('fieldset')
-    deepSearchContainer.style = 'padding: 0 16px 0 0; margin: 0 8px 8px 0; border-right: 1px solid grey; '
+    deepSearchContainer.style = 'padding: 0 8px; margin-right: 8px; border-right: 1px solid grey; '
     this.tool_container.append(deepSearchContainer)
     this.initDeepSearch(deepSearchContainer)
 
@@ -321,29 +321,70 @@ function initDeepSearch (container) {
   // create container if not defined
   if (!container) container = document.createElement('div')
 
+  // Bootstrap input group
+  const inputGroupDiv = document.createElement('div')
+  inputGroupDiv.classList.add('input-group', 'input-group-sm', 'mb-3')
+
   const inputField = document.createElement('input')
-  inputField.type = 'text'
-  inputField.placeholder = 'Deep Search'
+  inputField.setAttribute('type', 'text')
+  inputField.classList.add('form-control')
+  inputField.setAttribute('placeholder', 'Deep Search')
+  inputField.setAttribute('aria-label', 'Deep Search')
+  inputField.setAttribute('aria-describedby', 'basic-addon2')
   inputField.id = this.prefix + 'input-field'
-  inputField.style = 'padding-left: 8px; border-radius: 4px; margin-right: 4px;'
+
+  const appendDiv = document.createElement('div')
+  appendDiv.classList.add('input-group-append')
 
   const submitButton = document.createElement('button')
+  submitButton.setAttribute('type', 'button')
+  submitButton.setAttribute('class', 'btn btn-outline-secondary btn-sm')
   submitButton.id = this.prefix + 'submit-button'
   submitButton.textContent = 'Submit'
-  submitButton.style = 'border-radius: 4px; margin-right: 4px;'
+  submitButton.style = 'margin-right: 4px;'
+  submitButton.title = 'tbd'
 
-  container.appendChild(inputField)
-  container.appendChild(submitButton)
+  inputGroupDiv.appendChild(inputField)
+  appendDiv.appendChild(submitButton)
+  inputGroupDiv.appendChild(appendDiv)
+
+  container.appendChild(inputGroupDiv)
+
+  inputField.id = this.prefix + 'input-field'
+
+  // End of bootstrap input group
+
+  // working code before bootstrap was used
+
+  // const inputField = document.createElement('input')
+  // inputField.type = 'text'
+  // inputField.placeholder = 'Deep Search'
+  // inputField.id = this.prefix + 'input-field'
+  // inputField.style = 'padding-left: 8px; border-radius: 4px; margin-right: 4px;'
+
+  // const submitButton = document.createElement('button')
+  // submitButton.setAttribute('type', 'button')
+  // submitButton.setAttribute('class', 'btn btn-secondary btn-sm')
+  // submitButton.id = this.prefix + 'submit-button'
+  // submitButton.textContent = 'Submit'
+  // submitButton.style = 'margin-right: 4px;'
+  // submitButton.title = 'tbd'
+
+  container.appendChild(inputGroupDiv)
+  // container.appendChild(inputField)
+  // container.appendChild(submitButton)
 
   // this.deepSearch("");
 
   // Create the checkbox element
   const checkbox = document.createElement('input')
   checkbox.type = 'checkbox'
+  checkbox.title = 'tbd - e.g. Show nodes that were expanded during Deep Search'
 
   // Optionally set additional properties for the checkbox
   checkbox.id = this.prefix + 'myCheckbox'
-  container.appendChild(checkbox)
+  // container.appendChild(checkbox)
+  inputGroupDiv.appendChild(checkbox)
 
   submitButton.addEventListener('click', () => {
     this.searchExpands = []

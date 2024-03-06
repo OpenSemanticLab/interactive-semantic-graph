@@ -3,12 +3,34 @@ function createSearchUI (container) {
     // create the container if not defined
     if (!container) container = document.createElement('div')
 
+    // ------------- Working Code
+
     // create the input element
+    // const inputField = document.createElement('input')
+    // inputField.type = 'text'
+    // inputField.id = this.prefix + 'search_input'
+    // inputField.placeholder = 'Search'
+    // inputField.style = 'padding-left: 8px; border-radius: 4px; margin-right: 4px;'
+
+    // ---------------- End -----------------
+
+    // ------------ TEST Input Element created with Bootstrap --------------------
+
+    const inputGroupDiv = document.createElement('div')
+    inputGroupDiv.classList.add('input-group', 'input-group-sm', 'mb-3')
+
     const inputField = document.createElement('input')
-    inputField.type = 'text'
+    inputField.setAttribute('type', 'text')
+    inputField.classList.add('form-control')
+    inputField.setAttribute('placeholder', 'Search')
+    inputField.setAttribute('aria-label', 'Search')
+    inputField.setAttribute('aria-describedby', 'basic-addon2')
     inputField.id = this.prefix + 'search_input'
-    inputField.placeholder = 'Search'
-    inputField.style = 'padding-left: 8px; border-radius: 4px; margin-right: 4px;'
+
+    const appendDiv = document.createElement('div')
+    appendDiv.classList.add('input-group-append')
+
+    // -------------TEST End ------------------
 
     // add the event listener to the input element
     let debounceTimer
@@ -42,11 +64,49 @@ function createSearchUI (container) {
       }, 300) // Adjust the debounce timeout as needed (e.g., 300ms)
     })
 
-    // add the input field to the DOM
-    container.appendChild(inputField)
+    // --------------- Working code select button ---------------
 
-    // create the select element
+    // // add the input field to the DOM
+    // container.appendChild(inputField)
+
+    // // create the select element
+    // const selectElement = document.createElement('select')
+    // selectElement.id = this.prefix + 'search_select'
+    // selectElement.addEventListener('change', (event) => {
+    //   // get the selected value
+    //   document.getElementById(this.prefix + 'search_input').value = ''
+    //   document.getElementById(this.prefix + 'input-field').value = ''
+    //   this.collapseSearch()
+    //   this.recolorByProperty()
+    //   // this.searchNodes("");
+    // })
+
+    // // create the first option element
+    // const optionElement1 = document.createElement('option')
+    // optionElement1.value = 'search_node'
+    // optionElement1.text = 'Node'
+
+    // // create the second option element
+    // const optionElement2 = document.createElement('option')
+    // optionElement2.value = 'search_edge'
+    // optionElement2.text = 'Edge'
+
+    // // add the option elements to the select element
+    // selectElement.add(optionElement1)
+    // selectElement.add(optionElement2)
+
+    // // add the select element to the DOM
+    // container.appendChild(selectElement)
+
+    // ------------ End --------------------------
+
+    // ---------- TEST select button created with bootstrap
+
     const selectElement = document.createElement('select')
+    selectElement.classList.add('btn', 'btn-sm', 'btn-outline-secondary', 'dropdown-toggle')
+    selectElement.setAttribute('data-toggle', 'dropdown')
+    selectElement.setAttribute('aria-haspopup', 'true')
+    selectElement.setAttribute('aria-expanded', 'false')
     selectElement.id = this.prefix + 'search_select'
     selectElement.addEventListener('change', (event) => {
       // get the selected value
@@ -57,22 +117,28 @@ function createSearchUI (container) {
       // this.searchNodes("");
     })
 
-    // create the first option element
-    const optionElement1 = document.createElement('option')
-    optionElement1.value = 'search_node'
-    optionElement1.text = 'Node'
+    // Create the dropdown menu
+    const dropdownMenu = document.createElement('div')
+    dropdownMenu.classList.add('dropdown-menu')
 
-    // create the second option element
-    const optionElement2 = document.createElement('option')
-    optionElement2.value = 'search_edge'
-    optionElement2.text = 'Edge'
+    const dropdownItems = [
+      { text: 'Node', value: 'search_node' },
+      { text: 'Edge', value: 'search_edge' }
+    ]
 
-    // add the option elements to the select element
-    selectElement.add(optionElement1)
-    selectElement.add(optionElement2)
+    dropdownItems.forEach(item => {
+      const optionItem = document.createElement('option')
+      optionItem.text = item.text
+      optionItem.value = item.value
+      selectElement.add(optionItem)
+    })
 
-    // add the select element to the DOM
-    container.appendChild(selectElement)
+    inputGroupDiv.appendChild(inputField)
+    selectElement.appendChild(dropdownMenu)
+    appendDiv.appendChild(selectElement)
+    inputGroupDiv.appendChild(appendDiv)
+
+    container.appendChild(inputGroupDiv)
 
     return container
   }

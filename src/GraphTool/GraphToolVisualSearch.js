@@ -17,7 +17,7 @@ function createSearchUI (container) {
     // ------------ TEST Input Element created with Bootstrap --------------------
 
     const inputGroupDiv = document.createElement('div')
-    inputGroupDiv.classList.add('input-group', 'input-group-sm', 'mb-3')
+    inputGroupDiv.classList.add('input-group', 'input-group-sm')
 
     const inputField = document.createElement('input')
     inputField.setAttribute('type', 'text')

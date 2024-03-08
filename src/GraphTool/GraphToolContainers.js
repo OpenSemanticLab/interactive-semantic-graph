@@ -8,14 +8,50 @@ function initGraphContainers (divId) {
     this.vis_container.style = 'width: 65%; height: 800px; border: 1px solid lightgray;  float:left;'
     this.options_container = document.createElement('div')
     this.options_container.setAttribute('id', this.prefix + 'options_container')
-    this.options_container.setAttribute('style', 'overflow-y:scroll')
+    this.options_container.setAttribute('style', 'overflow-y:scroll; margin-left: 68%; width: 30%; height: 800px; border: 1px solid lightgray;')
     // this.options_container.width = "30%"
-    this.options_container.style = 'margin-left: 68%; width: 30%; height: 800px; border: 1px solid lightgray;'
+    // this.options_container.style = 'margin-left: 68%; width: 30%; height: 800px; border: 1px solid lightgray;'
+
+    // ------------- TEST toggle button for displaying tool_container  ------------------------
+
+    const self = this
+    const toggleButton = document.createElement('button')
+    toggleButton.setAttribute('type', 'button')
+    toggleButton.setAttribute('class', 'btn btn-outline-secondary btn-sm')
+    toggleButton.innerHTML = "<i class='fa-solid fa-lg fa-angle-down me-1'></i> Toolbar"
+    toggleButton.addEventListener('click', function () {
+      const isVisible = self.tool_container.style.visibility !== 'hidden'
+      if (isVisible) {
+        self.tool_container.style.visibility = 'hidden'
+        self.tool_container.style.transform = 'translateY(-100%)'
+        this.querySelector('i').classList.replace('fa-angle-up', 'fa-angle-down')
+      } else {
+        self.tool_container.style.visibility = 'visible'
+        self.tool_container.style.display = 'flex'
+        self.tool_container.style.justifyContent = 'start'
+        self.tool_container.style.alignItems = 'center'
+        self.tool_container.style.rowGap = '0.5rem'
+        self.tool_container.style.padding = '1rem'
+        self.tool_container.style.margin = '0.5rem 0 1.5rem 0'
+        self.tool_container.style.background = 'rgb(220, 236, 251)'
+        self.tool_container.style.transform = 'translateY(0)'
+        this.querySelector('i').classList.replace('fa-angle-down', 'fa-angle-up')
+      }
+    })
+
+    this.container.append(toggleButton)
 
     this.tool_container = document.createElement('div')
-    this.tool_container.style = 'display: flex; justify-content: start; align-items: center; padding: 16px 16px 8px 16px; margin: 24px 0; background: rgb(220, 236, 251);'
+    this.tool_container.style = 'display: none; transition: transform 0.5s ease-in-out; transform: translateY(-100%);'
     this.tool_container.setAttribute('class', 'navbar')
     this.container.append(this.tool_container)
+
+    // ------------------- End Test --------------
+
+    // this.tool_container = document.createElement('div')
+    // this.tool_container.style = 'display: flex; justify-content: start; align-items: center; row-gap: 0.5rem; padding: 1rem; margin: 1.5rem 0; background: rgb(220, 236, 251);'
+    // this.tool_container.setAttribute('class', 'navbar')
+    // this.container.append(this.tool_container)
 
     // Todo: the following should go to vue.js templates
     // Bootstrap class for open button
@@ -23,7 +59,6 @@ function initGraphContainers (divId) {
     const openButton = document.createElement('button')
     openButton.setAttribute('type', 'button')
     openButton.setAttribute('class', 'btn btn-outline-secondary btn-sm')
-    openButton.style = 'margin: 0 8px 8px 0;'
     openButton.innerHTML = "<i class='fa-regular fa-lg fa-folder-open me-1'></i> Open"
     openContainer.append(openButton)
     this.tool_container.append(openContainer)
@@ -34,7 +69,7 @@ function initGraphContainers (divId) {
     const saveButton = document.createElement('button')
     saveButton.setAttribute('type', 'button')
     saveButton.setAttribute('class', 'btn btn-outline-secondary btn-sm')
-    saveButton.style = 'margin: 0 8px 8px 8px;'
+    saveButton.style = 'margin: 0 8px 0 8px;'
     saveButton.innerHTML = "<i class='fa-regular fa-lg fa-floppy-disk me-1'></i> Save"
     saveContainer.append(saveButton)
     this.tool_container.append(saveContainer)
@@ -50,7 +85,6 @@ function initGraphContainers (divId) {
     deleteButton.setAttribute('type', 'button')
     deleteButton.setAttribute('class', 'btn btn-outline-danger btn-sm')
     deleteButton.setAttribute('id', this.prefix + 'deleteButton')
-    deleteButton.style = 'margin: 0 0 8px 8px;'
     deleteButton.innerHTML = "<i class='fa-regular fa-trash-can me-1'></i> Delete"
     deleteButton.addEventListener('click', () => {
       // this.options.manipulation.enabled = !this.options.manipulation.enabled
@@ -76,7 +110,7 @@ function initGraphContainers (divId) {
     addNodeButton.setAttribute('type', 'button')
     addNodeButton.setAttribute('class', 'btn btn-outline-dark btn-sm')
     addNodeButton.setAttribute('id', this.prefix + 'addNodeButton')
-    addNodeButton.style = 'margin: 0 0 8px 8px;'
+    addNodeButton.style = 'margin-left: 0.5rem'
     addNodeButton.innerHTML = "<i class='fa-regular fa-square-plus me-1'></i> Node"
     addNodeButton.addEventListener('click', () => {
       this.options.manipulation.enabled = !this.options.manipulation.enabled
@@ -106,7 +140,7 @@ function initGraphContainers (divId) {
     addEdgeButton.setAttribute('type', 'button')
     addEdgeButton.setAttribute('class', 'btn btn-outline-dark btn-sm')
     addEdgeButton.setAttribute('id', this.prefix + 'addEdgeButton')
-    addEdgeButton.style = 'margin: 0 0 8px 8px;'
+    addEdgeButton.style = 'margin: 0 0.5rem 0 0.5rem;'
     addEdgeButton.innerHTML = "<i class='fa-regular fa-square-plus me-1'></i> Edge"
     addEdgeButton.addEventListener('click', () => {
       this.options.manipulation.enabled = !this.options.manipulation.enabled
@@ -136,7 +170,6 @@ function initGraphContainers (divId) {
     editButton.setAttribute('type', 'button')
     editButton.setAttribute('class', 'btn btn-outline-primary btn-sm')
     editButton.setAttribute('id', this.prefix + 'editButton')
-    editButton.style = 'margin: 0 0 8px 8px;'
     editButton.innerHTML = "<i class='fa-regular fa-lg fa-pen-to-square me-1'></i> Edit"
 
     let isEditMode = true
@@ -181,7 +214,6 @@ function initGraphContainers (divId) {
     this.initDeepSearch(deepSearchContainer)
 
     const coloringContainer = document.createElement('fieldset')
-    coloringContainer.style = 'margin-bottom: 8px;'
     this.tool_container.append(coloringContainer)
     this.colorPicker(this, coloringContainer)
 
@@ -207,22 +239,41 @@ function colorPicker (graph, container) {
     dropdownDiv.setAttribute('id', this.prefix + 'myDropdown')
 
     const dropdown = document.createElement('select')
+    dropdown.classList.add('btn', 'btn-sm', 'btn-outline-secondary', 'dropdown-toggle') // added Bootstrap 210 - 213
+    dropdown.setAttribute('data-toggle', 'dropdown')
+    dropdown.setAttribute('aria-haspopup', 'true')
+    dropdown.setAttribute('aria-expanded', 'false')
 
-    const option1 = document.createElement('option')
-    option1.setAttribute('value', 'setColorByProperty')
-    option1.innerHTML = 'Color by Property'
+    // ---------------- Working Code ---------------------
 
-    const option2 = document.createElement('option')
-    option2.setAttribute('value', 'setColorByValue')
-    option2.innerHTML = 'Color by Value'
+    // const option1 = document.createElement('option')
+    // option1.setAttribute('value', 'setColorByProperty')
+    // option1.innerHTML = 'Color by Property'
 
-    // var option3 = document.createElement("option");
-    // option3.setAttribute("value", "option3");
-    // option3.innerHTML = "Option 3";
+    // const option2 = document.createElement('option')
+    // option2.setAttribute('value', 'setColorByValue')
+    // option2.innerHTML = 'Color by Value'
 
-    dropdown.appendChild(option1)
-    dropdown.appendChild(option2)
-    // dropdown.appendChild(option3);
+    // dropdown.appendChild(option1)
+    // dropdown.appendChild(option2)
+
+    // --------------------- End ---------------
+
+    // -------------------- Test new Bootstap UI ----------
+
+    const dropdownItems = [
+      { text: 'Color by Property', value: 'setColorByProperty' },
+      { text: 'Color by Value', value: 'setColorByValue' }
+    ]
+
+    dropdownItems.forEach(item => {
+      const optionItem = document.createElement('option')
+      optionItem.text = item.text
+      optionItem.value = item.value
+      dropdown.add(optionItem)
+    })
+
+    // --------------- End of Test ---------
 
     dropdownDiv.appendChild(dropdown)
 
@@ -253,17 +304,33 @@ function colorPicker (graph, container) {
       const selectedValue = this.value
 
       if (selectedValue === 'setColorByValue') {
+        const inputGroupDiv = document.createElement('div')
+        inputGroupDiv.classList.add('input-group', 'input-group-sm')
+
         const input = document.createElement('input')
-        input.type = 'text'
-        input.placeholder = 'Set path'
-        input.style = 'padding-left: 8px; margin: 0 4px 0 4px; border-radius: 4px;'
+        input.setAttribute('type', 'text')
+        input.classList.add('form-control')
+        input.setAttribute('placeholder', 'e.g. HasBudget.value')
+        input.setAttribute('aria-label', 'Color by Value')
+        input.setAttribute('aria-describedby', 'basic-addon2')
+        // input.type = 'text'
+        // input.placeholder = 'Set path'
+        // input.style = 'padding-left: 8px; margin: 0 4px 0 4px; border-radius: 4px;'
         input.id = prefix + 'setColorByValueInput'
+
+        const appendDiv = document.createElement('div')
+        appendDiv.classList.add('input-group-append')
 
         const usefulColors = ['orangered', 'red', 'orange', 'yellow', 'green', 'blue', 'purple', 'pink', 'brown', 'gray']
         const usefulColors2 = ['limegreen', 'green', 'orange', 'yellow', 'red', 'blue', 'purple', 'pink', 'brown', 'gray']
 
         // Create the select element
         const select = document.createElement('select')
+        select.classList.add('btn', 'btn-sm', 'btn-outline-secondary', 'dropdown-toggle') // added bootstrap 297-300
+        select.setAttribute('data-toggle', 'dropdown')
+        select.setAttribute('aria-haspopup', 'true')
+        select.setAttribute('aria-expanded', 'false')
+        select.style = 'border-top-right-radius: 0; border-bottom-right-radius: 0;'
 
         // Add options to the select element
         for (let i = 0; i < usefulColors.length; i++) {
@@ -275,7 +342,11 @@ function colorPicker (graph, container) {
         select.id = prefix + 'startColor'
 
         const select2 = document.createElement('select')
-        select2.style = 'margin: 0 4px;'
+        select2.classList.add('btn', 'btn-sm', 'btn-outline-secondary', 'dropdown-toggle') // added bootstrap 312-315
+        select2.setAttribute('data-toggle', 'dropdown')
+        select2.setAttribute('aria-haspopup', 'true')
+        select2.setAttribute('aria-expanded', 'false')
+        select2.style = 'border-top-left-radius: 0; border-bottom-left-radius: 0; margin-right: 0.5rem'
 
         // Add options to the select element
         for (let i = 0; i < usefulColors2.length; i++) {
@@ -288,9 +359,10 @@ function colorPicker (graph, container) {
 
         // Add a button to get the selected value
         const button = document.createElement('button')
+        button.setAttribute('class', 'btn btn-outline-primary btn-sm') // bootstrap
         button.id = prefix + 'setPath'
         button.innerHTML = 'Apply'
-        button.style = 'border-radius: 4px;'
+        // button.style = 'border-radius: 4px;'
         button.addEventListener('click', getPath)
 
         if (!document.getElementById(this.prefix + 'setColorByValueInput')) {
@@ -299,6 +371,15 @@ function colorPicker (graph, container) {
           document.getElementById(prefix + 'myDropdown').appendChild(select2)
           document.getElementById(prefix + 'myDropdown').appendChild(button)
         }
+
+        inputGroupDiv.appendChild(dropdownDiv)
+        inputGroupDiv.appendChild(input)
+        appendDiv.appendChild(select)
+        appendDiv.appendChild(select2)
+        appendDiv.appendChild(button)
+        inputGroupDiv.appendChild(appendDiv)
+
+        container.appendChild(inputGroupDiv)
       }
 
       if (selectedValue === 'setColorByProperty') {
@@ -321,9 +402,9 @@ function initDeepSearch (container) {
   // create container if not defined
   if (!container) container = document.createElement('div')
 
-  // Bootstrap input group
+  // ------------------Bootstrap input group
   const inputGroupDiv = document.createElement('div')
-  inputGroupDiv.classList.add('input-group', 'input-group-sm', 'mb-3')
+  inputGroupDiv.classList.add('input-group', 'input-group-sm')
 
   const inputField = document.createElement('input')
   inputField.setAttribute('type', 'text')
@@ -341,7 +422,7 @@ function initDeepSearch (container) {
   submitButton.setAttribute('class', 'btn btn-outline-secondary btn-sm')
   submitButton.id = this.prefix + 'submit-button'
   submitButton.textContent = 'Submit'
-  submitButton.style = 'margin-right: 4px;'
+  submitButton.style = 'margin-right: 4px'
   submitButton.title = 'tbd'
 
   inputGroupDiv.appendChild(inputField)
@@ -352,9 +433,9 @@ function initDeepSearch (container) {
 
   inputField.id = this.prefix + 'input-field'
 
-  // End of bootstrap input group
+  // ----------------End of bootstrap input group
 
-  // working code before bootstrap was used
+  // ----------------Working Code
 
   // const inputField = document.createElement('input')
   // inputField.type = 'text'

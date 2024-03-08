@@ -349,16 +349,16 @@ function initPopUpHTML () {
                     '  <table style="margin: auto">' +
                     '    <tbody>' +
                     '      <tr>' +
-                    '        <td style="font-weight: bold;">Label</td>' +
+                    '        <td style="font-weight: bold; font-size: 13px;">Label</td>' +
                     '      </tr>' +
                     '      <tr>' +
                     '        <td><input id="node-label" value="" /></td>' +
                     '      </tr>' +
                     '      <tr>' +
-                    '        <td><input type="checkbox" style="margin: 8px 4px 8px 0;" id="node_checkbox"><label>Object</label></td>'+
+                    '        <td><input type="checkbox" style="margin: 8px 4px 8px 0;" id="node_checkbox"><label>Create new Wikipage</label></td>'+
                     '      </tr>' +
                     '      <tr>' +
-                    '        <td style="font-weight: bold;">Type</td>' +
+                    '        <td style="font-weight: bold; font-size: 13px;">Type</td>' +
                     '      </tr>' +
                     '      <tr>' +
                     '        <td><input id="node-type" value="" /></td>' +

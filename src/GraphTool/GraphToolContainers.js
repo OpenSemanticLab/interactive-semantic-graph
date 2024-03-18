@@ -12,7 +12,7 @@ function initGraphContainers (divId) {
     // this.options_container.width = "30%"
     // this.options_container.style = 'margin-left: 68%; width: 30%; height: 800px; border: 1px solid lightgray;'
 
-    // ------------- TEST toggle button show / hide  tool_container  ------------------------
+    // ------------- Toggle button show / hide  tool_container
 
     const self = this
     const toggleButton = document.createElement('button')
@@ -47,8 +47,6 @@ function initGraphContainers (divId) {
     this.tool_container.setAttribute('class', 'navbar')
     this.container.append(this.tool_container)
 
-    // ------------------- End Test --------------
-
     // this.tool_container = document.createElement('div')
     // this.tool_container.style = 'display: flex; justify-content: start; align-items: center; row-gap: 0.5rem; padding: 1rem; margin: 1.5rem 0; background: rgb(220, 236, 251);'
     // this.tool_container.setAttribute('class', 'navbar')
@@ -56,8 +54,7 @@ function initGraphContainers (divId) {
 
     // Todo: the following should go to vue.js templates
 
-    // Bootstrap class for open button
-
+    // ----------Bootstrap class for File-Dropdown
     const dropdownContainer = document.createElement('div')
     dropdownContainer.classList.add('dropdown')
 
@@ -73,7 +70,6 @@ function initGraphContainers (divId) {
     const dropdownMenu = document.createElement('ul')
     dropdownMenu.classList.add('dropdown-menu')
     dropdownMenu.setAttribute('aria-labelledby', 'dropdownMenuButton')
-    // dropdownMenu.style.width = 'fit-content'
 
     const openItem = document.createElement('li')
     const openButton = document.createElement('button')
@@ -101,6 +97,7 @@ function initGraphContainers (divId) {
     const editContainer = document.createElement('div')
     editContainer.classList.add('dropdown')
 
+    // -------Bootstrap for Edit-Dropdown
     const editButton = document.createElement('button')
     editButton.setAttribute('type', 'button')
     editButton.setAttribute('class', 'btn btn-outline-secondary btn-sm dropdown-toggle')
@@ -225,7 +222,7 @@ function initGraphContainers (divId) {
     this.tool_container.append(coloringContainer)
     this.colorPicker(this, coloringContainer)
 
-    // Create Search Wrapper
+    // --------------- Create Search Wrapper
     const searchWrapper = document.createElement('fieldset')
     searchWrapper.style = 'display: flex; flex-wrap: no-wrap; flex: 1; justify-content: end; gap: 1rem'
 
@@ -241,7 +238,7 @@ function initGraphContainers (divId) {
     backendButton.innerHTML = "<i class='fa-solid fa-sm fa-magnifying-glass me-1'></i> Backend"
     backendButton.addEventListener('click', toggleSearchContainers)
 
-    // Toggle between search and deepsearch
+    // ------------Toggle between search and deepsearch
     function toggleSearchContainers () {
       if (deepSearchContainer.style.display === 'none') {
         searchContainer.style.display = 'none'
@@ -282,7 +279,6 @@ function initGraphContainers (divId) {
 function colorPicker (graph, container) {
   const colorPickerArgs = { graph, container }
   if (this.handleCallbacks({ id: 'onBeforeColorPicker', params: { graph: this, colorPickerArgs } })) {
-    // Create the dropdown menu
     // Todo: replace global ids with prefixed ids or class members to allow multiple instances on one page
 
     // create container if not specified
@@ -351,7 +347,6 @@ function colorPicker (graph, container) {
       const usefulColors = ['orangered', 'red', 'orange', 'yellow', 'green', 'blue', 'purple', 'pink', 'brown', 'gray']
       const usefulColors2 = ['limegreen', 'green', 'orange', 'yellow', 'red', 'blue', 'purple', 'pink', 'brown', 'gray']
 
-      // Create the select element
       const select = document.createElement('select')
       select.classList.add('btn', 'btn-sm', 'btn-outline-secondary', 'dropdown-toggle')
       select.setAttribute('data-toggle', 'dropdown')
@@ -359,7 +354,6 @@ function colorPicker (graph, container) {
       select.setAttribute('aria-expanded', 'false')
       select.style = 'border-top-right-radius: 0; border-bottom-right-radius: 0;'
 
-      // Add options to the select element
       for (let i = 0; i < usefulColors.length; i++) {
         const option = document.createElement('option')
         option.value = usefulColors[i]
@@ -384,7 +378,6 @@ function colorPicker (graph, container) {
       }
       select2.id = prefix + 'endColor'
 
-      // Add a button to get the selected value
       const button = document.createElement('button')
       button.setAttribute('class', 'btn btn-outline-primary btn-sm')
       button.id = prefix + 'setPath'
@@ -485,8 +478,6 @@ function initDeepSearch (container) {
 
   inputField.id = this.prefix + 'input-field'
 
-  // ----------------End of bootstrap input group
-
   // ----------------Working Code
 
   // const inputField = document.createElement('input')
@@ -509,7 +500,6 @@ function initDeepSearch (container) {
 
   // this.deepSearch("");
 
-  // Create the checkbox element
   const checkbox = document.createElement('input')
   checkbox.type = 'checkbox'
   checkbox.title = 'tbd - e.g. Show nodes that were expanded during Deep Search'

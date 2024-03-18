@@ -12,9 +12,7 @@ function createSearchUI (container) {
     // inputField.placeholder = 'Search'
     // inputField.style = 'padding-left: 8px; border-radius: 4px; margin-right: 4px;'
 
-    // ---------------- End -----------------
-
-    // ------------ TEST Input Element created with Bootstrap --------------------
+    // ------------ Bootstrap Input Element
 
     const inputGroupDiv = document.createElement('div')
     inputGroupDiv.classList.add('input-group', 'input-group-sm')
@@ -29,8 +27,6 @@ function createSearchUI (container) {
 
     const appendDiv = document.createElement('div')
     appendDiv.classList.add('input-group-append')
-
-    // -------------TEST End ------------------
 
     // add the event listener to the input element
     let debounceTimer
@@ -98,9 +94,7 @@ function createSearchUI (container) {
     // // add the select element to the DOM
     // container.appendChild(selectElement)
 
-    // ------------ End --------------------------
-
-    // ---------- TEST select button created with bootstrap
+    // ----------Bootstrap select button
 
     const selectElement = document.createElement('select')
     selectElement.classList.add('btn', 'btn-sm', 'btn-outline-secondary', 'dropdown-toggle')
@@ -117,7 +111,6 @@ function createSearchUI (container) {
       // this.searchNodes("");
     })
 
-    // Create the dropdown menu
     const dropdownMenu = document.createElement('div')
     dropdownMenu.classList.add('dropdown-menu')
 

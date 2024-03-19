@@ -5,7 +5,7 @@ function initGraphContainers (divId) {
     this.vis_container = document.createElement('div')
     this.vis_container.setAttribute('id', this.prefix + 'vis_container')
     // this.vis_container.width = "70%"
-    this.vis_container.style = 'width: 65%; height: 800px; border: 1px solid lightgray;  float:left;'
+    this.vis_container.style = 'width: 70%; height: 800px; border: 1px solid lightgray;  float:left;'
     this.options_container = document.createElement('div')
     this.options_container.setAttribute('id', this.prefix + 'options_container')
     this.options_container.setAttribute('style', 'overflow-y:scroll; margin-left: 68%; width: 30%; height: 800px; border: 1px solid lightgray;')
@@ -13,39 +13,43 @@ function initGraphContainers (divId) {
     // this.options_container.style = 'margin-left: 68%; width: 30%; height: 800px; border: 1px solid lightgray;'
 
     // ------------- Toggle button show / hide  tool_container
+    const toolbarWrapper = document.createElement('div')
+    toolbarWrapper.style.width = '60rem' // -------------------------------- for test purposes
 
     const self = this
     const toggleButton = document.createElement('button')
     toggleButton.setAttribute('type', 'button')
     toggleButton.setAttribute('class', 'btn btn-outline-secondary btn-sm')
+    toggleButton.style = 'margin-bottom: 0.5rem'
     toggleButton.innerHTML = "<i class='fa-solid fa-lg fa-angle-down me-1'></i> Toolbar"
     toggleButton.addEventListener('click', function () {
-      const isVisible = self.tool_container.style.visibility !== 'hidden'
+      const isVisible = self.tool_container.style.display !== 'none'
       if (isVisible) {
-        self.tool_container.style.visibility = 'hidden'
-        self.tool_container.style.transform = 'translateY(-100%)'
+        self.tool_container.style.display = 'none'
         this.querySelector('i').classList.replace('fa-angle-up', 'fa-angle-down')
       } else {
-        self.tool_container.style.visibility = 'visible'
         self.tool_container.style.display = 'flex'
-        self.tool_container.style.width = '60rem' // -------------------------------- for test purposes only
+        self.tool_container.style.width = '100%' // -------------------------------- for test purposes
         self.tool_container.style.justifyContent = 'start'
         self.tool_container.style.alignItems = 'start'
-        self.tool_container.style.gap = '0.5rem'
-        self.tool_container.style.padding = '0.7rem 1rem'
-        self.tool_container.style.margin = '0.5rem 0 5rem 0'
-        self.tool_container.style.background = 'rgb(220, 236, 251)'
-        self.tool_container.style.transform = 'translateY(0)'
+        self.tool_container.style.gap = '0.75rem'
+        self.tool_container.style.padding = '0.75rem 0.75rem 0.5rem 0.75rem'
+        self.tool_container.style.marginBottom = '0.5rem'
+        self.tool_container.style.borderRadius = '4px'
+        self.tool_container.style.background = '#f1f3f4'
         this.querySelector('i').classList.replace('fa-angle-down', 'fa-angle-up')
       }
     })
 
-    this.container.append(toggleButton)
+    // this.container.append(toggleButton)
+    toolbarWrapper.append(toggleButton)
 
     this.tool_container = document.createElement('div')
-    this.tool_container.style = 'display: none; transition: transform 0.3s ease-in-out; transform: translateY(-100%);'
+    this.tool_container.style = 'display: none;'
     this.tool_container.setAttribute('class', 'navbar')
-    this.container.append(this.tool_container)
+    toolbarWrapper.append(this.tool_container)
+    this.container.append(toolbarWrapper)
+    // this.container.append(this.tool_container)
 
     // this.tool_container = document.createElement('div')
     // this.tool_container.style = 'display: flex; justify-content: start; align-items: center; row-gap: 0.5rem; padding: 1rem; margin: 1.5rem 0; background: rgb(220, 236, 251);'
@@ -64,7 +68,7 @@ function initGraphContainers (divId) {
     dropdownButton.setAttribute('id', 'dropdownMenuButton')
     dropdownButton.setAttribute('data-bs-toggle', 'dropdown')
     dropdownButton.setAttribute('aria-expanded', 'false')
-    dropdownButton.innerHTML = "<i class='fa-regular fa-lg fa-folder-open me-1'></i> File"
+    dropdownButton.innerHTML = "<i class='fa-solid fa-lg fa-file me-1'></i> File"
     dropdownContainer.append(dropdownButton)
 
     const dropdownMenu = document.createElement('ul')
@@ -105,7 +109,7 @@ function initGraphContainers (divId) {
     editButton.setAttribute('data-bs-toggle', 'dropdown')
     editButton.setAttribute('aria-expanded', 'false')
     editButton.setAttribute('id', this.prefix + 'editButton')
-    editButton.innerHTML = "<i class='fa-regular fa-lg fa-pen-to-square me-1'></i> Edit"
+    editButton.innerHTML = "<i class='fa-solid fa-lg fa-pen-to-square me-1'></i> Edit"
     editContainer.append(editButton)
 
     const editDropdownMenu = document.createElement('ul')
@@ -188,7 +192,7 @@ function initGraphContainers (divId) {
     deleteButton.setAttribute('type', 'button')
     deleteButton.setAttribute('id', this.prefix + 'deleteButton')
     deleteButton.style.color = 'red'
-    deleteButton.innerHTML = 'Delete'
+    deleteButton.innerHTML = 'Delete selected'
     deleteButton.addEventListener('click', () => {
       // this.options.manipulation.enabled = !this.options.manipulation.enabled
       // this.options.manipulation.initiallyActive = !this.options.manipulation.initiallyActive
@@ -297,7 +301,7 @@ function colorPicker (graph, container) {
     dropdown.setAttribute('id', 'dropdownMenuButton')
     dropdown.setAttribute('data-bs-toggle', 'dropdown')
     dropdown.setAttribute('aria-expanded', 'false')
-    dropdown.innerHTML = 'Coloring'
+    dropdown.innerHTML = "<i class='fa-solid fa-lg fa-droplet me-1'></i> Coloring"
     dropdownDiv.append(dropdown)
 
     const colorDropdownMenu = document.createElement('ul')
@@ -468,7 +472,7 @@ function initDeepSearch (container) {
   submitButton.id = this.prefix + 'submit-button'
   submitButton.textContent = 'Submit'
   submitButton.style = 'margin-right: 4px'
-  submitButton.title = 'tbd'
+  // submitButton.title = 'tbd'
 
   inputGroupDiv.appendChild(inputField)
   appendDiv.appendChild(submitButton)
@@ -502,7 +506,7 @@ function initDeepSearch (container) {
 
   const checkbox = document.createElement('input')
   checkbox.type = 'checkbox'
-  checkbox.title = 'tbd - e.g. Show nodes that were expanded during Deep Search'
+  // checkbox.title = 'tbd - e.g. Show nodes that were expanded during Deep Search'
 
   // Optionally set additional properties for the checkbox
   checkbox.id = this.prefix + 'myCheckbox'

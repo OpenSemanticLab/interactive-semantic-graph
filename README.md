@@ -1,6 +1,6 @@
 # Interactive Semantic Graph
 
-Interactive semantic graph tool based on vis.js
+Interactive semantic graph tool based on vis.js - early stage & work in progress
 
 JavaScript app that relies only on JSON-SCHEMA + JSON-LD which can be build from SMW / OpenSemanticLab but also from any other linked data source. We aim to provided "advanced" capabilities like collapse subgrahs, edit multiple entities in parallel, copy-past nodes or subgraphs, etc. Successor of the legancy [Extension:InteractiveSemanticGraph](https://github.com/OpenSemanticLab/mediawiki-extensions-InteractiveSemanticGraph)
 
@@ -9,9 +9,12 @@ JavaScript app that relies only on JSON-SCHEMA + JSON-LD which can be build from
 [![release][release-img]][release-url]
 [![semantic][semantic-img]][semantic-url]
 
-## Features
+## (Planned) Features
 
-
+- Web-Standard Support: Fully compatible with JSON-SCHEMA and JSON-LD.
+- Dynamic Graph Interaction: Collapse subgraphs, edit multiple entities simultaneously, copy-paste nodes or subgraphs.
+- Customizable Backend Integration: The tool can interact with OpenSemanticLab or other semantic data sources.
+- Context sensitive visual elements to visualize end edit content, e.g. forms (single nodes) and tables (multiple nodes)
 
 ## Install
 
@@ -79,7 +82,3 @@ use [Docker Compose][] to run tasks locally:
 -   `docker-compose run test` to run tests across all LTS versions of Node.js
 -   `docker-compose run lint` to execute [super-linter][] locally
 
-> **Note:**  
-> Your main `README.md` file is in `docs/README.md`, the file at root is generated using [pandoc][] using the provided [template][].
->
-> You should run `docker-compose run readme` after any change to `docs/README.md` and before commit / push

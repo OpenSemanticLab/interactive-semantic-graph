@@ -17,7 +17,7 @@ jobs:
         repository: OpenSemanticLab/interactive-semantic-graph
         ref: master
     - name: Use Node.js
-      uses: actions/setup-node@v3
+      uses: actions/setup-node@v4
     - run: npm i
     - run: npm run build 
     - run: npm test
